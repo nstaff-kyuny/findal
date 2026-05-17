@@ -133,6 +133,7 @@ function AdminPanel() {
 function AllUsersTab() {
   const listAll = useServerFn(adminListAllUsers);
   const setBan = useServerFn(adminSetUserBan);
+  const hardDelete = useServerFn(adminDeleteUser);
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
@@ -173,6 +174,16 @@ function AllUsersTab() {
     try {
       await setBan({ data: { userId: uid, ban } });
       toast.success(ban ? "삭제되었습니다" : "복구되었습니다");
+      load();
+    } catch (e: any) { toast.error(e?.message ?? "실패"); }
+  };
+
+  const handleHardDelete = async (uid: string, label: string) => {
+    if (!confirm(`'${label}' 사용자를 완전 삭제합니다.\n이 작업은 되돌릴 수 없습니다. 계속할까요?`)) return;
+    if (!confirm("정말로 완전 삭제하시겠습니까? 모든 관련 데이터가 영구 삭제됩니다.")) return;
+    try {
+      await hardDelete({ data: { userId: uid } });
+      toast.success("완전 삭제되었습니다");
       load();
     } catch (e: any) { toast.error(e?.message ?? "실패"); }
   };
@@ -245,13 +256,16 @@ function AllUsersTab() {
                     <td className="p-2 whitespace-nowrap">{r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleString("ko-KR") : "-"}</td>
                     <td className="p-2">{banned ? <Badge variant="destructive">삭제됨</Badge> : <Badge variant="outline">활성</Badge>}</td>
                     <td className="p-2">
-                      {banned ? (
-                        <Button size="sm" variant="outline" onClick={() => handleBan(r.id, false, r.email)}>복구</Button>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={() => handleBan(r.id, true, r.email)}>
-                          <Trash2 size={14} className="text-destructive" />
-                        </Button>
-                      )}
+                      <div className="flex gap-1">
+                        {banned ? (
+                          <Button size="sm" variant="outline" onClick={() => handleBan(r.id, false, r.email)}>복구</Button>
+                        ) : (
+                          <Button size="sm" variant="ghost" onClick={() => handleBan(r.id, true, r.email)} title="삭제(복구가능)">
+                            <Trash2 size={14} className="text-destructive" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="destructive" onClick={() => handleHardDelete(r.id, r.email)} title="완전 삭제">완전삭제</Button>
+                      </div>
                     </td>
                   </tr>
                 );

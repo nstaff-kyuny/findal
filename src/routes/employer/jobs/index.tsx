@@ -16,6 +16,7 @@ export const Route = createFileRoute("/employer/jobs/")({ component: () => <Role
 
 function Page() {
   const { user } = useAuth();
+  const nav = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
   const load = async () => {
     if (!user) return;
@@ -36,7 +37,14 @@ function Page() {
   };
   const promote = async (jobId: string, dur: string) => {
     const { error } = await supabase.rpc("promote_job", { _job_id: jobId, _duration: dur } as any);
-    if (error) return toast.error(error.message);
+    if (error) {
+      if (error.message?.includes("크레딧")) {
+        toast.error("크레딧이 부족합니다. 크레딧 구매 페이지로 이동합니다.");
+        setTimeout(() => nav({ to: "/employer/credits" }), 600);
+        return;
+      }
+      return toast.error(error.message);
+    }
     toast.success("광고 등록 완료!");
   };
 
@@ -44,38 +52,38 @@ function Page() {
     <MobileLayout role="employer">
       <div className="p-3 space-y-3">
         <div className="flex justify-between items-center">
-          <h2 className="font-bold">내 공고 ({jobs.length}/20)</h2>
-          <Link to="/employer/jobs/new"><Button size="sm"><Plus size={14} className="mr-1" />등록</Button></Link>
+          <h2 className="font-bold text-base">내 공고 ({jobs.length}/20)</h2>
+          <Link to="/employer/jobs/new"><Button size="default" className="h-11 px-5 text-base"><Plus size={18} className="mr-1" />등록</Button></Link>
         </div>
         {jobs.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">공고가 없습니다</p>}
         {jobs.map(j => {
           const editCount = j.edit_count ?? 0;
           const canEdit = editCount < 2;
           return (
-          <Card key={j.id} className="p-3 space-y-2">
+          <Card key={j.id} className="p-4 space-y-3">
             <div className="flex justify-between items-start gap-2">
               <div className="min-w-0">
-                <div className="flex gap-1 flex-wrap mb-1">
-                  <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
-                  <Badge variant="outline" className="text-[10px]">{ROLE_LABEL[j.job_role]}</Badge>
-                  {!j.is_active && <Badge variant="destructive" className="text-[10px]">비활성</Badge>}
-                  <Badge variant="outline" className="text-[10px]">수정 {editCount}/2</Badge>
+                <div className="flex gap-1 flex-wrap mb-1.5">
+                  <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
+                  <Badge variant="outline" className="text-xs">{ROLE_LABEL[j.job_role]}</Badge>
+                  {!j.is_active && <Badge variant="destructive" className="text-xs">비활성</Badge>}
+                  <Badge variant="outline" className="text-xs">수정 {editCount}/2</Badge>
                 </div>
-                <h4 className="font-semibold text-sm truncate">{j.title}</h4>
-                <p className="text-xs text-muted-foreground">{j.place_name} · {Number(j.daily_wage).toLocaleString()}원</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">※ 공고 수정은 최대 2회까지 가능합니다</p>
+                <h4 className="font-semibold text-base truncate">{j.title}</h4>
+                <p className="text-sm text-muted-foreground">{j.place_name} · {Number(j.daily_wage).toLocaleString()}원</p>
+                <p className="text-xs text-muted-foreground mt-0.5">※ 공고 수정은 최대 2회까지 가능합니다</p>
               </div>
             </div>
-            <div className="flex gap-1 flex-wrap">
+            <div className="flex gap-1.5 flex-wrap">
               <Link to="/employer/jobs/edit/$id" params={{ id: j.id }} className={!canEdit ? "pointer-events-none opacity-50" : ""}>
                 <Button size="sm" variant="secondary" disabled={!canEdit}>수정</Button>
               </Link>
               <Button size="sm" variant="outline" className="flex-1" onClick={() => toggle(j)}>{j.is_active ? "비활성" : "활성"}</Button>
               <Dialog>
-                <DialogTrigger asChild><Button size="sm" variant="outline" className="flex-1"><Megaphone size={12} className="mr-1" />광고</Button></DialogTrigger>
+                <DialogTrigger asChild><Button size="sm" variant="outline" className="flex-1"><Megaphone size={14} className="mr-1" />광고</Button></DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>추천 배너 광고</DialogTitle></DialogHeader>
-                  <p className="text-xs text-muted-foreground">크레딧이 차감됩니다.</p>
+                  <p className="text-sm text-muted-foreground">크레딧이 차감됩니다.</p>
                   {PROMOTION_OPTIONS.map(p => (
                     <Button key={p.value} variant="outline" className="w-full" onClick={() => promote(j.id, p.value)}>{p.label}</Button>
                   ))}

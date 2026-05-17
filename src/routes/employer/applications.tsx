@@ -52,7 +52,8 @@ function Page() {
     load();
   };
   const noShow = async (id: string) => {
-    if (!confirm("이 구직자를 노쇼(미출근)로 표시할까요?")) return;
+    if (!confirm("정말 노쇼(미출근)로 처리하시겠습니까?\n노쇼 처리는 구직자에게 불이익이 가는 작업입니다.")) return;
+    if (!confirm("한 번 더 확인합니다. 노쇼 처리할까요?")) return;
     const { error } = await supabase.rpc("mark_no_show", { _app_id: id } as any);
     if (error) return toast.error(error.message);
     toast.success("노쇼 처리됨"); load();
@@ -76,7 +77,6 @@ function Page() {
                   {a.seeker_profiles?.experience && <Badge variant="outline" className="text-[10px]">{a.seeker_profiles.experience === "lt5" ? "경력 5회 미만" : "경력 5회 이상"}</Badge>}
                   {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
                 </div>
-                {a.status === "approved" && <p className="text-xs mt-2">📞 <a href={`tel:${a.profiles?.phone}`} className="text-primary font-bold">{a.profiles?.phone}</a></p>}
                 {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
               </div>
               <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
@@ -88,7 +88,14 @@ function Page() {
               </div>
             )}
             {(a.status === "approved" || a.status === "confirmed") && (
-              <Button size="sm" variant="outline" className="w-full" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
+              <div className="flex gap-2">
+                {a.profiles?.phone && (
+                  <a href={`tel:${a.profiles.phone}`} className="flex-1">
+                    <Button size="sm" className="w-full">📞 연락하기</Button>
+                  </a>
+                )}
+                <Button size="sm" variant="outline" className="flex-1" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
+              </div>
             )}
           </CardContent></Card>
         ))}
