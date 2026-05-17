@@ -80,7 +80,7 @@ function Page() {
                 </div>
                 {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
               </div>
-              <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
+              <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={STATUS_CLASS[a.status]}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
             </div>
             {a.status === "pending" && (
               <div className="flex gap-2">
