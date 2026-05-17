@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NoticesRouteImport } from './routes/notices'
 import { Route as InquiryRouteImport } from './routes/inquiry'
@@ -34,6 +35,11 @@ import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OnboardingRoute = OnboardingRouteImport.update({
@@ -146,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/inquiry': typeof InquiryRoute
   '/notices': typeof NoticesRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
@@ -169,6 +176,7 @@ export interface FileRoutesByTo {
   '/inquiry': typeof InquiryRoute
   '/notices': typeof NoticesRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/inquiry': typeof InquiryRoute
   '/notices': typeof NoticesRoute
   '/onboarding': typeof OnboardingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
@@ -218,6 +227,7 @@ export interface FileRouteTypes {
     | '/inquiry'
     | '/notices'
     | '/onboarding'
+    | '/reset-password'
     | '/terms'
     | '/employer/applications'
     | '/employer/credits'
@@ -241,6 +251,7 @@ export interface FileRouteTypes {
     | '/inquiry'
     | '/notices'
     | '/onboarding'
+    | '/reset-password'
     | '/terms'
     | '/employer/applications'
     | '/employer/credits'
@@ -264,6 +275,7 @@ export interface FileRouteTypes {
     | '/inquiry'
     | '/notices'
     | '/onboarding'
+    | '/reset-password'
     | '/terms'
     | '/employer/applications'
     | '/employer/credits'
@@ -288,6 +300,7 @@ export interface RootRouteChildren {
   InquiryRoute: typeof InquiryRoute
   NoticesRoute: typeof NoticesRoute
   OnboardingRoute: typeof OnboardingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   TermsRoute: typeof TermsRoute
   EmployerApplicationsRoute: typeof EmployerApplicationsRoute
   EmployerCreditsRoute: typeof EmployerCreditsRoute
@@ -310,6 +323,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/onboarding': {
@@ -464,6 +484,7 @@ const rootRouteChildren: RootRouteChildren = {
   InquiryRoute: InquiryRoute,
   NoticesRoute: NoticesRoute,
   OnboardingRoute: OnboardingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   TermsRoute: TermsRoute,
   EmployerApplicationsRoute: EmployerApplicationsRoute,
   EmployerCreditsRoute: EmployerCreditsRoute,
