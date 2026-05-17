@@ -8,7 +8,7 @@ type Tab = { to: string; label: string; icon: any };
 const seekerTabs: Tab[] = [
   { to: "/seeker/home", label: "홈", icon: Home },
   { to: "/seeker/featured", label: "추천", icon: Star },
-  { to: "/seeker/applications", label: "신청내역", icon: FileText },
+  { to: "/seeker/applications", label: "신청/승인 내역", icon: FileText },
   { to: "/seeker/me", label: "설정", icon: Settings },
 ];
 
