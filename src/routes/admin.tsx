@@ -115,9 +115,16 @@ function UsersTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const [seekers, setSeekers] = useState<any[]>([]);
   useEffect(() => { (async () => {
-    const { data: e } = await supabase.from("employer_profiles").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
-    const { data: s } = await supabase.from("seeker_profiles").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
-    setEmployers(e ?? []); setSeekers(s ?? []);
+    const { data: e } = await supabase.from("employer_profiles").select("*").order("created_at", { ascending: false });
+    const { data: s } = await supabase.from("seeker_profiles").select("*").order("created_at", { ascending: false });
+    const ids = Array.from(new Set([...(e ?? []), ...(s ?? [])].map((r: any) => r.user_id)));
+    const { data: profs } = ids.length
+      ? await supabase.from("profiles").select("id, full_name, phone").in("id", ids)
+      : { data: [] as any[] };
+    const pmap: Record<string, any> = {};
+    (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
+    setEmployers((e ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
+    setSeekers((s ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
   })(); }, []);
 
   const exportEmployers = () => {
