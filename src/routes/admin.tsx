@@ -398,8 +398,8 @@ function ReferrersTab() {
             const users = signups[r.code] ?? [];
             const isOpen = expanded[r.id];
             return (
-              <>
-                <tr key={r.id} className="border-b">
+              <Fragment key={r.id}>
+                <tr className="border-b">
                   <td className="py-2 font-mono">{r.code}</td>
                   <td>{r.name}</td>
                   <td>{r.phone}</td>
