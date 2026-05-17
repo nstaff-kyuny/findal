@@ -89,7 +89,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           <div>
             <h2 className="font-bold">{profile?.full_name ?? user?.email}</h2>
             <p className="text-xs text-muted-foreground">{profile?.phone}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
+            <p className="text-xs text-muted-foreground"><span style={{ pointerEvents: "none" }}>{user?.email}</span></p>
             <p className="text-[10px] mt-1 text-primary">{role === "seeker" ? "구직자 계정" : "구인자 계정"}</p>
           </div>
           <Button size="sm" variant="outline" onClick={openEdit}><UserCog size={14} className="mr-1" />수정</Button>
