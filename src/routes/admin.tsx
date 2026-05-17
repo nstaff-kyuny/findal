@@ -300,45 +300,6 @@ function UsersTab() {
     </div>
   );
 }
-  const [employers, setEmployers] = useState<any[]>([]);
-  const load = async () => {
-    const { data } = await supabase.from("employer_profiles").select("*").order("credits");
-    const ids = (data ?? []).map((r: any) => r.user_id);
-    const { data: profs } = ids.length
-      ? await supabase.from("profiles").select("id, full_name").in("id", ids)
-      : { data: [] as any[] };
-    const pmap: Record<string, any> = {};
-    (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
-    setEmployers((data ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
-  };
-  useEffect(() => { load(); }, []);
-  const grant = async (uid: string) => {
-    const amt = prompt("지급할 크레딧 수량 (음수 가능):");
-    if (!amt) return;
-    const { error } = await supabase.rpc("admin_grant_credits", { _employer: uid, _amount: Number(amt), _note: "관리자 무상지급" } as any);
-    if (error) return toast.error(error.message);
-    toast.success("처리 완료"); load();
-  };
-  return (
-    <Card className="mt-4"><CardContent className="p-4">
-      <h3 className="font-bold mb-3">크레딧 관리</h3>
-      <table className="w-full text-sm">
-        <thead><tr className="text-left border-b"><th className="py-2">회사</th><th>담당자</th><th>크레딧</th><th></th></tr></thead>
-        <tbody>
-          {employers.map(e => (
-            <tr key={e.user_id} className="border-b">
-              <td className="py-2">{e.company_name}</td>
-              <td>{e.profiles?.full_name}</td>
-              <td className="font-bold">{e.credits}</td>
-              <td><Button size="sm" variant="outline" onClick={() => grant(e.user_id)}>크레딧 지급/차감</Button></td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </CardContent></Card>
-  );
-}
-
 function CreditsTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const load = async () => {
