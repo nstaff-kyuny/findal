@@ -114,12 +114,14 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
         </Select>
       </div>
       <div className="flex items-center justify-between"><Label>한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
-      <div><Label>비자 상태</Label>
-        <Select value={visa} onValueChange={setVisa}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>{Object.entries(VISA_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-        </Select>
-      </div>
+      {nationality === "foreigner" && (
+        <div><Label>비자 상태</Label>
+          <Select value={visa} onValueChange={setVisa}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>{Object.entries(VISA_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+      )}
       <div><Label>선호 지역</Label>
         <Select value={region} onValueChange={setRegion}>
           <SelectTrigger><SelectValue /></SelectTrigger>
