@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
@@ -12,12 +12,6 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/employer/history")({
   component: () => (
@@ -50,7 +44,7 @@ function Page() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const pdfRef = useRef<HTMLDivElement>(null);
-  const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user) return;
@@ -223,7 +217,11 @@ function Page() {
               <Button onClick={downloadPdf}>PDF 다운로드</Button>
             </div>
             <p className="text-xs text-muted-foreground">확정 된 기록만 표시됩니다.</p>
-            <CalendarView month={calMonth} data={confirmedByDay} onSelectDay={setSelectedDay} />
+            <CalendarView
+              month={calMonth}
+              data={confirmedByDay}
+              onSelectDay={(d) => navigate({ to: "/employer/history/$date", params: { date: d } })}
+            />
 
             <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
               <PdfDoc
@@ -235,40 +233,6 @@ function Page() {
             </div>
           </TabsContent>
         </Tabs>
-
-        <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(null)}>
-          <DialogContent className="max-w-sm">
-            <DialogHeader>
-              <DialogTitle>{selectedDay} 확정 구직자</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {(selectedDay ? (confirmedByDay.get(selectedDay) ?? []) : []).length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-6">기록이 없습니다</p>
-              )}
-              {(selectedDay ? (confirmedByDay.get(selectedDay) ?? []) : []).map((e) => (
-                <Card key={e.id} className="p-3 space-y-1">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm">
-                        {e.profiles?.full_name ?? "(이름미입력)"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{e.profiles?.phone ?? ""}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {e.jobs?.title} · {e.jobs?.place_name}
-                      </p>
-                      <p className="text-xs font-semibold mt-1">
-                        {Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원
-                      </p>
-                    </div>
-                    <Badge className={`text-xs px-2 py-1 ${STATUS_CLASS[e.status] ?? ""}`}>
-                      {STATUS_LABEL[e.status] ?? e.status}
-                    </Badge>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </MobileLayout>
   );
@@ -314,7 +278,16 @@ function CalendarView({
               onClick={() => clickable && onSelectDay(key)}
               className={`min-h-[72px] border-t border-l p-1 text-[10px] text-left ${clickable ? "hover:bg-accent cursor-pointer" : "cursor-default"}`}
             >
-              {d && <div className="font-bold text-xs mb-0.5">{d}</div>}
+              {d && (
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="font-bold text-xs">{d}</span>
+                  {entries.filter((e) => e.status === "confirmed").length >= 2 && (
+                    <span className="text-[10px] font-bold text-white bg-green-600 rounded-full px-1.5 leading-4">
+                      {entries.filter((e) => e.status === "confirmed").length}명
+                    </span>
+                  )}
+                </div>
+              )}
               {entries.map((e, idx) => (
                 <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5">
                   <div className="font-semibold truncate">{e.profiles?.full_name}</div>

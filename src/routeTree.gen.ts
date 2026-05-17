@@ -31,6 +31,7 @@ import { Route as EmployerApplicationsRouteImport } from './routes/employer/appl
 import { Route as EmployerJobsIndexRouteImport } from './routes/employer/jobs/index'
 import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
 import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
+import { Route as EmployerHistoryDateRouteImport } from './routes/employer/history.$date'
 import { Route as EmployerJobsEditIdRouteImport } from './routes/employer/jobs/edit.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -143,6 +144,11 @@ const EmployerJobsNewRoute = EmployerJobsNewRouteImport.update({
   path: '/employer/jobs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmployerHistoryDateRoute = EmployerHistoryDateRouteImport.update({
+  id: '/$date',
+  path: '/$date',
+  getParentRoute: () => EmployerHistoryRoute,
+} as any)
 const EmployerJobsEditIdRoute = EmployerJobsEditIdRouteImport.update({
   id: '/employer/jobs/edit/$id',
   path: '/employer/jobs/edit/$id',
@@ -162,13 +168,14 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
-  '/employer/history': typeof EmployerHistoryRoute
+  '/employer/history': typeof EmployerHistoryRouteWithChildren
   '/employer/home': typeof EmployerHomeRoute
   '/employer/me': typeof EmployerMeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/employer/history/$date': typeof EmployerHistoryDateRoute
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs/': typeof EmployerJobsIndexRoute
@@ -187,13 +194,14 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
-  '/employer/history': typeof EmployerHistoryRoute
+  '/employer/history': typeof EmployerHistoryRouteWithChildren
   '/employer/home': typeof EmployerHomeRoute
   '/employer/me': typeof EmployerMeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/employer/history/$date': typeof EmployerHistoryDateRoute
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs': typeof EmployerJobsIndexRoute
@@ -213,13 +221,14 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
-  '/employer/history': typeof EmployerHistoryRoute
+  '/employer/history': typeof EmployerHistoryRouteWithChildren
   '/employer/home': typeof EmployerHomeRoute
   '/employer/me': typeof EmployerMeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/employer/history/$date': typeof EmployerHistoryDateRoute
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs/': typeof EmployerJobsIndexRoute
@@ -247,6 +256,7 @@ export interface FileRouteTypes {
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/employer/history/$date'
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs/'
@@ -272,6 +282,7 @@ export interface FileRouteTypes {
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/employer/history/$date'
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs'
@@ -297,6 +308,7 @@ export interface FileRouteTypes {
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/employer/history/$date'
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs/'
@@ -316,7 +328,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   EmployerApplicationsRoute: typeof EmployerApplicationsRoute
   EmployerCreditsRoute: typeof EmployerCreditsRoute
-  EmployerHistoryRoute: typeof EmployerHistoryRoute
+  EmployerHistoryRoute: typeof EmployerHistoryRouteWithChildren
   EmployerHomeRoute: typeof EmployerHomeRoute
   EmployerMeRoute: typeof EmployerMeRoute
   SeekerApplicationsRoute: typeof SeekerApplicationsRoute
@@ -485,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployerJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/history/$date': {
+      id: '/employer/history/$date'
+      path: '/$date'
+      fullPath: '/employer/history/$date'
+      preLoaderRoute: typeof EmployerHistoryDateRouteImport
+      parentRoute: typeof EmployerHistoryRoute
+    }
     '/employer/jobs/edit/$id': {
       id: '/employer/jobs/edit/$id'
       path: '/employer/jobs/edit/$id'
@@ -494,6 +513,18 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface EmployerHistoryRouteChildren {
+  EmployerHistoryDateRoute: typeof EmployerHistoryDateRoute
+}
+
+const EmployerHistoryRouteChildren: EmployerHistoryRouteChildren = {
+  EmployerHistoryDateRoute: EmployerHistoryDateRoute,
+}
+
+const EmployerHistoryRouteWithChildren = EmployerHistoryRoute._addFileChildren(
+  EmployerHistoryRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -508,7 +539,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   EmployerApplicationsRoute: EmployerApplicationsRoute,
   EmployerCreditsRoute: EmployerCreditsRoute,
-  EmployerHistoryRoute: EmployerHistoryRoute,
+  EmployerHistoryRoute: EmployerHistoryRouteWithChildren,
   EmployerHomeRoute: EmployerHomeRoute,
   EmployerMeRoute: EmployerMeRoute,
   SeekerApplicationsRoute: SeekerApplicationsRoute,
