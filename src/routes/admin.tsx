@@ -256,13 +256,16 @@ function AllUsersTab() {
                     <td className="p-2 whitespace-nowrap">{r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleString("ko-KR") : "-"}</td>
                     <td className="p-2">{banned ? <Badge variant="destructive">삭제됨</Badge> : <Badge variant="outline">활성</Badge>}</td>
                     <td className="p-2">
-                      {banned ? (
-                        <Button size="sm" variant="outline" onClick={() => handleBan(r.id, false, r.email)}>복구</Button>
-                      ) : (
-                        <Button size="sm" variant="ghost" onClick={() => handleBan(r.id, true, r.email)}>
-                          <Trash2 size={14} className="text-destructive" />
-                        </Button>
-                      )}
+                      <div className="flex gap-1">
+                        {banned ? (
+                          <Button size="sm" variant="outline" onClick={() => handleBan(r.id, false, r.email)}>복구</Button>
+                        ) : (
+                          <Button size="sm" variant="ghost" onClick={() => handleBan(r.id, true, r.email)} title="삭제(복구가능)">
+                            <Trash2 size={14} className="text-destructive" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="destructive" onClick={() => handleHardDelete(r.id, r.email)} title="완전 삭제">완전삭제</Button>
+                      </div>
                     </td>
                   </tr>
                 );
