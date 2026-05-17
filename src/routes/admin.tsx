@@ -3,7 +3,7 @@ import { useEffect, useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { adminCreateUser, adminDeleteUser } from "@/lib/admin-users.functions";
+import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails } from "@/lib/admin-users.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
-import { Download, Trash2, UserPlus } from "lucide-react";
+import { Download, Trash2, UserPlus, KeyRound } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -128,8 +128,11 @@ function AdminPanel() {
 function UsersTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const [seekers, setSeekers] = useState<any[]>([]);
+  const [emails, setEmails] = useState<Record<string, string>>({});
   const createUser = useServerFn(adminCreateUser);
   const deleteUser = useServerFn(adminDeleteUser);
+  const resetPwd = useServerFn(adminResetPassword);
+  const listEmails = useServerFn(adminListUserEmails);
   const [newEmail, setNewEmail] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [newName, setNewName] = useState("");
@@ -148,6 +151,14 @@ function UsersTab() {
     (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
     setEmployers((e ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
     setSeekers((s ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
+    if (ids.length) {
+      try {
+        const { emails: map } = await listEmails({ data: { userIds: ids } });
+        setEmails(map);
+      } catch (err: any) {
+        console.error("email load failed", err);
+      }
+    }
   };
   useEffect(() => { load(); }, []);
 
@@ -175,9 +186,22 @@ function UsersTab() {
     }
   };
 
+  const handleReset = async (uid: string, label: string) => {
+    const pw = prompt(`'${label}'의 새 비밀번호를 입력하세요 (최소 6자리):`);
+    if (!pw) return;
+    if (pw.length < 6) return toast.error("최소 6자리 이상이어야 합니다");
+    try {
+      await resetPwd({ data: { userId: uid, newPassword: pw } });
+      toast.success("비밀번호가 변경되었습니다");
+    } catch (e: any) {
+      toast.error(e?.message ?? "변경 실패");
+    }
+  };
+
   const exportEmployers = () => {
     const rows = employers.map(e => ({
       가입일: new Date(e.created_at).toLocaleString("ko-KR"),
+      이메일ID: emails[e.user_id] ?? "",
       회사명: e.company_name, 위치: e.location, 담당자: e.profiles?.full_name ?? e.manager_name,
       담당자전화: e.contact_phone, 회원전화: e.profiles?.phone, 크레딧: e.credits,
       푸시알림: e.notify_push ? "Y" : "N", 마케팅알림: e.notify_marketing ? "Y" : "N",
@@ -188,6 +212,7 @@ function UsersTab() {
   const exportSeekers = () => {
     const rows = seekers.map(s => ({
       가입일: new Date(s.created_at).toLocaleString("ko-KR"),
+      이메일ID: emails[s.user_id] ?? "",
       이름: s.profiles?.full_name, 전화: s.profiles?.phone,
       국적: s.nationality === "foreigner" ? "외국인" : "내국인",
       경력: s.experience === "lt5" ? "5회 미만" : "5회 이상",
@@ -202,6 +227,7 @@ function UsersTab() {
     <div className="space-y-4 mt-4">
       <Card><CardContent className="p-4 space-y-3">
         <h3 className="font-bold flex items-center gap-2"><UserPlus size={16} />사용자 추가</h3>
+        <p className="text-xs text-muted-foreground">⚠️ 보안상 기존 비밀번호는 볼 수 없습니다(암호화 저장). 변경이 필요하면 각 사용자의 🔑 버튼으로 새 비밀번호를 설정하세요.</p>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
           <Input placeholder="이메일" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
           <Input placeholder="비밀번호 (6자리)" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
@@ -228,12 +254,18 @@ function UsersTab() {
               <div key={e.user_id} className="p-2 border rounded text-sm flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold truncate">{e.company_name}</p>
+                  <p className="text-xs text-primary truncate">📧 {emails[e.user_id] ?? "..."}</p>
                   <p className="text-xs text-muted-foreground truncate">{e.profiles?.full_name} · {e.contact_phone}</p>
                   <p className="text-xs">📍 {e.location} · 💰 {e.credits} 크레딧</p>
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(e.user_id, e.company_name)}>
-                  <Trash2 size={14} className="text-destructive" />
-                </Button>
+                <div className="flex flex-col gap-1">
+                  <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(e.user_id, e.company_name)}>
+                    <KeyRound size={14} />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(e.user_id, e.company_name)}>
+                    <Trash2 size={14} className="text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -248,12 +280,18 @@ function UsersTab() {
               <div key={s.user_id} className="p-2 border rounded text-sm flex justify-between items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold">{s.profiles?.full_name} <Badge variant="outline" className="ml-1 text-[10px]">{s.nationality === "foreigner" ? "외국인" : "내국인"}</Badge></p>
+                  <p className="text-xs text-primary truncate">📧 {emails[s.user_id] ?? "..."}</p>
                   <p className="text-xs text-muted-foreground truncate">{s.profiles?.phone} · 추천인: {s.referrer_code ?? "-"}</p>
                   <p className="text-xs">경력: {s.experience} · 한국어: {s.korean_ok ? "O" : "X"} · 비자: {s.visa}</p>
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(s.user_id, s.profiles?.full_name ?? "사용자")}>
-                  <Trash2 size={14} className="text-destructive" />
-                </Button>
+                <div className="flex flex-col gap-1">
+                  <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(s.user_id, s.profiles?.full_name ?? "사용자")}>
+                    <KeyRound size={14} />
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(s.user_id, s.profiles?.full_name ?? "사용자")}>
+                    <Trash2 size={14} className="text-destructive" />
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
@@ -262,7 +300,6 @@ function UsersTab() {
     </div>
   );
 }
-
 function CreditsTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const load = async () => {

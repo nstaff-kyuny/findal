@@ -64,3 +64,43 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const adminResetPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ userId: z.string().uuid(), newPassword: z.string().min(6) }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      password: data.newPassword,
+    });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const adminListUserEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ userIds: z.array(z.string().uuid()).max(1000) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const map: Record<string, string> = {};
+    // paginate through all users (admin API has no in() filter)
+    let page = 1;
+    const perPage = 1000;
+    const wanted = new Set(data.userIds);
+    while (wanted.size > 0) {
+      const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+      if (error) throw new Error(error.message);
+      for (const u of list.users) {
+        if (wanted.has(u.id)) {
+          map[u.id] = u.email ?? "";
+          wanted.delete(u.id);
+        }
+      }
+      if (list.users.length < perPage) break;
+      page++;
+      if (page > 20) break;
+    }
+    return { emails: map };
+  });
