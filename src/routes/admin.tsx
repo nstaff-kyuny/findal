@@ -434,6 +434,7 @@ function ReferrersTab() {
           {list.map(r => {
             const users = signups[r.code] ?? [];
             const isOpen = expanded[r.id];
+            const toggle = () => setExpanded(s => ({ ...s, [r.id]: !s[r.id] }));
             return (
               <Fragment key={r.id}>
                 <tr className="border-b">
@@ -441,7 +442,7 @@ function ReferrersTab() {
                   <td>{r.name}</td>
                   <td>{r.phone}</td>
                   <td>
-                    <Button size="sm" variant="ghost" className="font-bold h-auto p-1" onClick={() => setExpanded(s => { const n = { ...s }; n[r.id] = !n[r.id]; return n; })}>
+                    <Button size="sm" variant="ghost" className="font-bold h-auto p-1" onClick={toggle}>
                       {users.length}명 {users.length > 0 ? (isOpen ? " ▲" : " ▼") : ""}
                     </Button>
                   </td>
