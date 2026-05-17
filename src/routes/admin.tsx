@@ -433,7 +433,7 @@ function ReferrersTab() {
                     </td>
                   </tr>
                 )}
-              </>
+              </Fragment>
             );
           })}
         </tbody>
