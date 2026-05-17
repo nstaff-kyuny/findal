@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { EventPopup } from "@/components/EventPopup";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 function NotFoundComponent() {
   return (
@@ -136,6 +137,7 @@ function RootComponent() {
         <AuthProvider>
           <Outlet />
           <EventPopup />
+          <InstallPrompt />
           <Toaster />
         </AuthProvider>
       </ClientOnly>
