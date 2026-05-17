@@ -358,7 +358,7 @@ function UsersTab() {
                   <p className="font-semibold">{s.profiles?.full_name} <Badge variant="outline" className="ml-1 text-[10px]">{s.nationality === "foreigner" ? "외국인" : "내국인"}</Badge></p>
                   <p className="text-xs text-primary truncate">📧 {emails[s.user_id] ?? "..."}</p>
                   <p className="text-xs text-muted-foreground truncate">{s.profiles?.phone} · 추천인: {s.referrer_code ?? "-"}</p>
-                  <p className="text-xs">경력: {s.experience} · 한국어: {s.korean_ok ? "O" : "X"} · 비자: {s.visa}</p>
+                  <p className="text-xs">경력: {s.experience === "lt5" ? "5회 미만" : s.experience === "gte5" ? "5회 이상" : s.experience} · 한국어: {s.korean_ok ? "가능" : "불가"} · 비자: {s.nationality === "korean" ? "해당없음" : (VISA_LABEL[s.visa] ?? s.visa ?? "-")}</p>
                 </div>
                 <div className="flex flex-col gap-1">
                   <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(s.user_id, s.profiles?.full_name ?? "사용자")}>
