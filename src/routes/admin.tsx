@@ -6,24 +6,29 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import * as XLSX from "xlsx";
+import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
+
+function downloadXlsx(rows: any[], sheetName: string, filename: string) {
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, sheetName);
+  XLSX.writeFile(wb, filename);
+}
 
 function Admin() {
   const { user, roles, loading, signOut } = useAuth();
   const nav = useNavigate();
-  useEffect(() => {
-    if (loading) return;
-    if (!user) nav({ to: "/auth" });
-  }, [loading, user]);
-
+  useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user]);
   if (!user) return null;
   const isAdmin = roles.includes("admin");
-
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="bg-background border-b px-6 py-3 flex justify-between items-center">
@@ -44,19 +49,16 @@ function AdminClaim({ userId, onClaimed }: { userId: string; onClaimed: () => vo
   const [busy, setBusy] = useState(false);
   const claim = async () => {
     setBusy(true);
-    // first admin only — works if no admin exists yet
     const { count } = await supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
-    if ((count ?? 0) > 0) { setBusy(false); return toast.error("이미 관리자가 등록되어 있습니다. 기존 관리자에게 권한 부여를 요청하세요."); }
+    if ((count ?? 0) > 0) { setBusy(false); return toast.error("이미 관리자가 등록되어 있습니다."); }
     const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" } as any);
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("관리자 권한 부여됨");
-    onClaimed();
+    toast.success("관리자 권한 부여됨"); onClaimed();
   };
   return (
     <Card className="max-w-md mx-auto mt-12"><CardContent className="p-6 text-center space-y-3">
       <h2 className="font-bold text-lg">관리자 권한이 없습니다</h2>
-      <p className="text-sm text-muted-foreground">최초 관리자가 아직 없으면 아래 버튼으로 직접 등록할 수 있습니다.</p>
       <Button onClick={claim} disabled={busy}>최초 관리자로 등록</Button>
     </CardContent></Card>
   );
@@ -65,18 +67,30 @@ function AdminClaim({ userId, onClaimed }: { userId: string; onClaimed: () => vo
 function AdminPanel() {
   return (
     <Tabs defaultValue="users">
-      <TabsList>
+      <TabsList className="flex-wrap h-auto">
         <TabsTrigger value="users">사용자</TabsTrigger>
         <TabsTrigger value="credits">크레딧</TabsTrigger>
         <TabsTrigger value="referrers">추천인</TabsTrigger>
         <TabsTrigger value="banners">광고 배너</TabsTrigger>
-        <TabsTrigger value="purchases">크레딧 구매요청</TabsTrigger>
+        <TabsTrigger value="purchases">크레딧 구매현황</TabsTrigger>
+        <TabsTrigger value="payment">결제 연동</TabsTrigger>
+        <TabsTrigger value="notices">공지사항</TabsTrigger>
+        <TabsTrigger value="events">이벤트</TabsTrigger>
+        <TabsTrigger value="faqs">FAQ</TabsTrigger>
+        <TabsTrigger value="inquiries">1:1 문의</TabsTrigger>
+        <TabsTrigger value="version">앱 버전</TabsTrigger>
       </TabsList>
       <TabsContent value="users"><UsersTab /></TabsContent>
       <TabsContent value="credits"><CreditsTab /></TabsContent>
       <TabsContent value="referrers"><ReferrersTab /></TabsContent>
       <TabsContent value="banners"><BannersTab /></TabsContent>
       <TabsContent value="purchases"><PurchasesTab /></TabsContent>
+      <TabsContent value="payment"><PaymentTab /></TabsContent>
+      <TabsContent value="notices"><NoticesTab /></TabsContent>
+      <TabsContent value="events"><EventsTab /></TabsContent>
+      <TabsContent value="faqs"><FaqsTab /></TabsContent>
+      <TabsContent value="inquiries"><InquiriesTab /></TabsContent>
+      <TabsContent value="version"><VersionTab /></TabsContent>
     </Tabs>
   );
 }
@@ -89,10 +103,37 @@ function UsersTab() {
     const { data: s } = await supabase.from("seeker_profiles").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
     setEmployers(e ?? []); setSeekers(s ?? []);
   })(); }, []);
+
+  const exportEmployers = () => {
+    const rows = employers.map(e => ({
+      가입일: new Date(e.created_at).toLocaleString("ko-KR"),
+      회사명: e.company_name, 위치: e.location, 담당자: e.profiles?.full_name ?? e.manager_name,
+      담당자전화: e.contact_phone, 회원전화: e.profiles?.phone, 크레딧: e.credits,
+      푸시알림: e.notify_push ? "Y" : "N", 마케팅알림: e.notify_marketing ? "Y" : "N",
+      사용자ID: e.user_id,
+    }));
+    downloadXlsx(rows, "구인자", `구인자_리스트_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+  const exportSeekers = () => {
+    const rows = seekers.map(s => ({
+      가입일: new Date(s.created_at).toLocaleString("ko-KR"),
+      이름: s.profiles?.full_name, 전화: s.profiles?.phone,
+      국적: s.nationality === "foreigner" ? "외국인" : "내국인",
+      경력: s.experience === "lt5" ? "5회 미만" : "5회 이상",
+      한국어: s.korean_ok ? "가능" : "불가", 비자: s.visa,
+      선호지역: s.preferred_region, 추천인코드: s.referrer_code,
+      푸시알림: s.notify_push ? "Y" : "N", 마케팅알림: s.notify_marketing ? "Y" : "N",
+      사용자ID: s.user_id,
+    }));
+    downloadXlsx(rows, "구직자", `구직자_리스트_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
   return (
     <div className="grid md:grid-cols-2 gap-4 mt-4">
       <Card><CardContent className="p-4">
-        <h3 className="font-bold mb-3">구인자 ({employers.length})</h3>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-bold">구인자 ({employers.length})</h3>
+          <Button size="sm" variant="outline" onClick={exportEmployers}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+        </div>
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
           {employers.map(e => (
             <div key={e.user_id} className="p-2 border rounded text-sm">
@@ -104,7 +145,10 @@ function UsersTab() {
         </div>
       </CardContent></Card>
       <Card><CardContent className="p-4">
-        <h3 className="font-bold mb-3">구직자 ({seekers.length})</h3>
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="font-bold">구직자 ({seekers.length})</h3>
+          <Button size="sm" variant="outline" onClick={exportSeekers}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+        </div>
         <div className="space-y-2 max-h-[60vh] overflow-y-auto">
           {seekers.map(s => (
             <div key={s.user_id} className="p-2 border rounded text-sm">
@@ -172,9 +216,19 @@ function ReferrersTab() {
     if (error) return toast.error(error.message);
     setCode(""); setName(""); setPhone(""); load();
   };
+  const exportXlsx = () => {
+    const rows = list.map(r => ({
+      코드: r.code, 이름: r.name, 연락처: r.phone, 가입자수: counts[r.code] ?? 0,
+      활성: r.active ? "Y" : "N", 비고: r.note, 등록일: new Date(r.created_at).toLocaleString("ko-KR"),
+    }));
+    downloadXlsx(rows, "추천인", `추천인_리스트_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-4">
-      <h3 className="font-bold">추천인 관리</h3>
+      <div className="flex justify-between items-center">
+        <h3 className="font-bold">추천인 관리</h3>
+        <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+      </div>
       <div className="grid grid-cols-4 gap-2">
         <Input placeholder="코드 (예: REF1234)" value={code} onChange={e => setCode(e.target.value)} />
         <Input placeholder="이름" value={name} onChange={e => setName(e.target.value)} />
@@ -252,30 +306,353 @@ function BannersTab() {
 function PurchasesTab() {
   const [list, setList] = useState<any[]>([]);
   const load = async () => {
-    const { data } = await supabase.from("credit_purchase_requests").select("*, employer_profiles!inner(company_name, user_id)").order("created_at", { ascending: false });
+    const { data } = await supabase.from("credit_purchase_requests")
+      .select("*, employer_profiles!inner(company_name, user_id)")
+      .order("created_at", { ascending: false });
     setList(data ?? []);
   };
   useEffect(() => { load(); }, []);
-  const fulfill = async (r: any) => {
-    const { error: e1 } = await supabase.rpc("admin_grant_credits", { _employer: r.employer_id, _amount: r.pack, _note: `구매(${r.pack})` } as any);
-    if (e1) return toast.error(e1.message);
-    await supabase.from("credit_purchase_requests").update({ status: "fulfilled" }).eq("id", r.id);
-    toast.success("크레딧 적립됨"); load();
+  const totalSales = list.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.amount_krw), 0);
+  const totalCredits = list.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.pack), 0);
+  return (
+    <div className="mt-4 space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <Card><CardContent className="p-4">
+          <p className="text-xs text-muted-foreground">총 결제건수</p>
+          <p className="text-2xl font-bold">{list.filter(r => r.status === "fulfilled").length}건</p>
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
+          <p className="text-xs text-muted-foreground">총 매출액</p>
+          <p className="text-2xl font-bold">{totalSales.toLocaleString()}원</p>
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
+          <p className="text-xs text-muted-foreground">총 판매 크레딧</p>
+          <p className="text-2xl font-bold">{totalCredits.toLocaleString()}</p>
+        </CardContent></Card>
+      </div>
+      <Card><CardContent className="p-4">
+        <h3 className="font-bold mb-3">크레딧 구매 현황</h3>
+        <table className="w-full text-sm">
+          <thead><tr className="text-left border-b">
+            <th className="py-2">결제일시</th><th>회사</th><th>수량</th><th>금액</th>
+            <th>결제수단</th><th>결제번호</th><th>상태</th>
+          </tr></thead>
+          <tbody>
+            {list.map(r => (
+              <tr key={r.id} className="border-b">
+                <td className="py-2 text-xs">{new Date(r.created_at).toLocaleString("ko-KR")}</td>
+                <td>{r.employer_profiles?.company_name}</td>
+                <td>{r.pack}</td>
+                <td>{Number(r.amount_krw).toLocaleString()}원</td>
+                <td className="text-xs">{r.payment_method ?? "-"}</td>
+                <td className="text-xs font-mono">{r.payment_ref ?? "-"}</td>
+                <td><Badge variant={r.status === "fulfilled" ? "default" : "secondary"}>{r.status === "fulfilled" ? "결제완료" : r.status}</Badge></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </CardContent></Card>
+    </div>
+  );
+}
+
+const PAYMENT_KEY = "findar.payment_config";
+
+function PaymentTab() {
+  const [provider, setProvider] = useState("none");
+  const [merchantId, setMerchantId] = useState("");
+  const [apiKey, setApiKey] = useState("");
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PAYMENT_KEY);
+      if (raw) {
+        const cfg = JSON.parse(raw);
+        setProvider(cfg.provider ?? "none"); setMerchantId(cfg.merchantId ?? "");
+        setApiKey(cfg.apiKey ?? ""); setEnabled(cfg.enabled ?? false);
+      }
+    } catch {}
+  }, []);
+
+  const save = () => {
+    localStorage.setItem(PAYMENT_KEY, JSON.stringify({ provider, merchantId, apiKey, enabled }));
+    toast.success("결제 설정이 저장되었습니다");
+  };
+
+  return (
+    <div className="mt-4 grid md:grid-cols-2 gap-4">
+      <Card><CardContent className="p-4 space-y-3">
+        <h3 className="font-bold">온라인 결제 플랫폼 연동</h3>
+        <p className="text-xs text-muted-foreground">구인자의 크레딧 온라인 구매를 처리할 결제 PG 사를 연결합니다.</p>
+
+        <div>
+          <Label>결제 제공사</Label>
+          <select className="w-full border rounded h-9 px-2 mt-1 bg-background"
+            value={provider} onChange={e => setProvider(e.target.value)}>
+            <option value="none">선택 안함</option>
+            <option value="toss">토스페이먼츠 (Toss Payments)</option>
+            <option value="iamport">아임포트 (PortOne)</option>
+            <option value="nicepay">나이스페이</option>
+            <option value="kg_inicis">KG이니시스</option>
+            <option value="stripe">Stripe (해외)</option>
+          </select>
+        </div>
+        <div><Label>가맹점 ID / Merchant ID</Label><Input value={merchantId} onChange={e => setMerchantId(e.target.value)} /></div>
+        <div><Label>API 키 / Secret Key</Label><Input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} /></div>
+        <div className="flex items-center justify-between">
+          <Label>결제 활성화</Label>
+          <Switch checked={enabled} onCheckedChange={setEnabled} />
+        </div>
+        <Button onClick={save} className="w-full">설정 저장</Button>
+      </CardContent></Card>
+
+      <Card><CardContent className="p-4 space-y-3 text-sm">
+        <h3 className="font-bold">연동 가이드</h3>
+        <p className="text-muted-foreground">
+          현재는 결제 설정만 저장됩니다. 실 결제 처리를 위해서는 선택한 PG사의 SDK 연동과 서버 측 결제 검증 로직 구현이 추가로 필요합니다.
+        </p>
+        <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
+          <li>토스페이먼츠: <a className="text-primary underline" href="https://docs.tosspayments.com" target="_blank" rel="noreferrer">docs.tosspayments.com</a></li>
+          <li>PortOne(아임포트): <a className="text-primary underline" href="https://portone.io/korea/ko" target="_blank" rel="noreferrer">portone.io</a></li>
+          <li>Stripe: <a className="text-primary underline" href="https://stripe.com/docs" target="_blank" rel="noreferrer">stripe.com/docs</a></li>
+        </ul>
+        <p className="text-xs text-amber-600 mt-2">⚠ 보안: 실제 API 시크릿 키는 클라이언트가 아닌 서버 환경 변수로 관리하는 것을 권장합니다.</p>
+      </CardContent></Card>
+    </div>
+  );
+}
+
+function NoticesTab() {
+  const [list, setList] = useState<any[]>([]);
+  const [title, setTitle] = useState(""); const [body, setBody] = useState(""); const [pinned, setPinned] = useState(false);
+  const load = async () => {
+    const { data } = await supabase.from("notices").select("*").order("created_at", { ascending: false });
+    setList(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const add = async () => {
+    if (!title || !body) return toast.error("제목과 내용 필수");
+    const { error } = await supabase.from("notices").insert({ title, body, pinned } as any);
+    if (error) return toast.error(error.message);
+    setTitle(""); setBody(""); setPinned(false); load();
+  };
+  const toggle = async (n: any) => { await supabase.from("notices").update({ active: !n.active }).eq("id", n.id); load(); };
+  const del = async (id: string) => { if (confirm("삭제할까요?")) { await supabase.from("notices").delete().eq("id", id); load(); } };
+  return (
+    <Card className="mt-4"><CardContent className="p-4 space-y-4">
+      <h3 className="font-bold">공지사항 관리</h3>
+      <div className="space-y-2">
+        <Input placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} />
+        <Textarea placeholder="내용" rows={4} value={body} onChange={e => setBody(e.target.value)} />
+        <div className="flex items-center gap-2"><Switch checked={pinned} onCheckedChange={setPinned} /><Label>상단 고정</Label></div>
+        <Button onClick={add}>등록</Button>
+      </div>
+      <table className="w-full text-sm">
+        <thead><tr className="text-left border-b"><th className="py-2">제목</th><th>등록일</th><th>활성</th><th></th></tr></thead>
+        <tbody>
+          {list.map(n => (
+            <tr key={n.id} className="border-b">
+              <td className="py-2">{n.pinned && "📌 "}{n.title}</td>
+              <td className="text-xs">{new Date(n.created_at).toLocaleDateString()}</td>
+              <td><Badge variant={n.active ? "default" : "secondary"}>{n.active ? "활성" : "비활성"}</Badge></td>
+              <td className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={() => toggle(n)}>{n.active ? "비활성" : "활성"}</Button>
+                <Button size="sm" variant="destructive" onClick={() => del(n.id)}>삭제</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </CardContent></Card>
+  );
+}
+
+function EventsTab() {
+  const [list, setList] = useState<any[]>([]);
+  const [title, setTitle] = useState(""); const [body, setBody] = useState("");
+  const [img, setImg] = useState(""); const [url, setUrl] = useState("");
+  const [start, setStart] = useState(""); const [end, setEnd] = useState("");
+  const load = async () => {
+    const { data } = await supabase.from("events").select("*").order("created_at", { ascending: false });
+    setList(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const add = async () => {
+    if (!title || !end) return toast.error("제목과 종료일 필수");
+    const { error } = await supabase.from("events").insert({
+      title, body: body || null, image_url: img || null, link_url: url || null,
+      starts_at: start || new Date().toISOString(), ends_at: end,
+    } as any);
+    if (error) return toast.error(error.message);
+    setTitle(""); setBody(""); setImg(""); setUrl(""); setStart(""); setEnd(""); load();
+  };
+  const toggle = async (e: any) => { await supabase.from("events").update({ active: !e.active }).eq("id", e.id); load(); };
+  const del = async (id: string) => { if (confirm("삭제할까요?")) { await supabase.from("events").delete().eq("id", id); load(); } };
+  return (
+    <Card className="mt-4"><CardContent className="p-4 space-y-4">
+      <h3 className="font-bold">이벤트 관리 (로그인 시 팝업으로 표시)</h3>
+      <div className="grid grid-cols-2 gap-2">
+        <Input placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} />
+        <Input placeholder="이미지 URL" value={img} onChange={e => setImg(e.target.value)} />
+        <Input placeholder="링크 URL (선택)" value={url} onChange={e => setUrl(e.target.value)} />
+        <div className="grid grid-cols-2 gap-2">
+          <Input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
+          <Input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} />
+        </div>
+      </div>
+      <Textarea placeholder="내용 (선택)" rows={3} value={body} onChange={e => setBody(e.target.value)} />
+      <Button onClick={add}>등록</Button>
+      <table className="w-full text-sm">
+        <thead><tr className="text-left border-b"><th className="py-2">제목</th><th>기간</th><th>활성</th><th></th></tr></thead>
+        <tbody>
+          {list.map(e => (
+            <tr key={e.id} className="border-b">
+              <td className="py-2">{e.title}</td>
+              <td className="text-xs">{new Date(e.starts_at).toLocaleDateString()} ~ {new Date(e.ends_at).toLocaleDateString()}</td>
+              <td><Badge variant={e.active ? "default" : "secondary"}>{e.active ? "활성" : "비활성"}</Badge></td>
+              <td className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={() => toggle(e)}>{e.active ? "비활성" : "활성"}</Button>
+                <Button size="sm" variant="destructive" onClick={() => del(e.id)}>삭제</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </CardContent></Card>
+  );
+}
+
+function FaqsTab() {
+  const [list, setList] = useState<any[]>([]);
+  const [q, setQ] = useState(""); const [a, setA] = useState(""); const [cat, setCat] = useState("");
+  const load = async () => {
+    const { data } = await supabase.from("faqs").select("*").order("sort_order").order("created_at");
+    setList(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const add = async () => {
+    if (!q || !a) return toast.error("질문과 답변 필수");
+    const { error } = await supabase.from("faqs").insert({ question: q, answer: a, category: cat || null } as any);
+    if (error) return toast.error(error.message);
+    setQ(""); setA(""); setCat(""); load();
+  };
+  const toggle = async (f: any) => { await supabase.from("faqs").update({ active: !f.active }).eq("id", f.id); load(); };
+  const del = async (id: string) => { if (confirm("삭제할까요?")) { await supabase.from("faqs").delete().eq("id", id); load(); } };
+  return (
+    <Card className="mt-4"><CardContent className="p-4 space-y-4">
+      <h3 className="font-bold">자주 묻는 질문 관리</h3>
+      <div className="space-y-2">
+        <Input placeholder="질문" value={q} onChange={e => setQ(e.target.value)} />
+        <Textarea placeholder="답변" rows={3} value={a} onChange={e => setA(e.target.value)} />
+        <Input placeholder="카테고리 (선택)" value={cat} onChange={e => setCat(e.target.value)} />
+        <Button onClick={add}>등록</Button>
+      </div>
+      <table className="w-full text-sm">
+        <thead><tr className="text-left border-b"><th className="py-2">질문</th><th>카테고리</th><th>활성</th><th></th></tr></thead>
+        <tbody>
+          {list.map(f => (
+            <tr key={f.id} className="border-b">
+              <td className="py-2">{f.question}</td>
+              <td className="text-xs">{f.category ?? "-"}</td>
+              <td><Badge variant={f.active ? "default" : "secondary"}>{f.active ? "활성" : "비활성"}</Badge></td>
+              <td className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={() => toggle(f)}>{f.active ? "비활성" : "활성"}</Button>
+                <Button size="sm" variant="destructive" onClick={() => del(f.id)}>삭제</Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </CardContent></Card>
+  );
+}
+
+function InquiriesTab() {
+  const [list, setList] = useState<any[]>([]);
+  const [answering, setAnswering] = useState<string | null>(null);
+  const [answerText, setAnswerText] = useState("");
+  const load = async () => {
+    const { data } = await supabase.from("inquiries").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
+    setList(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const reply = async (id: string) => {
+    if (!answerText) return toast.error("답변을 입력하세요");
+    const { error } = await supabase.from("inquiries").update({
+      answer: answerText, answered_at: new Date().toISOString(), status: "answered",
+    } as any).eq("id", id);
+    if (error) return toast.error(error.message);
+    setAnswering(null); setAnswerText(""); toast.success("답변 등록됨"); load();
   };
   return (
-    <Card className="mt-4"><CardContent className="p-4">
-      <h3 className="font-bold mb-3">크레딧 구매 요청</h3>
+    <Card className="mt-4"><CardContent className="p-4 space-y-3">
+      <h3 className="font-bold">1:1 문의 관리</h3>
+      {list.length === 0 && <p className="text-sm text-muted-foreground">문의가 없습니다</p>}
+      {list.map(q => (
+        <Card key={q.id}><CardContent className="p-3 space-y-2">
+          <div className="flex justify-between items-center">
+            <div>
+              <p className="font-semibold text-sm">{q.subject}</p>
+              <p className="text-xs text-muted-foreground">{q.profiles?.full_name} · {q.profiles?.phone} · {new Date(q.created_at).toLocaleString("ko-KR")}</p>
+            </div>
+            <Badge variant={q.status === "answered" ? "default" : "secondary"}>{q.status === "answered" ? "답변완료" : "대기"}</Badge>
+          </div>
+          <p className="text-sm whitespace-pre-wrap p-2 bg-muted/40 rounded">{q.body}</p>
+          {q.answer ? (
+            <div className="p-2 bg-primary/5 border-l-2 border-primary rounded">
+              <p className="text-[10px] text-primary font-semibold">답변</p>
+              <p className="text-sm whitespace-pre-wrap mt-1">{q.answer}</p>
+            </div>
+          ) : answering === q.id ? (
+            <div className="space-y-2">
+              <Textarea rows={3} value={answerText} onChange={e => setAnswerText(e.target.value)} placeholder="답변을 입력하세요" />
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => reply(q.id)}>답변 등록</Button>
+                <Button size="sm" variant="outline" onClick={() => { setAnswering(null); setAnswerText(""); }}>취소</Button>
+              </div>
+            </div>
+          ) : (
+            <Button size="sm" variant="outline" onClick={() => setAnswering(q.id)}>답변하기</Button>
+          )}
+        </CardContent></Card>
+      ))}
+    </CardContent></Card>
+  );
+}
+
+function VersionTab() {
+  const [list, setList] = useState<any[]>([]);
+  const [version, setVersion] = useState(""); const [notes, setNotes] = useState("");
+  const load = async () => {
+    const { data } = await supabase.from("app_version").select("*").order("created_at", { ascending: false });
+    setList(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const release = async () => {
+    if (!version) return toast.error("버전 번호 필수");
+    await supabase.from("app_version").update({ is_latest: false } as any).eq("is_latest", true);
+    const { error } = await supabase.from("app_version").insert({ version, notes, is_latest: true } as any);
+    if (error) return toast.error(error.message);
+    setVersion(""); setNotes(""); toast.success("새 버전 등록됨"); load();
+  };
+  return (
+    <Card className="mt-4"><CardContent className="p-4 space-y-4">
+      <h3 className="font-bold">앱 버전 관리</h3>
+      <div className="grid grid-cols-3 gap-2">
+        <Input placeholder="새 버전 (예: 1.0.1)" value={version} onChange={e => setVersion(e.target.value)} />
+        <Input placeholder="릴리즈 노트" value={notes} onChange={e => setNotes(e.target.value)} className="col-span-2" />
+      </div>
+      <Button onClick={release}>새 버전 릴리즈</Button>
       <table className="w-full text-sm">
-        <thead><tr className="text-left border-b"><th className="py-2">회사</th><th>수량</th><th>금액</th><th>상태</th><th>요청일</th><th></th></tr></thead>
+        <thead><tr className="text-left border-b"><th className="py-2">버전</th><th>릴리즈노트</th><th>최신</th><th>등록일</th></tr></thead>
         <tbody>
-          {list.map(r => (
-            <tr key={r.id} className="border-b">
-              <td className="py-2">{r.employer_profiles?.company_name}</td>
-              <td>{r.pack}</td>
-              <td>{Number(r.amount_krw).toLocaleString()}원</td>
-              <td><Badge variant={r.status === "fulfilled" ? "default" : "secondary"}>{r.status}</Badge></td>
-              <td className="text-xs">{new Date(r.created_at).toLocaleString("ko-KR")}</td>
-              <td>{r.status === "pending" && <Button size="sm" onClick={() => fulfill(r)}>적립</Button>}</td>
+          {list.map(v => (
+            <tr key={v.id} className="border-b">
+              <td className="py-2 font-mono">{v.version}</td>
+              <td className="text-xs">{v.notes}</td>
+              <td>{v.is_latest && <Badge>최신</Badge>}</td>
+              <td className="text-xs">{new Date(v.created_at).toLocaleString("ko-KR")}</td>
             </tr>
           ))}
         </tbody>
