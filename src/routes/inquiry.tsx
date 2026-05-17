@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft } from "lucide-react";
+import { BackToSettings } from "@/components/BackToSettings";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/inquiry")({ component: Page });
@@ -32,7 +32,7 @@ function Page() {
   return (
     <div className="min-h-screen bg-muted/30 max-w-md mx-auto">
       <header className="sticky top-0 bg-background border-b px-4 py-3 flex items-center gap-2">
-        <Link to="/seeker/me"><ChevronLeft size={20} /></Link>
+        <BackToSettings />
         <h1 className="font-bold">1:1 문의하기</h1>
       </header>
       <div className="p-3 space-y-3">
