@@ -26,8 +26,24 @@ function downloadXlsx(rows: any[], sheetName: string, filename: string) {
 function Admin() {
   const { user, roles, loading, signOut } = useAuth();
   const nav = useNavigate();
+  const [isDesktop, setIsDesktop] = useState(typeof window !== "undefined" ? window.innerWidth >= 1024 : true);
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user]);
+  useEffect(() => {
+    const onResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   if (!user) return null;
+  if (!isDesktop) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+        <div>
+          <h1 className="font-bold text-lg mb-2">관리자 페이지는 PC에서만 이용 가능합니다</h1>
+          <p className="text-sm text-muted-foreground">데스크탑(1024px 이상) 환경에서 접속해 주세요.</p>
+        </div>
+      </div>
+    );
+  }
   const isAdmin = roles.includes("admin");
   return (
     <div className="min-h-screen bg-muted/30">
