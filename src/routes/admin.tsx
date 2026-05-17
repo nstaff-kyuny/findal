@@ -11,16 +11,27 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { Download } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
-function downloadXlsx(rows: any[], sheetName: string, filename: string) {
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, filename);
+async function downloadXlsx(rows: any[], sheetName: string, filename: string) {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet(sheetName);
+  const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+  if (headers.length) {
+    ws.columns = headers.map((h) => ({ header: h, key: h }));
+    rows.forEach((r) => ws.addRow(r));
+  }
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function Admin() {
