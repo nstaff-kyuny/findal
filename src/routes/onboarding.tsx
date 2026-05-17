@@ -86,7 +86,8 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "seeker" } as any);
     const { error: e2 } = await supabase.from("seeker_profiles").upsert({
-      user_id: userId, nationality, experience, korean_ok: koreanOk, visa,
+      user_id: userId, nationality, experience, korean_ok: koreanOk,
+      visa: nationality === "korean" ? null : visa,
       referrer_code: referrer || null, preferred_region: region,
     } as any, { onConflict: "user_id" });
     setSaving(false);
