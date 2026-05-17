@@ -21,9 +21,16 @@ function Page() {
   const [filter, setFilter] = useState<"day"|"week"|"month">("month");
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase.from("job_applications")
-      .select("*, jobs(title, place_name, daily_wage, contact_phone)").eq("seeker_id", user.id).order("created_at", { ascending: false });
-    setApps(data ?? []);
+    const { data: appsData, error } = await supabase.from("job_applications")
+      .select("*").eq("seeker_id", user.id).order("created_at", { ascending: false });
+    if (error) { toast.error(error.message); return; }
+    const list = appsData ?? [];
+    const jobIds = Array.from(new Set(list.map((a: any) => a.job_id)));
+    const jobsRes = jobIds.length
+      ? await supabase.from("jobs").select("id, title, place_name, daily_wage, contact_phone").in("id", jobIds)
+      : { data: [] as any[] };
+    const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
+    setApps(list.map((a: any) => ({ ...a, jobs: jobsMap.get(a.job_id) })));
   };
   useEffect(() => { load(); }, [user]);
   const confirm = async (id: string) => {
