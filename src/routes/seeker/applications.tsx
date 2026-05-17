@@ -100,9 +100,9 @@ function Page() {
       <div className="p-3 space-y-3">
         <h2 className="font-bold">나의 신청 내역</h2>
         <Tabs value={topTab} onValueChange={(v: any) => setTopTab(v)}>
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="list">전체 내역</TabsTrigger>
-            <TabsTrigger value="calendar">확정 캘린더</TabsTrigger>
+          <TabsList className="grid grid-cols-2 w-full h-12">
+            <TabsTrigger value="list" className="text-base font-semibold h-10">전체 내역</TabsTrigger>
+            <TabsTrigger value="calendar" className="text-base font-semibold h-10">일한 기록 보기</TabsTrigger>
           </TabsList>
 
           <TabsContent value="list" className="mt-3">
