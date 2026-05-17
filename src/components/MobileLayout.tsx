@@ -15,7 +15,7 @@ const seekerTabs: Tab[] = [
 const employerTabs: Tab[] = [
   { to: "/employer/home", label: "홈", icon: LayoutDashboard },
   { to: "/employer/jobs", label: "공고", icon: Briefcase },
-  { to: "/employer/applications", label: "요청", icon: Inbox },
+  { to: "/employer/applications", label: "신청/승인 내역", icon: Inbox },
   { to: "/employer/credits", label: "크레딧", icon: CreditCard },
   { to: "/employer/me", label: "설정", icon: Settings },
 ];
