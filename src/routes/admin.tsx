@@ -293,7 +293,7 @@ function UsersTab() {
       이름: s.profiles?.full_name, 전화: s.profiles?.phone,
       국적: s.nationality === "foreigner" ? "외국인" : "내국인",
       경력: s.experience === "lt5" ? "5회 미만" : "5회 이상",
-      한국어: s.korean_ok ? "가능" : "불가", 비자: s.visa,
+      한국어: s.korean_ok ? "가능" : "불가", 비자: s.nationality === "korean" ? "해당없음" : (VISA_LABEL[s.visa] ?? s.visa ?? ""),
       선호지역: s.preferred_region, 추천인코드: s.referrer_code,
       푸시알림: s.notify_push ? "Y" : "N", 마케팅알림: s.notify_marketing ? "Y" : "N",
       사용자ID: s.user_id,
