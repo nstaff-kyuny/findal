@@ -13,17 +13,28 @@ function Page() {
   const [promoted, setPromoted] = useState<any[]>([]);
   const [random, setRandom] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
+  const [counts, setCounts] = useState<Record<string, number>>({});
   const nav = useNavigate();
 
   useEffect(() => { (async () => {
     const now = new Date().toISOString();
     const { data: p } = await supabase.from("promoted_jobs")
       .select("job_id, jobs(*)").gte("ends_at", now).limit(12);
-    setPromoted((p ?? []).map((r: any) => r.jobs).filter(Boolean));
+    const promotedJobs = (p ?? []).map((r: any) => r.jobs).filter(Boolean);
+    setPromoted(promotedJobs);
     const { data: r } = await supabase.from("jobs").select("*").eq("is_active", true).limit(20);
-    setRandom((r ?? []).sort(() => Math.random() - 0.5));
+    const randomJobs = (r ?? []).sort(() => Math.random() - 0.5);
+    setRandom(randomJobs);
     const { data: a } = await supabase.from("ad_banners").select("*").eq("active", true).gte("ends_at", now).lte("starts_at", now).limit(3);
     setAds(a ?? []);
+
+    const jobIds = Array.from(new Set([...promotedJobs, ...randomJobs].map((j: any) => j.id)));
+    if (jobIds.length) {
+      const { data: apps } = await supabase.from("job_applications").select("job_id").in("job_id", jobIds);
+      const map: Record<string, number> = {};
+      (apps ?? []).forEach((x: any) => { map[x.job_id] = (map[x.job_id] ?? 0) + 1; });
+      setCounts(map);
+    }
   })(); }, []);
 
   const card = (j: any) => (
@@ -34,6 +45,7 @@ function Page() {
       <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
       <h3 className="text-xs font-semibold mt-1 truncate">{j.title}</h3>
       <p className="text-xs text-primary font-bold">{Number(j.daily_wage).toLocaleString()}원</p>
+      <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
     </Card>
   );
 
