@@ -3,7 +3,7 @@ import { useEffect, useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails } from "@/lib/admin-users.functions";
+import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails, adminListAllUsers, adminSetUserBan } from "@/lib/admin-users.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,8 +97,9 @@ function AdminClaim({ userId, onClaimed }: { userId: string; onClaimed: () => vo
 
 function AdminPanel() {
   return (
-    <Tabs defaultValue="users">
+    <Tabs defaultValue="all-users">
       <TabsList className="flex-wrap h-auto">
+        <TabsTrigger value="all-users">전체 사용자</TabsTrigger>
         <TabsTrigger value="users">사용자</TabsTrigger>
         <TabsTrigger value="credits">크레딧</TabsTrigger>
         <TabsTrigger value="referrers">추천인</TabsTrigger>
@@ -112,6 +113,7 @@ function AdminPanel() {
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
       </TabsList>
+      <TabsContent value="all-users"><AllUsersTab /></TabsContent>
       <TabsContent value="users"><UsersTab /></TabsContent>
       <TabsContent value="credits"><CreditsTab /></TabsContent>
       <TabsContent value="referrers"><ReferrersTab /></TabsContent>
@@ -125,6 +127,140 @@ function AdminPanel() {
       <TabsContent value="version"><VersionTab /></TabsContent>
       <TabsContent value="icons"><IconsTab /></TabsContent>
     </Tabs>
+  );
+}
+
+function AllUsersTab() {
+  const listAll = useServerFn(adminListAllUsers);
+  const setBan = useServerFn(adminSetUserBan);
+  const [rows, setRows] = useState<any[]>([]);
+  const [q, setQ] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const load = async () => {
+    setLoading(true);
+    try {
+      const { users } = await listAll({});
+      // join with profiles, roles, seeker referrer
+      const ids = users.map((u: any) => u.id);
+      const [{ data: profs }, { data: roles }, { data: seekers }, { data: emps }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, phone").in("id", ids),
+        supabase.from("user_roles").select("user_id, role").in("user_id", ids),
+        supabase.from("seeker_profiles").select("user_id, referrer_code").in("user_id", ids),
+        supabase.from("employer_profiles").select("user_id, company_name").in("user_id", ids),
+      ]);
+      const pmap: Record<string, any> = {}; (profs ?? []).forEach((p: any) => pmap[p.id] = p);
+      const rmap: Record<string, string[]> = {}; (roles ?? []).forEach((r: any) => { (rmap[r.user_id] ??= []).push(r.role); });
+      const smap: Record<string, any> = {}; (seekers ?? []).forEach((s: any) => smap[s.user_id] = s);
+      const emap: Record<string, any> = {}; (emps ?? []).forEach((e: any) => emap[e.user_id] = e);
+      setRows(users.map((u: any) => ({
+        ...u,
+        full_name: pmap[u.id]?.full_name ?? "",
+        phone: pmap[u.id]?.phone ?? "",
+        roles: (rmap[u.id] ?? []).join(", "),
+        referrer_code: smap[u.id]?.referrer_code ?? "",
+        company_name: emap[u.id]?.company_name ?? "",
+      })));
+    } catch (e: any) {
+      toast.error(e?.message ?? "로드 실패");
+    } finally { setLoading(false); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const handleBan = async (uid: string, ban: boolean, label: string) => {
+    const msg = ban ? `'${label}' 사용자를 삭제(비활성화)할까요? 복구 가능합니다.` : `'${label}' 사용자를 복구할까요?`;
+    if (!confirm(msg)) return;
+    try {
+      await setBan({ data: { userId: uid, ban } });
+      toast.success(ban ? "삭제되었습니다" : "복구되었습니다");
+      load();
+    } catch (e: any) { toast.error(e?.message ?? "실패"); }
+  };
+
+  const filtered = rows.filter(r => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (r.email ?? "").toLowerCase().includes(s) ||
+      (r.full_name ?? "").toLowerCase().includes(s) ||
+      (r.company_name ?? "").toLowerCase().includes(s) ||
+      (r.phone ?? "").includes(s) ||
+      (r.referrer_code ?? "").toLowerCase().includes(s);
+  });
+
+  const exportAll = () => {
+    const data = filtered.map(r => ({
+      이메일: r.email,
+      이름: r.full_name,
+      회사명: r.company_name,
+      전화: r.phone,
+      권한: r.roles,
+      추천인코드: r.referrer_code,
+      가입일: new Date(r.created_at).toLocaleString("ko-KR"),
+      최근로그인: r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleString("ko-KR") : "-",
+      상태: r.banned_until && new Date(r.banned_until) > new Date() ? "삭제됨" : "활성",
+      사용자ID: r.id,
+    }));
+    downloadXlsx(data, "전체사용자", `전체사용자_${new Date().toISOString().slice(0,10)}.xlsx`);
+  };
+
+  return (
+    <div className="space-y-4 mt-4">
+      <Card><CardContent className="p-4">
+        <div className="flex items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2 flex-1">
+            <h3 className="font-bold">전체 사용자 ({filtered.length}/{rows.length})</h3>
+            <Input placeholder="이메일/이름/회사/전화/추천인 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={load} disabled={loading}>{loading ? "로딩..." : "새로고침"}</Button>
+            <Button size="sm" variant="outline" onClick={exportAll}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+          </div>
+        </div>
+        <div className="overflow-x-auto max-h-[70vh] overflow-y-auto border rounded">
+          <table className="w-full text-xs">
+            <thead className="bg-muted sticky top-0">
+              <tr>
+                <th className="p-2 text-left">이메일</th>
+                <th className="p-2 text-left">이름/회사</th>
+                <th className="p-2 text-left">전화</th>
+                <th className="p-2 text-left">권한</th>
+                <th className="p-2 text-left">추천인</th>
+                <th className="p-2 text-left">가입일</th>
+                <th className="p-2 text-left">최근 로그인</th>
+                <th className="p-2 text-left">상태</th>
+                <th className="p-2 text-left">작업</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(r => {
+                const banned = r.banned_until && new Date(r.banned_until) > new Date();
+                return (
+                  <tr key={r.id} className="border-t hover:bg-muted/30">
+                    <td className="p-2">{r.email}</td>
+                    <td className="p-2">{r.full_name || r.company_name || "-"}</td>
+                    <td className="p-2">{r.phone || "-"}</td>
+                    <td className="p-2">{r.roles || "-"}</td>
+                    <td className="p-2">{r.referrer_code || "-"}</td>
+                    <td className="p-2 whitespace-nowrap">{new Date(r.created_at).toLocaleDateString("ko-KR")}</td>
+                    <td className="p-2 whitespace-nowrap">{r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleString("ko-KR") : "-"}</td>
+                    <td className="p-2">{banned ? <Badge variant="destructive">삭제됨</Badge> : <Badge variant="outline">활성</Badge>}</td>
+                    <td className="p-2">
+                      {banned ? (
+                        <Button size="sm" variant="outline" onClick={() => handleBan(r.id, false, r.email)}>복구</Button>
+                      ) : (
+                        <Button size="sm" variant="ghost" onClick={() => handleBan(r.id, true, r.email)}>
+                          <Trash2 size={14} className="text-destructive" />
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </CardContent></Card>
+    </div>
   );
 }
 
