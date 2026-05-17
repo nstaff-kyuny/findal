@@ -16,7 +16,13 @@ import { Route as SeekerMeRouteImport } from './routes/seeker/me'
 import { Route as SeekerHomeRouteImport } from './routes/seeker/home'
 import { Route as SeekerFeaturedRouteImport } from './routes/seeker/featured'
 import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
+import { Route as EmployerHomeRouteImport } from './routes/employer/home'
+import { Route as EmployerHistoryRouteImport } from './routes/employer/history'
+import { Route as EmployerCreditsRouteImport } from './routes/employer/credits'
+import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
+import { Route as EmployerJobsIndexRouteImport } from './routes/employer/jobs/index'
 import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
+import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -53,9 +59,39 @@ const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
   path: '/seeker/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmployerHomeRoute = EmployerHomeRouteImport.update({
+  id: '/employer/home',
+  path: '/employer/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerHistoryRoute = EmployerHistoryRouteImport.update({
+  id: '/employer/history',
+  path: '/employer/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerCreditsRoute = EmployerCreditsRouteImport.update({
+  id: '/employer/credits',
+  path: '/employer/credits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
+  id: '/employer/applications',
+  path: '/employer/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerJobsIndexRoute = EmployerJobsIndexRouteImport.update({
+  id: '/employer/jobs/',
+  path: '/employer/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SeekerJobsIdRoute = SeekerJobsIdRouteImport.update({
   id: '/seeker/jobs/$id',
   path: '/seeker/jobs/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerJobsNewRoute = EmployerJobsNewRouteImport.update({
+  id: '/employer/jobs/new',
+  path: '/employer/jobs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -63,32 +99,50 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/credits': typeof EmployerCreditsRoute
+  '/employer/history': typeof EmployerHistoryRoute
+  '/employer/home': typeof EmployerHomeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
+  '/employer/jobs/': typeof EmployerJobsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/credits': typeof EmployerCreditsRoute
+  '/employer/history': typeof EmployerHistoryRoute
+  '/employer/home': typeof EmployerHomeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
+  '/employer/jobs': typeof EmployerJobsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/employer/applications': typeof EmployerApplicationsRoute
+  '/employer/credits': typeof EmployerCreditsRoute
+  '/employer/history': typeof EmployerHistoryRoute
+  '/employer/home': typeof EmployerHomeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
+  '/employer/jobs/': typeof EmployerJobsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -96,42 +150,66 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/employer/applications'
+    | '/employer/credits'
+    | '/employer/history'
+    | '/employer/home'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/employer/jobs/new'
     | '/seeker/jobs/$id'
+    | '/employer/jobs/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/employer/applications'
+    | '/employer/credits'
+    | '/employer/history'
+    | '/employer/home'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/employer/jobs/new'
     | '/seeker/jobs/$id'
+    | '/employer/jobs'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/onboarding'
+    | '/employer/applications'
+    | '/employer/credits'
+    | '/employer/history'
+    | '/employer/home'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/employer/jobs/new'
     | '/seeker/jobs/$id'
+    | '/employer/jobs/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  EmployerApplicationsRoute: typeof EmployerApplicationsRoute
+  EmployerCreditsRoute: typeof EmployerCreditsRoute
+  EmployerHistoryRoute: typeof EmployerHistoryRoute
+  EmployerHomeRoute: typeof EmployerHomeRoute
   SeekerApplicationsRoute: typeof SeekerApplicationsRoute
   SeekerFeaturedRoute: typeof SeekerFeaturedRoute
   SeekerHomeRoute: typeof SeekerHomeRoute
   SeekerMeRoute: typeof SeekerMeRoute
+  EmployerJobsNewRoute: typeof EmployerJobsNewRoute
   SeekerJobsIdRoute: typeof SeekerJobsIdRoute
+  EmployerJobsIndexRoute: typeof EmployerJobsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -185,11 +263,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeekerApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/home': {
+      id: '/employer/home'
+      path: '/employer/home'
+      fullPath: '/employer/home'
+      preLoaderRoute: typeof EmployerHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/history': {
+      id: '/employer/history'
+      path: '/employer/history'
+      fullPath: '/employer/history'
+      preLoaderRoute: typeof EmployerHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/credits': {
+      id: '/employer/credits'
+      path: '/employer/credits'
+      fullPath: '/employer/credits'
+      preLoaderRoute: typeof EmployerCreditsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/applications': {
+      id: '/employer/applications'
+      path: '/employer/applications'
+      fullPath: '/employer/applications'
+      preLoaderRoute: typeof EmployerApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/jobs/': {
+      id: '/employer/jobs/'
+      path: '/employer/jobs'
+      fullPath: '/employer/jobs/'
+      preLoaderRoute: typeof EmployerJobsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/seeker/jobs/$id': {
       id: '/seeker/jobs/$id'
       path: '/seeker/jobs/$id'
       fullPath: '/seeker/jobs/$id'
       preLoaderRoute: typeof SeekerJobsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/jobs/new': {
+      id: '/employer/jobs/new'
+      path: '/employer/jobs/new'
+      fullPath: '/employer/jobs/new'
+      preLoaderRoute: typeof EmployerJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -199,11 +319,17 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  EmployerApplicationsRoute: EmployerApplicationsRoute,
+  EmployerCreditsRoute: EmployerCreditsRoute,
+  EmployerHistoryRoute: EmployerHistoryRoute,
+  EmployerHomeRoute: EmployerHomeRoute,
   SeekerApplicationsRoute: SeekerApplicationsRoute,
   SeekerFeaturedRoute: SeekerFeaturedRoute,
   SeekerHomeRoute: SeekerHomeRoute,
   SeekerMeRoute: SeekerMeRoute,
+  EmployerJobsNewRoute: EmployerJobsNewRoute,
   SeekerJobsIdRoute: SeekerJobsIdRoute,
+  EmployerJobsIndexRoute: EmployerJobsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
