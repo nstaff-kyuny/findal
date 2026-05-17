@@ -73,7 +73,9 @@ function Page() {
     const [y, m] = calMonth.split("-").map(Number);
     const map = new Map<string, any[]>();
     apps.filter(a => a.status === "confirmed" || a.status === "no_show").forEach(a => {
-      const dates: string[] = a.jobs?.work_dates ?? [];
+      const savedDates: string[] = a.jobs?.work_dates ?? [];
+      const fallbackDate = (a.confirmed_at ?? a.no_show_at ?? a.approved_at ?? a.created_at)?.slice(0, 10);
+      const dates: string[] = savedDates.length > 0 ? savedDates : (fallbackDate ? [fallbackDate] : []);
       dates.forEach((d: string) => {
         const dt = new Date(d);
         if (dt.getFullYear() === y && dt.getMonth() + 1 === m) {
