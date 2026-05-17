@@ -1,26 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/")({
-  component: Index,
-});
-
-// IMPORTANT: Replace this placeholder. For sites with multiple pages (About, Services, Contact, etc.),
-// create separate route files (about.tsx, services.tsx, contact.tsx) — don't put all pages in this file.
-function PlaceholderIndex() {
-  return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
-  );
-}
+export const Route = createFileRoute("/")({ component: Index });
 
 function Index() {
-  return <PlaceholderIndex />;
+  const { loading, user, roles } = useAuth();
+  const nav = useNavigate();
+  useEffect(() => {
+    if (loading) return;
+    if (!user) return nav({ to: "/auth" });
+    if (roles.includes("admin")) return nav({ to: "/admin" });
+    if (roles.includes("employer")) return nav({ to: "/employer/home" });
+    if (roles.includes("seeker")) return nav({ to: "/seeker/home" });
+    nav({ to: "/onboarding" });
+  }, [loading, user, roles]);
+  return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">불러오는 중…</div>;
 }
