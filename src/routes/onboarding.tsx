@@ -14,40 +14,52 @@ import { NATIONALITY_LABEL, VISA_LABEL, REGIONS } from "@/lib/constants";
 export const Route = createFileRoute("/onboarding")({ component: Onboarding });
 
 function Onboarding() {
-  const { user, loading, refreshRoles } = useAuth();
+  const { user, loading, roles, refreshRoles } = useAuth();
   const nav = useNavigate();
-  const [role, setRole] = useState<"seeker" | "employer" | null>(null);
+  const [resolvedRole, setResolvedRole] = useState<"seeker" | "employer" | null>(null);
 
   useEffect(() => {
-    if (!loading && !user) nav({ to: "/auth" });
-  }, [loading, user]);
+    if (loading) return;
+    if (!user) return nav({ to: "/auth" });
+    // 가입 시 선택한 역할 우선 사용, 없으면 user_roles 에서 가져옴
+    const intended = (user.user_metadata as any)?.intended_role as "seeker" | "employer" | undefined;
+    if (intended) {
+      // ensure user_roles has it
+      (async () => {
+        if (!roles.includes(intended)) {
+          await supabase.from("user_roles").insert({ user_id: user.id, role: intended } as any);
+          await refreshRoles();
+        }
+        setResolvedRole(intended);
+      })();
+    } else if (roles.includes("seeker")) setResolvedRole("seeker");
+    else if (roles.includes("employer")) setResolvedRole("employer");
+  }, [loading, user, roles]);
 
   if (!user) return null;
 
   return (
     <div className="min-h-screen p-4 bg-muted/30">
       <div className="max-w-md mx-auto space-y-4">
-        <h1 className="text-2xl font-bold text-center mt-6">시작하기</h1>
-        {!role && (
+        <h1 className="text-2xl font-bold text-center mt-6">프로필 설정</h1>
+        {!resolvedRole && (
           <div className="grid grid-cols-1 gap-3 mt-8">
-            <Card className="cursor-pointer hover:border-primary" onClick={() => setRole("seeker")}>
+            <Card className="cursor-pointer hover:border-primary" onClick={() => setResolvedRole("seeker")}>
               <CardContent className="p-6 text-center">
                 <div className="text-3xl mb-2">🧑‍🍳</div>
                 <h2 className="font-bold">구직자로 시작하기</h2>
-                <p className="text-xs text-muted-foreground mt-1">일자리를 찾고 싶어요 (무료)</p>
               </CardContent>
             </Card>
-            <Card className="cursor-pointer hover:border-primary" onClick={() => setRole("employer")}>
+            <Card className="cursor-pointer hover:border-primary" onClick={() => setResolvedRole("employer")}>
               <CardContent className="p-6 text-center">
                 <div className="text-3xl mb-2">🏨</div>
                 <h2 className="font-bold">구인자로 시작하기</h2>
-                <p className="text-xs text-muted-foreground mt-1">직원을 채용하고 싶어요</p>
               </CardContent>
             </Card>
           </div>
         )}
-        {role === "seeker" && <SeekerForm onDone={async () => { await refreshRoles(); nav({ to: "/seeker/home" }); }} userId={user.id} />}
-        {role === "employer" && <EmployerForm onDone={async () => { await refreshRoles(); nav({ to: "/employer/home" }); }} userId={user.id} />}
+        {resolvedRole === "seeker" && <SeekerForm onDone={async () => { await refreshRoles(); nav({ to: "/seeker/home" }); }} userId={user.id} />}
+        {resolvedRole === "employer" && <EmployerForm onDone={async () => { await refreshRoles(); nav({ to: "/employer/home" }); }} userId={user.id} />}
       </div>
     </div>
   );
@@ -63,15 +75,14 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
   const [saving, setSaving] = useState(false);
   const save = async () => {
     setSaving(true);
-    const { error: e1 } = await supabase.from("user_roles").insert({ user_id: userId, role: "seeker" });
-    if (e1 && !String(e1.message).includes("duplicate")) { setSaving(false); return toast.error(e1.message); }
+    await supabase.from("user_roles").insert({ user_id: userId, role: "seeker" } as any);
     const { error: e2 } = await supabase.from("seeker_profiles").upsert({
       user_id: userId, nationality, experience, korean_ok: koreanOk, visa,
       referrer_code: referrer || null, preferred_region: region,
     } as any);
     setSaving(false);
     if (e2) return toast.error(e2.message);
-    toast.success("구직자 프로필 저장 완료");
+    toast.success("저장 완료");
     onDone();
   };
   return (
@@ -120,14 +131,13 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
   const save = async () => {
     if (!company || !location || !manager || !phone) return toast.error("모든 항목을 입력하세요");
     setSaving(true);
-    const { error: e1 } = await supabase.from("user_roles").insert({ user_id: userId, role: "employer" });
-    if (e1 && !String(e1.message).includes("duplicate")) { setSaving(false); return toast.error(e1.message); }
+    await supabase.from("user_roles").insert({ user_id: userId, role: "employer" } as any);
     const { error: e2 } = await supabase.from("employer_profiles").upsert({
       user_id: userId, company_name: company, location, manager_name: manager, contact_phone: phone,
     } as any);
     setSaving(false);
     if (e2) return toast.error(e2.message);
-    toast.success("구인자 프로필 저장. 가입 보너스 2 크레딧 제공!");
+    toast.success("저장 완료. 가입 보너스 2 크레딧 제공!");
     onDone();
   };
   return (

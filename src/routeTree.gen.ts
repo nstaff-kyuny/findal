@@ -9,7 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NoticesRouteImport } from './routes/notices'
+import { Route as InquiryRouteImport } from './routes/inquiry'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as EventsRouteImport } from './routes/events'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
@@ -17,6 +22,7 @@ import { Route as SeekerMeRouteImport } from './routes/seeker/me'
 import { Route as SeekerHomeRouteImport } from './routes/seeker/home'
 import { Route as SeekerFeaturedRouteImport } from './routes/seeker/featured'
 import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
+import { Route as EmployerMeRouteImport } from './routes/employer/me'
 import { Route as EmployerHomeRouteImport } from './routes/employer/home'
 import { Route as EmployerHistoryRouteImport } from './routes/employer/history'
 import { Route as EmployerCreditsRouteImport } from './routes/employer/credits'
@@ -25,9 +31,34 @@ import { Route as EmployerJobsIndexRouteImport } from './routes/employer/jobs/in
 import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
 import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NoticesRoute = NoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InquiryRoute = InquiryRouteImport.update({
+  id: '/inquiry',
+  path: '/inquiry',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -63,6 +94,11 @@ const SeekerFeaturedRoute = SeekerFeaturedRouteImport.update({
 const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
   id: '/seeker/applications',
   path: '/seeker/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerMeRoute = EmployerMeRouteImport.update({
+  id: '/employer/me',
+  path: '/employer/me',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerHomeRoute = EmployerHomeRouteImport.update({
@@ -105,11 +141,17 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/events': typeof EventsRoute
+  '/faq': typeof FaqRoute
+  '/inquiry': typeof InquiryRoute
+  '/notices': typeof NoticesRoute
   '/onboarding': typeof OnboardingRoute
+  '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
   '/employer/history': typeof EmployerHistoryRoute
   '/employer/home': typeof EmployerHomeRoute
+  '/employer/me': typeof EmployerMeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
@@ -122,11 +164,17 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/events': typeof EventsRoute
+  '/faq': typeof FaqRoute
+  '/inquiry': typeof InquiryRoute
+  '/notices': typeof NoticesRoute
   '/onboarding': typeof OnboardingRoute
+  '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
   '/employer/history': typeof EmployerHistoryRoute
   '/employer/home': typeof EmployerHomeRoute
+  '/employer/me': typeof EmployerMeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
@@ -140,11 +188,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/events': typeof EventsRoute
+  '/faq': typeof FaqRoute
+  '/inquiry': typeof InquiryRoute
+  '/notices': typeof NoticesRoute
   '/onboarding': typeof OnboardingRoute
+  '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
   '/employer/history': typeof EmployerHistoryRoute
   '/employer/home': typeof EmployerHomeRoute
+  '/employer/me': typeof EmployerMeRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
@@ -159,11 +213,17 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/events'
+    | '/faq'
+    | '/inquiry'
+    | '/notices'
     | '/onboarding'
+    | '/terms'
     | '/employer/applications'
     | '/employer/credits'
     | '/employer/history'
     | '/employer/home'
+    | '/employer/me'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
@@ -176,11 +236,17 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/events'
+    | '/faq'
+    | '/inquiry'
+    | '/notices'
     | '/onboarding'
+    | '/terms'
     | '/employer/applications'
     | '/employer/credits'
     | '/employer/history'
     | '/employer/home'
+    | '/employer/me'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
@@ -193,11 +259,17 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/auth'
+    | '/events'
+    | '/faq'
+    | '/inquiry'
+    | '/notices'
     | '/onboarding'
+    | '/terms'
     | '/employer/applications'
     | '/employer/credits'
     | '/employer/history'
     | '/employer/home'
+    | '/employer/me'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
@@ -211,11 +283,17 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  EventsRoute: typeof EventsRoute
+  FaqRoute: typeof FaqRoute
+  InquiryRoute: typeof InquiryRoute
+  NoticesRoute: typeof NoticesRoute
   OnboardingRoute: typeof OnboardingRoute
+  TermsRoute: typeof TermsRoute
   EmployerApplicationsRoute: typeof EmployerApplicationsRoute
   EmployerCreditsRoute: typeof EmployerCreditsRoute
   EmployerHistoryRoute: typeof EmployerHistoryRoute
   EmployerHomeRoute: typeof EmployerHomeRoute
+  EmployerMeRoute: typeof EmployerMeRoute
   SeekerApplicationsRoute: typeof SeekerApplicationsRoute
   SeekerFeaturedRoute: typeof SeekerFeaturedRoute
   SeekerHomeRoute: typeof SeekerHomeRoute
@@ -227,11 +305,46 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/onboarding': {
       id: '/onboarding'
       path: '/onboarding'
       fullPath: '/onboarding'
       preLoaderRoute: typeof OnboardingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/notices': {
+      id: '/notices'
+      path: '/notices'
+      fullPath: '/notices'
+      preLoaderRoute: typeof NoticesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inquiry': {
+      id: '/inquiry'
+      path: '/inquiry'
+      fullPath: '/inquiry'
+      preLoaderRoute: typeof InquiryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -281,6 +394,13 @@ declare module '@tanstack/react-router' {
       path: '/seeker/applications'
       fullPath: '/seeker/applications'
       preLoaderRoute: typeof SeekerApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/me': {
+      id: '/employer/me'
+      path: '/employer/me'
+      fullPath: '/employer/me'
+      preLoaderRoute: typeof EmployerMeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employer/home': {
@@ -339,11 +459,17 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  EventsRoute: EventsRoute,
+  FaqRoute: FaqRoute,
+  InquiryRoute: InquiryRoute,
+  NoticesRoute: NoticesRoute,
   OnboardingRoute: OnboardingRoute,
+  TermsRoute: TermsRoute,
   EmployerApplicationsRoute: EmployerApplicationsRoute,
   EmployerCreditsRoute: EmployerCreditsRoute,
   EmployerHistoryRoute: EmployerHistoryRoute,
   EmployerHomeRoute: EmployerHomeRoute,
+  EmployerMeRoute: EmployerMeRoute,
   SeekerApplicationsRoute: SeekerApplicationsRoute,
   SeekerFeaturedRoute: SeekerFeaturedRoute,
   SeekerHomeRoute: SeekerHomeRoute,
@@ -355,13 +481,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
