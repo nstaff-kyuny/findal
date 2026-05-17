@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useLocation, useNavigate } from "@tanstack/react-router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
@@ -14,12 +14,19 @@ import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 
 export const Route = createFileRoute("/employer/history")({
-  component: () => (
+  component: HistoryRouteShell,
+});
+
+function HistoryRouteShell() {
+  const location = useLocation();
+  if (location.pathname !== "/employer/history") return <Outlet />;
+
+  return (
     <RoleGate role="employer">
       <Page />
     </RoleGate>
-  ),
-});
+  );
+}
 
 const STATUS_LABEL: Record<string, string> = {
   approved: "승인",
@@ -269,7 +276,8 @@ function CalendarView({
         {cells.map((d, i) => {
           const key = d ? `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}` : "";
           const entries = d ? (data.get(key) ?? []) : [];
-          const clickable = d && entries.length > 0;
+          const confirmedCount = entries.filter((e) => e.status === "confirmed").length;
+          const clickable = d && confirmedCount > 0;
           return (
             <button
               type="button"
@@ -281,16 +289,13 @@ function CalendarView({
               {d && (
                 <>
                   <div className="font-bold text-xs mb-1">{d}</div>
-                  {(() => {
-                    const cnt = entries.filter((e) => e.status === "confirmed").length;
-                    return cnt > 0 ? (
-                      <div className="flex justify-center">
-                        <span className="text-[11px] font-bold text-white bg-green-600 rounded-full px-2 py-0.5">
-                          {cnt}명
-                        </span>
-                      </div>
-                    ) : null;
-                  })()}
+                  {confirmedCount > 0 && (
+                    <div className="flex justify-center">
+                      <span className="text-[11px] font-bold text-white bg-green-600 rounded-full px-2 py-0.5">
+                        {confirmedCount}명
+                      </span>
+                    </div>
+                  )}
                 </>
               )}
             </button>
