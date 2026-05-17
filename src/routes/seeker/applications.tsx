@@ -154,7 +154,7 @@ function Page() {
               />
               <Button onClick={downloadPdf}>PDF 다운로드</Button>
             </div>
-            <p className="text-xs text-muted-foreground">확정(갈께요) 기록만 표시됩니다.</p>
+            <p className="text-xs text-muted-foreground">확정 된 기록만 표시됩니다.</p>
             <CalendarView month={calMonth} data={confirmedByDay} />
 
             <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
