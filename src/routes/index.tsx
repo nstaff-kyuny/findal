@@ -9,10 +9,10 @@ function Index() {
   const nav = useNavigate();
   useEffect(() => {
     if (loading) return;
-    if (!user) return nav({ to: "/auth" });
-    if (roles.includes("admin")) return nav({ to: "/admin" });
-    if (roles.includes("employer")) return nav({ to: "/employer/home" });
-    if (roles.includes("seeker")) return nav({ to: "/seeker/home" });
+    if (!user) { nav({ to: "/auth" }); return; }
+    if (roles.includes("admin")) { nav({ to: "/admin" }); return; }
+    if (roles.includes("employer")) { nav({ to: "/employer/home" }); return; }
+    if (roles.includes("seeker")) { nav({ to: "/seeker/home" }); return; }
     nav({ to: "/onboarding" });
   }, [loading, user, roles]);
   return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">불러오는 중…</div>;
