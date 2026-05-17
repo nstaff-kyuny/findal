@@ -134,31 +134,37 @@ export type Database = {
       job_applications: {
         Row: {
           approved_at: string | null
+          confirmed_at: string | null
           created_at: string
           employer_id: string
           id: string
           job_id: string
           message: string | null
+          no_show_at: string | null
           seeker_id: string
           status: Database["public"]["Enums"]["application_status"]
         }
         Insert: {
           approved_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           employer_id: string
           id?: string
           job_id: string
           message?: string | null
+          no_show_at?: string | null
           seeker_id: string
           status?: Database["public"]["Enums"]["application_status"]
         }
         Update: {
           approved_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
           employer_id?: string
           id?: string
           job_id?: string
           message?: string | null
+          no_show_at?: string | null
           seeker_id?: string
           status?: Database["public"]["Enums"]["application_status"]
         }
@@ -401,6 +407,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      mark_no_show: { Args: { _app_id: string }; Returns: Json }
       promote_job: {
         Args: {
           _duration: Database["public"]["Enums"]["promotion_duration"]
@@ -408,10 +415,17 @@ export type Database = {
         }
         Returns: Json
       }
+      seeker_confirm_application: { Args: { _app_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "seeker" | "employer" | "admin"
-      application_status: "pending" | "approved" | "rejected" | "cancelled"
+      application_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "cancelled"
+        | "confirmed"
+        | "no_show"
       credit_tx_type:
         | "purchase"
         | "approval_use"
@@ -558,7 +572,14 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["seeker", "employer", "admin"],
-      application_status: ["pending", "approved", "rejected", "cancelled"],
+      application_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "cancelled",
+        "confirmed",
+        "no_show",
+      ],
       credit_tx_type: [
         "purchase",
         "approval_use",

@@ -9,8 +9,24 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
+// 관리자 테스트 계정용 alias: 아이디 "nstaff" + 비번 "0407" 입력 시
+// 실제 계정(nstaff@findar.app / 040700)으로 변환
+const ADMIN_ALIAS = "nstaff";
+const ADMIN_EMAIL = "nstaff@findar.app";
+const ADMIN_PW_ALIAS = "0407";
+const ADMIN_PW_REAL = "040700";
+
+function normalizeLogin(id: string, pw: string) {
+  if (id.trim().toLowerCase() === ADMIN_ALIAS) {
+    return { email: ADMIN_EMAIL, password: pw === ADMIN_PW_ALIAS ? ADMIN_PW_REAL : pw };
+  }
+  return { email: id.trim(), password: pw };
+}
+
 function AuthPage() {
   const nav = useNavigate();
+  const [loginId, setLoginId] = useState("");
+  const [loginPw, setLoginPw] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -18,13 +34,18 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   const signIn = async () => {
+    if (!loginId || !loginPw) return toast.error("아이디/비밀번호를 입력하세요");
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { email: e, password: p } = normalizeLogin(loginId, loginPw);
+    const { error } = await supabase.auth.signInWithPassword({ email: e, password: p });
     setLoading(false);
     if (error) return toast.error(error.message);
     nav({ to: "/" });
   };
+
   const signUp = async () => {
+    if (!/^\d{6}$/.test(password)) return toast.error("비밀번호는 숫자 6자리로 설정해 주세요");
+    if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email, password,
@@ -40,25 +61,36 @@ function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-muted/30 p-4">
-      <div className="bg-background rounded-2xl shadow-xl p-6 w-full max-w-md">
-        <h1 className="text-2xl font-bold text-center mb-2">JobMatch</h1>
-        <p className="text-center text-sm text-muted-foreground mb-6">호텔·식당·요양 일용직 매칭</p>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background p-4">
+      <div className="bg-background rounded-2xl shadow-xl p-6 w-full max-w-md border">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-xl mb-3">FA</div>
+          <h1 className="text-2xl font-bold text-primary">Find AR <span className="text-foreground">(파인달)</span></h1>
+          <p className="text-sm text-muted-foreground mt-1">일용직 일자리 찾기</p>
+          <p className="text-xs text-muted-foreground">호텔·식당·요양 일용직 매칭</p>
+        </div>
         <Tabs defaultValue="login">
           <TabsList className="grid grid-cols-2 w-full">
             <TabsTrigger value="login">로그인</TabsTrigger>
             <TabsTrigger value="signup">회원가입</TabsTrigger>
           </TabsList>
           <TabsContent value="login" className="space-y-3 mt-4">
-            <div><Label>이메일</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
-            <div><Label>비밀번호</Label><Input type="password" value={password} onChange={e => setPassword(e.target.value)} /></div>
+            <div><Label>아이디 (이메일)</Label><Input value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="이메일 또는 nstaff" /></div>
+            <div><Label>비밀번호</Label><Input type="password" inputMode="numeric" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
             <Button className="w-full" onClick={signIn} disabled={loading}>로그인</Button>
+            <p className="text-[11px] text-muted-foreground text-center pt-1">관리자 테스트: <span className="font-mono">nstaff</span> / <span className="font-mono">0407</span></p>
           </TabsContent>
           <TabsContent value="signup" className="space-y-3 mt-4">
             <div><Label>이름</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
             <div><Label>연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
             <div><Label>이메일</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
-            <div><Label>비밀번호</Label><Input type="password" value={password} onChange={e => setPassword(e.target.value)} /></div>
+            <div>
+              <Label>비밀번호 (숫자 6자리)</Label>
+              <Input type="password" inputMode="numeric" maxLength={6} pattern="\d{6}"
+                value={password}
+                onChange={e => setPassword(e.target.value.replace(/\D/g, "").slice(0,6))}
+                placeholder="••••••" />
+            </div>
             <Button className="w-full" onClick={signUp} disabled={loading}>회원가입</Button>
           </TabsContent>
         </Tabs>
