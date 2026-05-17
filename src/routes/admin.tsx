@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -305,15 +305,31 @@ function CreditsTab() {
 
 function ReferrersTab() {
   const [list, setList] = useState<any[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [signups, setSignups] = useState<Record<string, any[]>>({});
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [code, setCode] = useState(""); const [name, setName] = useState(""); const [phone, setPhone] = useState("");
   const load = async () => {
     const { data } = await supabase.from("referrers").select("*").order("created_at", { ascending: false });
     setList(data ?? []);
-    const { data: seekers } = await supabase.from("seeker_profiles").select("referrer_code");
-    const map: Record<string, number> = {};
-    (seekers ?? []).forEach((s: any) => { if (s.referrer_code) map[s.referrer_code] = (map[s.referrer_code] ?? 0) + 1; });
-    setCounts(map);
+    const { data: seekers } = await supabase.from("seeker_profiles").select("user_id, referrer_code, created_at");
+    const userIds = (seekers ?? []).filter((s: any) => s.referrer_code).map((s: any) => s.user_id);
+    let profilesMap: Record<string, any> = {};
+    if (userIds.length) {
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, phone").in("id", userIds);
+      (profs ?? []).forEach((p: any) => { profilesMap[p.id] = p; });
+    }
+    const map: Record<string, any[]> = {};
+    (seekers ?? []).forEach((s: any) => {
+      if (!s.referrer_code) return;
+      const p = profilesMap[s.user_id] ?? {};
+      (map[s.referrer_code] ||= []).push({
+        user_id: s.user_id,
+        full_name: p.full_name ?? "-",
+        phone: p.phone ?? "-",
+        signed_up_at: s.created_at,
+      });
+    });
+    setSignups(map);
   };
   useEffect(() => { load(); }, []);
   const add = async () => {
@@ -328,12 +344,40 @@ function ReferrersTab() {
     if (error) return toast.error(error.message);
     toast.success("삭제되었습니다"); load();
   };
-  const exportXlsx = () => {
-    const rows = list.map(r => ({
-      코드: r.code, 이름: r.name, 연락처: r.phone, 가입자수: counts[r.code] ?? 0,
-      활성: r.active ? "Y" : "N", 비고: r.note, 등록일: new Date(r.created_at).toLocaleString("ko-KR"),
+  const exportXlsx = async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws1 = wb.addWorksheet("추천인");
+    ws1.columns = [
+      { header: "코드", key: "code" }, { header: "이름", key: "name" },
+      { header: "연락처", key: "phone" }, { header: "가입자수", key: "count" },
+      { header: "활성", key: "active" }, { header: "비고", key: "note" },
+      { header: "등록일", key: "created" },
+    ];
+    list.forEach(r => ws1.addRow({
+      code: r.code, name: r.name, phone: r.phone,
+      count: (signups[r.code] ?? []).length,
+      active: r.active ? "Y" : "N", note: r.note,
+      created: new Date(r.created_at).toLocaleString("ko-KR"),
     }));
-    downloadXlsx(rows, "추천인", `추천인_리스트_${new Date().toISOString().slice(0,10)}.xlsx`);
+    const ws2 = wb.addWorksheet("가입자");
+    ws2.columns = [
+      { header: "추천인코드", key: "code" }, { header: "추천인이름", key: "refName" },
+      { header: "가입자이름", key: "userName" }, { header: "가입자연락처", key: "userPhone" },
+      { header: "가입일", key: "signedUp" },
+    ];
+    list.forEach(r => {
+      (signups[r.code] ?? []).forEach((u: any) => ws2.addRow({
+        code: r.code, refName: r.name,
+        userName: u.full_name, userPhone: u.phone,
+        signedUp: new Date(u.signed_up_at).toLocaleString("ko-KR"),
+      }));
+    });
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `추천인_리스트_${new Date().toISOString().slice(0,10)}.xlsx`;
+    a.click(); URL.revokeObjectURL(url);
   };
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-4">
@@ -350,19 +394,48 @@ function ReferrersTab() {
       <table className="w-full text-sm">
         <thead><tr className="text-left border-b"><th className="py-2">코드</th><th>이름</th><th>연락처</th><th>가입자</th><th></th></tr></thead>
         <tbody>
-          {list.map(r => (
-            <tr key={r.id} className="border-b">
-              <td className="py-2 font-mono">{r.code}</td>
-              <td>{r.name}</td>
-              <td>{r.phone}</td>
-              <td className="font-bold">{counts[r.code] ?? 0}명</td>
-              <td>
-                <Button size="sm" variant="ghost" onClick={() => del(r.id, r.name)}>
-                  <Trash2 size={14} className="text-destructive" />
-                </Button>
-              </td>
-            </tr>
-          ))}
+          {list.map(r => {
+            const users = signups[r.code] ?? [];
+            const isOpen = expanded[r.id];
+            return (
+              <Fragment key={r.id}>
+                <tr className="border-b">
+                  <td className="py-2 font-mono">{r.code}</td>
+                  <td>{r.name}</td>
+                  <td>{r.phone}</td>
+                  <td>
+                    <Button size="sm" variant="ghost" className="font-bold h-auto p-1"
+                      onClick={() => setExpanded(s => ({ ...s, [r.id]: !s[r.id] }))}>
+                      {users.length}명 {users.length > 0 && (isOpen ? "▲" : "▼")}
+                    </Button>
+                  </td>
+                  <td>
+                    <Button size="sm" variant="ghost" onClick={() => del(r.id, r.name)}>
+                      <Trash2 size={14} className="text-destructive" />
+                    </Button>
+                  </td>
+                </tr>
+                {isOpen && users.length > 0 && (
+                  <tr key={r.id + "-detail"} className="border-b bg-muted/30">
+                    <td colSpan={5} className="p-2">
+                      <table className="w-full text-xs">
+                        <thead><tr className="text-left text-muted-foreground"><th className="py-1">가입자 이름</th><th>연락처</th><th>가입일</th></tr></thead>
+                        <tbody>
+                          {users.map((u: any) => (
+                            <tr key={u.user_id}>
+                              <td className="py-1">{u.full_name}</td>
+                              <td>{u.phone}</td>
+                              <td>{new Date(u.signed_up_at).toLocaleString("ko-KR")}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
         </tbody>
       </table>
     </CardContent></Card>
