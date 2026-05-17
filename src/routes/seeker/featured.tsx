@@ -37,26 +37,41 @@ function Page() {
     }
   })(); }, []);
 
+  const industryIcon = (ind: string) => {
+    switch (ind) {
+      case "hospital":
+      case "nursing": return "🏥";
+      case "restaurant": return "🍽️";
+      case "hotel":
+      case "motel":
+      case "resort": return "🏨";
+      default: return "🏢";
+    }
+  };
+
   const premiumCard = (j: any) => (
-    <Card key={j.id} className="p-2 cursor-pointer" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+    <Card key={j.id} className="p-3 cursor-pointer border-2 border-primary/60 shadow-md" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
       {j.photo_url ? (
-        <img src={j.photo_url} className="w-full h-24 rounded object-cover mb-1" alt={j.title} />
-      ) : <div className="w-full h-24 rounded bg-muted flex items-center justify-center text-2xl mb-1">🏢</div>}
-      <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
-      <h3 className="text-xs font-semibold mt-1 truncate">{j.title}</h3>
-      <p className="text-[11px] text-muted-foreground truncate">🏨 {j.place_name}</p>
-      <p className="text-xs text-primary font-bold">{Number(j.daily_wage).toLocaleString()}원</p>
-      <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
+        <img src={j.photo_url} className="w-full h-28 rounded object-cover mb-2" alt={j.title} />
+      ) : <div className="w-full h-28 rounded bg-muted flex items-center justify-center text-3xl mb-2">{industryIcon(j.industry)}</div>}
+      <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
+      <h3 className="text-base font-bold mt-1 truncate">{j.title}</h3>
+      <p className="text-sm text-muted-foreground truncate">🏨 {j.place_name}</p>
+      <p className="text-base text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
+      <p className="text-xs text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
     </Card>
   );
 
   const todayCard = (j: any) => (
-    <Card key={j.id} className="p-3 cursor-pointer" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
-      <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
-      <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
-      <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>
-      <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
-      <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
+    <Card key={j.id} className="relative p-3 cursor-pointer overflow-hidden" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+      <div className="absolute right-1 bottom-1 text-6xl opacity-10 pointer-events-none select-none">{industryIcon(j.industry)}</div>
+      <div className="relative">
+        <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
+        <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>
+        <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
+        <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
+      </div>
     </Card>
   );
 

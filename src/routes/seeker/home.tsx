@@ -13,9 +13,17 @@ import { MapPin, Search, Navigation } from "lucide-react";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
+const CATEGORIES: { key: string; label: string; industries: string[] }[] = [
+  { key: "all", label: "전체", industries: [] },
+  { key: "lodging", label: "호텔/모텔/리조트", industries: ["hotel", "motel", "resort"] },
+  { key: "restaurant", label: "식당", industries: ["restaurant"] },
+  { key: "medical", label: "병원/요양", industries: ["hospital", "nursing"] },
+];
+
 function Page() {
   const [region, setRegion] = useState("all");
   const [q, setQ] = useState("");
+  const [category, setCategory] = useState<string>("all");
   const [jobs, setJobs] = useState<any[]>([]);
   const [nearby, setNearby] = useState(false);
   const nav = useNavigate();
@@ -24,9 +32,11 @@ function Page() {
     let qb = supabase.from("jobs").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(50);
     if (region !== "all") qb = qb.eq("region", region);
     if (q) qb = qb.ilike("title", `%${q}%`);
+    const cat = CATEGORIES.find(c => c.key === category);
+    if (cat && cat.industries.length) qb = qb.in("industry", cat.industries as any);
     const { data } = await qb;
     setJobs(data ?? []);
-  })(); }, [region, q]);
+  })(); }, [region, q, category]);
 
   return (
     <MobileLayout role="seeker">
@@ -43,6 +53,13 @@ function Page() {
             <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={e => setQ(e.target.value)} placeholder="공고 검색" className="pl-7" />
           </div>
+        </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {CATEGORIES.map(c => (
+            <Button key={c.key} size="sm" variant={category === c.key ? "default" : "outline"} onClick={() => setCategory(c.key)} className="text-xs">
+              {c.label}
+            </Button>
+          ))}
         </div>
         <Button variant={nearby ? "default" : "outline"} size="sm" className="w-full" onClick={() => setNearby(!nearby)}>
           <Navigation size={14} className="mr-1" /> 위치기반으로 찾기
