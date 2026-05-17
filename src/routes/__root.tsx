@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
 import { EventPopup } from "@/components/EventPopup";
+import { InstallPrompt } from "@/components/InstallPrompt";
 
 function NotFoundComponent() {
   return (
@@ -75,7 +76,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { name: "theme-color", content: "#ffffff" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "Find AR" },
       { title: "일용직알바찾기_FInd AR" },
       { name: "description", content: "Find AR (파인달) connects employers with temporary workers for hospitality, restaurants, and healthcare roles." },
       { name: "author", content: "Lovable" },
@@ -94,6 +100,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: appCss,
       },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-192.png" },
+      { rel: "apple-touch-icon", sizes: "192x192", href: "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-192.png" },
+      { rel: "apple-touch-icon", sizes: "512x512", href: "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-512.png" },
+      { rel: "icon", type: "image/png", sizes: "192x192", href: "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-192.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-512.png" },
     ],
   }),
   shellComponent: RootShell,
@@ -125,6 +137,7 @@ function RootComponent() {
         <AuthProvider>
           <Outlet />
           <EventPopup />
+          <InstallPrompt />
           <Toaster />
         </AuthProvider>
       </ClientOnly>

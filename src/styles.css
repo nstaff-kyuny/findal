@@ -143,3 +143,15 @@
     color: var(--color-foreground);
   }
 }
+
+/* iOS safe-area handling for standalone (홈화면 추가) mode */
+@supports (padding: env(safe-area-inset-top)) {
+  header.sticky,
+  header.fixed {
+    padding-top: calc(0.75rem + env(safe-area-inset-top));
+  }
+  nav.fixed.bottom-0 {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+

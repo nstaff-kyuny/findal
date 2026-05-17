@@ -109,6 +109,7 @@ function AdminPanel() {
         <TabsTrigger value="faqs">FAQ</TabsTrigger>
         <TabsTrigger value="inquiries">1:1 문의</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
+        <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
       </TabsList>
       <TabsContent value="users"><UsersTab /></TabsContent>
       <TabsContent value="credits"><CreditsTab /></TabsContent>
@@ -121,7 +122,82 @@ function AdminPanel() {
       <TabsContent value="faqs"><FaqsTab /></TabsContent>
       <TabsContent value="inquiries"><InquiriesTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
+      <TabsContent value="icons"><IconsTab /></TabsContent>
     </Tabs>
+  );
+}
+
+function IconsTab() {
+  const [version, setVersion] = useState(Date.now());
+  const [busy, setBusy] = useState<string | null>(null);
+  const base = "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons";
+
+  const upload = async (file: File, name: "icon-192.png" | "icon-512.png", expectedSize: number) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.src = url;
+    await new Promise((r) => (img.onload = r));
+    URL.revokeObjectURL(url);
+    if (img.width !== expectedSize || img.height !== expectedSize) {
+      toast.error(`이미지 크기는 정확히 ${expectedSize}x${expectedSize} 이어야 합니다. (현재 ${img.width}x${img.height})`);
+      return;
+    }
+    setBusy(name);
+    const { error } = await supabase.storage.from("app-icons").upload(name, file, {
+      upsert: true,
+      contentType: "image/png",
+      cacheControl: "60",
+    });
+    setBusy(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${name} 업로드 완료`);
+    setVersion(Date.now());
+  };
+
+  return (
+    <Card>
+      <CardContent className="pt-6 space-y-6">
+        <div>
+          <h2 className="font-semibold text-lg mb-1">홈화면 추가 아이콘 관리</h2>
+          <p className="text-sm text-muted-foreground">
+            업로드한 아이콘은 즉시 PWA 매니페스트에 반영됩니다. 새로 홈화면에 추가하는 사용자부터 적용됩니다.
+            (이미 설치된 아이콘은 재설치 시 갱신됩니다.)
+          </p>
+        </div>
+
+        {[
+          { name: "icon-192.png" as const, size: 192 },
+          { name: "icon-512.png" as const, size: 512 },
+        ].map((it) => (
+          <div key={it.name} className="flex items-center gap-4 border rounded-lg p-4">
+            <img
+              src={`${base}/${it.name}?v=${version}`}
+              alt={it.name}
+              className="w-20 h-20 rounded-lg border bg-muted object-contain"
+            />
+            <div className="flex-1">
+              <div className="font-medium">{it.name}</div>
+              <div className="text-xs text-muted-foreground mb-2">
+                필수 크기: {it.size}×{it.size} PNG
+              </div>
+              <Input
+                type="file"
+                accept="image/png"
+                disabled={busy === it.name}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) upload(f, it.name, it.size);
+                  e.target.value = "";
+                }}
+              />
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
