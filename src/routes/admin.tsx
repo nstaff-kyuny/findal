@@ -27,7 +27,7 @@ function Admin() {
   return (
     <div className="min-h-screen bg-muted/30">
       <header className="bg-background border-b px-6 py-3 flex justify-between items-center">
-        <h1 className="font-bold text-xl">JobMatch · 관리자</h1>
+        <h1 className="font-bold text-xl text-primary">Find AR (파인달) · 관리자</h1>
         <div className="flex items-center gap-3 text-sm">
           <span className="text-muted-foreground">{user.email}</span>
           <Button size="sm" variant="outline" onClick={signOut}>로그아웃</Button>
