@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -44,7 +44,8 @@ function Page() {
     setProfile(p);
   };
   useEffect(() => { load(); }, [user]);
-  const confirm = async (id: string) => {
+
+  const confirmApp = async (id: string) => {
     const { error } = await supabase.rpc("seeker_confirm_application", { _app_id: id } as any);
     if (error) return toast.error(error.message);
     toast.success("확정 완료! 구인자에게 알림이 전달됩니다.");
@@ -61,7 +62,6 @@ function Page() {
 
   const approved = filtered.filter(a => a.status === "approved");
 
-  // Calendar data: confirmed apps for the selected month, indexed by date string YYYY-MM-DD
   const confirmedByDay = useMemo(() => {
     const [y, m] = calMonth.split("-").map(Number);
     const map = new Map<string, any[]>();
@@ -70,9 +70,8 @@ function Page() {
       dates.forEach((d: string) => {
         const dt = new Date(d);
         if (dt.getFullYear() === y && dt.getMonth() + 1 === m) {
-          const key = d;
-          if (!map.has(key)) map.set(key, []);
-          map.get(key)!.push(a);
+          if (!map.has(d)) map.set(d, []);
+          map.get(d)!.push(a);
         }
       });
     });
@@ -86,9 +85,9 @@ function Page() {
       const canvas = await html2canvas(pdfRef.current, { scale: 2, backgroundColor: "#ffffff" });
       const img = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-      const pageW = 210, pageH = 297;
+      const pageW = 210;
       const imgH = (canvas.height * pageW) / canvas.width;
-      pdf.addImage(img, "JPEG", 0, 0, pageW, Math.min(imgH, pageH));
+      pdf.addImage(img, "JPEG", 0, 0, pageW, imgH);
       pdf.save(`근무기록_${calMonth}.pdf`);
     } catch (e: any) {
       toast.error("PDF 생성 실패: " + e.message);
@@ -127,7 +126,7 @@ function Page() {
                         <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className="text-sm px-3 py-1">{STATUS_LABEL[a.status] ?? a.status}</Badge>
                       </div>
                       {a.status === "approved" && (
-                        <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirm(a.id)}>✋ 갈께요 (최종확정)</Button>
+                        <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirmApp(a.id)}>✋ 갈께요 (최종확정)</Button>
                       )}
                       {a.status === "confirmed" && a.jobs?.contact_phone && (
                         <a href={`tel:${a.jobs.contact_phone}`} className="block">
@@ -152,13 +151,13 @@ function Page() {
                 onChange={(e) => setCalMonth(e.target.value)}
                 className="flex-1 h-10 px-3 rounded-md border bg-background text-sm"
               />
-              <Button size="default" onClick={downloadPdf}>PDF 다운로드</Button>
+              <Button onClick={downloadPdf}>PDF 다운로드</Button>
             </div>
+            <p className="text-xs text-muted-foreground">확정(갈께요) 기록만 표시됩니다.</p>
             <CalendarView month={calMonth} data={confirmedByDay} />
 
-            {/* Hidden PDF render target (A4 portrait, ~794x1123 px @ 96dpi) */}
-            <div className="fixed -left-[9999px] top-0">
-              <PdfDocument ref={pdfRef} month={calMonth} data={confirmedByDay} userName={profile?.full_name ?? user?.email ?? ""} />
+            <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
+              <PdfDoc ref={pdfRef} month={calMonth} data={confirmedByDay} userName={profile?.full_name ?? user?.email ?? ""} />
             </div>
           </TabsContent>
         </Tabs>
@@ -176,7 +175,6 @@ function CalendarView({ month, data }: { month: string; data: Map<string, any[]>
   for (let i = 0; i < startDow; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   while (cells.length % 7 !== 0) cells.push(null);
-
   const weekdays = ["일","월","화","수","목","금","토"];
   return (
     <div className="border rounded-md overflow-hidden bg-card">
@@ -188,10 +186,10 @@ function CalendarView({ month, data }: { month: string; data: Map<string, any[]>
           const key = d ? `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
           const entries = d ? (data.get(key) ?? []) : [];
           return (
-            <div key={i} className="min-h-[70px] border-t border-l p-1 text-[10px]">
+            <div key={i} className="min-h-[72px] border-t border-l p-1 text-[10px]">
               {d && <div className="font-bold text-xs mb-0.5">{d}</div>}
               {entries.map((e, idx) => (
-                <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5 truncate">
+                <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5">
                   <div className="font-semibold truncate">{e.jobs?.place_name}</div>
                   <div className="truncate text-muted-foreground">{Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원</div>
                 </div>
@@ -204,9 +202,6 @@ function CalendarView({ month, data }: { month: string; data: Map<string, any[]>
   );
 }
 
-const PdfDocument = ({ ref: _r, month, data, userName }: any) => null as any;
-// Use forwardRef pattern
-import React from "react";
 const PdfDoc = React.forwardRef<HTMLDivElement, { month: string; data: Map<string, any[]>; userName: string }>(
   ({ month, data, userName }, ref) => {
     const [y, m] = month.split("-").map(Number);
@@ -217,18 +212,17 @@ const PdfDoc = React.forwardRef<HTMLDivElement, { month: string; data: Map<strin
     for (let i = 0; i < startDow; i++) cells.push(null);
     for (let d = 1; d <= daysInMonth; d++) cells.push(d);
     while (cells.length % 7 !== 0) cells.push(null);
-
     const weekdays = ["일","월","화","수","목","금","토"];
     const total = Array.from(data.values()).flat().reduce((s, e) => s + Number(e.jobs?.daily_wage ?? 0), 0);
 
     return (
-      <div ref={ref} style={{ width: "794px", minHeight: "1123px", padding: "40px", background: "#fff", color: "#111", fontFamily: "'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif", boxSizing: "border-box" }}>
+      <div ref={ref} style={{ width: "794px", minHeight: "1123px", padding: "40px", background: "#fff", color: "#111", fontFamily: "'Malgun Gothic','Apple SD Gothic Neo','Nanum Gothic',sans-serif", boxSizing: "border-box" }}>
         <div style={{ textAlign: "center", marginBottom: "20px" }}>
-          <h1 style={{ fontSize: "22px", fontWeight: "bold", margin: 0 }}>근무 기록 확인서</h1>
+          <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>근무 기록 확인서</h1>
         </div>
-        <div style={{ marginBottom: "16px", fontSize: "13px", lineHeight: 1.7 }}>
+        <div style={{ marginBottom: "16px", fontSize: "13px", lineHeight: 1.8 }}>
           <div><strong>성명:</strong> {userName}</div>
-          <div><strong>기간:</strong> {y}년 {m}월 ({y}-{String(m).padStart(2,"0")}-01 ~ {y}-{String(m).padStart(2,"0")}-{daysInMonth})</div>
+          <div><strong>확인 기간:</strong> {y}년 {m}월 ({y}-{String(m).padStart(2,"0")}-01 ~ {y}-{String(m).padStart(2,"0")}-{daysInMonth})</div>
           <div><strong>합계 금액:</strong> {total.toLocaleString()}원</div>
         </div>
 
@@ -241,7 +235,7 @@ const PdfDoc = React.forwardRef<HTMLDivElement, { month: string; data: Map<strin
               const key = d ? `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
               const entries = d ? (data.get(key) ?? []) : [];
               return (
-                <div key={i} style={{ minHeight: "100px", borderTop: "1px solid #333", borderRight: "1px solid #333", padding: "4px", fontSize: "9px", boxSizing: "border-box" }}>
+                <div key={i} style={{ minHeight: "110px", borderTop: "1px solid #333", borderRight: "1px solid #333", padding: "4px", fontSize: "9px", boxSizing: "border-box" }}>
                   {d && <div style={{ fontWeight: "bold", fontSize: "11px", marginBottom: "2px" }}>{d}</div>}
                   {entries.map((e, idx) => (
                     <div key={idx} style={{ background: "#eef4ff", borderRadius: "3px", padding: "2px 3px", marginBottom: "2px" }}>
@@ -256,8 +250,8 @@ const PdfDoc = React.forwardRef<HTMLDivElement, { month: string; data: Map<strin
           </div>
         </div>
 
-        <div style={{ marginTop: "30px", paddingTop: "16px", borderTop: "2px solid #333", textAlign: "center", fontSize: "11px", color: "#555" }}>
-          <div style={{ fontSize: "16px", fontWeight: "bold", color: "#1d4ed8", marginBottom: "6px" }}>Find AR</div>
+        <div style={{ marginTop: "40px", paddingTop: "16px", borderTop: "2px solid #333", textAlign: "center", fontSize: "11px", color: "#555" }}>
+          <div style={{ fontSize: "18px", fontWeight: "bold", color: "#1d4ed8", marginBottom: "6px", letterSpacing: "1px" }}>Find AR</div>
           <div>본 문서는 단순 기록에 대한 확인서이며, 단순 확인용 정보 제공에 대한 기록물입니다.</div>
           <div style={{ marginTop: "4px" }}>발급일: {new Date().toLocaleDateString("ko-KR")}</div>
         </div>
@@ -266,8 +260,3 @@ const PdfDoc = React.forwardRef<HTMLDivElement, { month: string; data: Map<strin
   }
 );
 PdfDoc.displayName = "PdfDoc";
-
-// Re-export under the name used above
-function _bind(){ return PdfDoc; }
-// Replace placeholder
-(PdfDocument as any) = PdfDoc;
