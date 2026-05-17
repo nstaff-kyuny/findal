@@ -322,6 +322,12 @@ function ReferrersTab() {
     if (error) return toast.error(error.message);
     setCode(""); setName(""); setPhone(""); load();
   };
+  const del = async (id: string, label: string) => {
+    if (!confirm(`'${label}' 추천인을 삭제할까요?`)) return;
+    const { error } = await supabase.from("referrers").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("삭제되었습니다"); load();
+  };
   const exportXlsx = () => {
     const rows = list.map(r => ({
       코드: r.code, 이름: r.name, 연락처: r.phone, 가입자수: counts[r.code] ?? 0,
@@ -342,7 +348,7 @@ function ReferrersTab() {
         <Button onClick={add}>추가</Button>
       </div>
       <table className="w-full text-sm">
-        <thead><tr className="text-left border-b"><th className="py-2">코드</th><th>이름</th><th>연락처</th><th>가입자</th></tr></thead>
+        <thead><tr className="text-left border-b"><th className="py-2">코드</th><th>이름</th><th>연락처</th><th>가입자</th><th></th></tr></thead>
         <tbody>
           {list.map(r => (
             <tr key={r.id} className="border-b">
@@ -350,6 +356,11 @@ function ReferrersTab() {
               <td>{r.name}</td>
               <td>{r.phone}</td>
               <td className="font-bold">{counts[r.code] ?? 0}명</td>
+              <td>
+                <Button size="sm" variant="ghost" onClick={() => del(r.id, r.name)}>
+                  <Trash2 size={14} className="text-destructive" />
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
