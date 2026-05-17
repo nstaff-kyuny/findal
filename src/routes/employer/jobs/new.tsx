@@ -115,6 +115,9 @@ function Page() {
             <div><Label>일당 (원)</Label><Input type="number" value={wage} onChange={e => setWage(Number(e.target.value))} /></div>
             <div><Label>급여 지급일</Label><Input value={payDay} onChange={e => setPayDay(e.target.value)} /></div>
           </div>
+          <div><Label>필요 인원수 <span className="text-red-500">*</span></Label>
+            <Input type="number" min={1} value={headcount} onChange={e => setHeadcount(Number(e.target.value))} />
+          </div>
           {isRoomCleaningHotel && <div>
             <Label>일일 청소 객실수 <span className="text-red-500">*</span></Label>
             <Input type="number" value={rooms} onChange={e => setRooms(e.target.value ? Number(e.target.value) : "")} />
