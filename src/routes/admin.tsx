@@ -336,9 +336,15 @@ function PurchasesTab() {
   const [list, setList] = useState<any[]>([]);
   const load = async () => {
     const { data } = await supabase.from("credit_purchase_requests")
-      .select("*, employer_profiles!inner(company_name, user_id)")
+      .select("*")
       .order("created_at", { ascending: false });
-    setList(data ?? []);
+    const ids = Array.from(new Set((data ?? []).map((r: any) => r.employer_id)));
+    const { data: emps } = ids.length
+      ? await supabase.from("employer_profiles").select("user_id, company_name").in("user_id", ids)
+      : { data: [] as any[] };
+    const emap: Record<string, any> = {};
+    (emps ?? []).forEach((e: any) => { emap[e.user_id] = e; });
+    setList((data ?? []).map((r: any) => ({ ...r, employer_profiles: emap[r.employer_id] })));
   };
   useEffect(() => { load(); }, []);
   const totalSales = list.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.amount_krw), 0);
