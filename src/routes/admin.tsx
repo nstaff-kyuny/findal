@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
 import { Download, Trash2, UserPlus, KeyRound } from "lucide-react";
+import { VISA_LABEL } from "@/lib/constants";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -292,7 +293,7 @@ function UsersTab() {
       이름: s.profiles?.full_name, 전화: s.profiles?.phone,
       국적: s.nationality === "foreigner" ? "외국인" : "내국인",
       경력: s.experience === "lt5" ? "5회 미만" : "5회 이상",
-      한국어: s.korean_ok ? "가능" : "불가", 비자: s.visa,
+      한국어: s.korean_ok ? "가능" : "불가", 비자: s.nationality === "korean" ? "해당없음" : (VISA_LABEL[s.visa] ?? s.visa ?? ""),
       선호지역: s.preferred_region, 추천인코드: s.referrer_code,
       푸시알림: s.notify_push ? "Y" : "N", 마케팅알림: s.notify_marketing ? "Y" : "N",
       사용자ID: s.user_id,
@@ -358,7 +359,7 @@ function UsersTab() {
                   <p className="font-semibold">{s.profiles?.full_name} <Badge variant="outline" className="ml-1 text-[10px]">{s.nationality === "foreigner" ? "외국인" : "내국인"}</Badge></p>
                   <p className="text-xs text-primary truncate">📧 {emails[s.user_id] ?? "..."}</p>
                   <p className="text-xs text-muted-foreground truncate">{s.profiles?.phone} · 추천인: {s.referrer_code ?? "-"}</p>
-                  <p className="text-xs">경력: {s.experience} · 한국어: {s.korean_ok ? "O" : "X"} · 비자: {s.visa}</p>
+                  <p className="text-xs">경력: {s.experience === "lt5" ? "5회 미만" : s.experience === "gte5" ? "5회 이상" : s.experience} · 한국어: {s.korean_ok ? "가능" : "불가"} · 비자: {s.nationality === "korean" ? "해당없음" : (VISA_LABEL[s.visa] ?? s.visa ?? "-")}</p>
                 </div>
                 <div className="flex flex-col gap-1">
                   <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(s.user_id, s.profiles?.full_name ?? "사용자")}>
