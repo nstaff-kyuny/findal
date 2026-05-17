@@ -48,7 +48,10 @@ function Page() {
           <Link to="/employer/jobs/new"><Button size="sm"><Plus size={14} className="mr-1" />등록</Button></Link>
         </div>
         {jobs.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">공고가 없습니다</p>}
-        {jobs.map(j => (
+        {jobs.map(j => {
+          const editCount = j.edit_count ?? 0;
+          const canEdit = editCount < 2;
+          return (
           <Card key={j.id} className="p-3 space-y-2">
             <div className="flex justify-between items-start gap-2">
               <div className="min-w-0">
@@ -56,12 +59,17 @@ function Page() {
                   <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
                   <Badge variant="outline" className="text-[10px]">{ROLE_LABEL[j.job_role]}</Badge>
                   {!j.is_active && <Badge variant="destructive" className="text-[10px]">비활성</Badge>}
+                  <Badge variant="outline" className="text-[10px]">수정 {editCount}/2</Badge>
                 </div>
                 <h4 className="font-semibold text-sm truncate">{j.title}</h4>
                 <p className="text-xs text-muted-foreground">{j.place_name} · {Number(j.daily_wage).toLocaleString()}원</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">※ 공고 수정은 최대 2회까지 가능합니다</p>
               </div>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-1 flex-wrap">
+              <Link to="/employer/jobs/edit/$id" params={{ id: j.id }} className={!canEdit ? "pointer-events-none opacity-50" : ""}>
+                <Button size="sm" variant="secondary" disabled={!canEdit}>수정</Button>
+              </Link>
               <Button size="sm" variant="outline" className="flex-1" onClick={() => toggle(j)}>{j.is_active ? "비활성" : "활성"}</Button>
               <Dialog>
                 <DialogTrigger asChild><Button size="sm" variant="outline" className="flex-1"><Megaphone size={12} className="mr-1" />광고</Button></DialogTrigger>
@@ -76,7 +84,8 @@ function Page() {
               <Button size="sm" variant="destructive" onClick={() => remove(j.id)}>삭제</Button>
             </div>
           </Card>
-        ))}
+          );
+        })}
       </div>
     </MobileLayout>
   );
