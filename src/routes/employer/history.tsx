@@ -235,12 +235,54 @@ function Page() {
             </div>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader>
+              <DialogTitle>{selectedDay} 확정 구직자</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              {(selectedDay ? (confirmedByDay.get(selectedDay) ?? []) : []).length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-6">기록이 없습니다</p>
+              )}
+              {(selectedDay ? (confirmedByDay.get(selectedDay) ?? []) : []).map((e) => (
+                <Card key={e.id} className="p-3 space-y-1">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm">
+                        {e.profiles?.full_name ?? "(이름미입력)"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">{e.profiles?.phone ?? ""}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {e.jobs?.title} · {e.jobs?.place_name}
+                      </p>
+                      <p className="text-xs font-semibold mt-1">
+                        {Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원
+                      </p>
+                    </div>
+                    <Badge className={`text-xs px-2 py-1 ${STATUS_CLASS[e.status] ?? ""}`}>
+                      {STATUS_LABEL[e.status] ?? e.status}
+                    </Badge>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </MobileLayout>
   );
 }
 
-function CalendarView({ month, data }: { month: string; data: Map<string, any[]> }) {
+function CalendarView({
+  month,
+  data,
+  onSelectDay,
+}: {
+  month: string;
+  data: Map<string, any[]>;
+  onSelectDay: (d: string) => void;
+}) {
   const [y, m] = month.split("-").map(Number);
   const first = new Date(y, m - 1, 1);
   const daysInMonth = new Date(y, m, 0).getDate();
@@ -263,8 +305,15 @@ function CalendarView({ month, data }: { month: string; data: Map<string, any[]>
         {cells.map((d, i) => {
           const key = d ? `${y}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}` : "";
           const entries = d ? (data.get(key) ?? []) : [];
+          const clickable = d && entries.length > 0;
           return (
-            <div key={i} className="min-h-[72px] border-t border-l p-1 text-[10px]">
+            <button
+              type="button"
+              key={i}
+              disabled={!clickable}
+              onClick={() => clickable && onSelectDay(key)}
+              className={`min-h-[72px] border-t border-l p-1 text-[10px] text-left ${clickable ? "hover:bg-accent cursor-pointer" : "cursor-default"}`}
+            >
               {d && <div className="font-bold text-xs mb-0.5">{d}</div>}
               {entries.map((e, idx) => (
                 <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5">
@@ -275,13 +324,14 @@ function CalendarView({ month, data }: { month: string; data: Map<string, any[]>
                   </div>
                 </div>
               ))}
-            </div>
+            </button>
           );
         })}
       </div>
     </div>
   );
 }
+
 
 const PdfDoc = React.forwardRef<
   HTMLDivElement,
