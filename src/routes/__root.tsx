@@ -76,14 +76,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "일용직알바찾기_FInd AR" },
+      { name: "description", content: "Find AR (파인달) connects employers with temporary workers for hospitality, restaurants, and healthcare roles." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "일용직알바찾기_FInd AR" },
+      { property: "og:description", content: "Find AR (파인달) connects employers with temporary workers for hospitality, restaurants, and healthcare roles." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "일용직알바찾기_FInd AR" },
+      { name: "twitter:description", content: "Find AR (파인달) connects employers with temporary workers for hospitality, restaurants, and healthcare roles." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b960614b-6802-4c79-9831-baf58dfba981/id-preview-52e8e032--0901552f-1f39-43d3-90dd-086a05e6d476.lovable.app-1778999799501.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b960614b-6802-4c79-9831-baf58dfba981/id-preview-52e8e032--0901552f-1f39-43d3-90dd-086a05e6d476.lovable.app-1778999799501.png" },
     ],
     links: [
       {
