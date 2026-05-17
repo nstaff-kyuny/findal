@@ -12,6 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as SeekerMeRouteImport } from './routes/seeker/me'
+import { Route as SeekerHomeRouteImport } from './routes/seeker/home'
+import { Route as SeekerFeaturedRouteImport } from './routes/seeker/featured'
+import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
+import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
 
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
@@ -28,35 +33,105 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SeekerMeRoute = SeekerMeRouteImport.update({
+  id: '/seeker/me',
+  path: '/seeker/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerHomeRoute = SeekerHomeRouteImport.update({
+  id: '/seeker/home',
+  path: '/seeker/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerFeaturedRoute = SeekerFeaturedRouteImport.update({
+  id: '/seeker/featured',
+  path: '/seeker/featured',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
+  id: '/seeker/applications',
+  path: '/seeker/applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerJobsIdRoute = SeekerJobsIdRouteImport.update({
+  id: '/seeker/jobs/$id',
+  path: '/seeker/jobs/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/featured': typeof SeekerFeaturedRoute
+  '/seeker/home': typeof SeekerHomeRoute
+  '/seeker/me': typeof SeekerMeRoute
+  '/seeker/jobs/$id': typeof SeekerJobsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/featured': typeof SeekerFeaturedRoute
+  '/seeker/home': typeof SeekerHomeRoute
+  '/seeker/me': typeof SeekerMeRoute
+  '/seeker/jobs/$id': typeof SeekerJobsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/onboarding': typeof OnboardingRoute
+  '/seeker/applications': typeof SeekerApplicationsRoute
+  '/seeker/featured': typeof SeekerFeaturedRoute
+  '/seeker/home': typeof SeekerHomeRoute
+  '/seeker/me': typeof SeekerMeRoute
+  '/seeker/jobs/$id': typeof SeekerJobsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/onboarding'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/seeker/applications'
+    | '/seeker/featured'
+    | '/seeker/home'
+    | '/seeker/me'
+    | '/seeker/jobs/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/onboarding'
-  id: '__root__' | '/' | '/auth' | '/onboarding'
+  to:
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/seeker/applications'
+    | '/seeker/featured'
+    | '/seeker/home'
+    | '/seeker/me'
+    | '/seeker/jobs/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/onboarding'
+    | '/seeker/applications'
+    | '/seeker/featured'
+    | '/seeker/home'
+    | '/seeker/me'
+    | '/seeker/jobs/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   OnboardingRoute: typeof OnboardingRoute
+  SeekerApplicationsRoute: typeof SeekerApplicationsRoute
+  SeekerFeaturedRoute: typeof SeekerFeaturedRoute
+  SeekerHomeRoute: typeof SeekerHomeRoute
+  SeekerMeRoute: typeof SeekerMeRoute
+  SeekerJobsIdRoute: typeof SeekerJobsIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +157,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/seeker/me': {
+      id: '/seeker/me'
+      path: '/seeker/me'
+      fullPath: '/seeker/me'
+      preLoaderRoute: typeof SeekerMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/home': {
+      id: '/seeker/home'
+      path: '/seeker/home'
+      fullPath: '/seeker/home'
+      preLoaderRoute: typeof SeekerHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/featured': {
+      id: '/seeker/featured'
+      path: '/seeker/featured'
+      fullPath: '/seeker/featured'
+      preLoaderRoute: typeof SeekerFeaturedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/applications': {
+      id: '/seeker/applications'
+      path: '/seeker/applications'
+      fullPath: '/seeker/applications'
+      preLoaderRoute: typeof SeekerApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seeker/jobs/$id': {
+      id: '/seeker/jobs/$id'
+      path: '/seeker/jobs/$id'
+      fullPath: '/seeker/jobs/$id'
+      preLoaderRoute: typeof SeekerJobsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +199,11 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   OnboardingRoute: OnboardingRoute,
+  SeekerApplicationsRoute: SeekerApplicationsRoute,
+  SeekerFeaturedRoute: SeekerFeaturedRoute,
+  SeekerHomeRoute: SeekerHomeRoute,
+  SeekerMeRoute: SeekerMeRoute,
+  SeekerJobsIdRoute: SeekerJobsIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
