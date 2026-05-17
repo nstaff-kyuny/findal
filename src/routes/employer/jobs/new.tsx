@@ -71,7 +71,7 @@ function Page() {
       employer_id: user.id, industry, job_role: jobRole, title, place_name: placeName, location, region,
       photo_url: photoUrl, daily_wage: wage, pay_day: payDay, preparations: prep || null,
       contact_phone: useDefaultContact ? (emp?.contact_phone ?? "") : contact,
-      work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, is_active: true,
+      work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: Math.max(1, Number(headcount) || 1), is_active: true,
     } as any);
     setSaving(false);
     if (error) return toast.error(error.message);
