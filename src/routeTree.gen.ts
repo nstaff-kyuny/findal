@@ -31,6 +31,7 @@ import { Route as EmployerApplicationsRouteImport } from './routes/employer/appl
 import { Route as EmployerJobsIndexRouteImport } from './routes/employer/jobs/index'
 import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
 import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
+import { Route as EmployerJobsEditIdRouteImport } from './routes/employer/jobs/edit.$id'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -142,6 +143,11 @@ const EmployerJobsNewRoute = EmployerJobsNewRouteImport.update({
   path: '/employer/jobs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EmployerJobsEditIdRoute = EmployerJobsEditIdRouteImport.update({
+  id: '/employer/jobs/edit/$id',
+  path: '/employer/jobs/edit/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs/': typeof EmployerJobsIndexRoute
+  '/employer/jobs/edit/$id': typeof EmployerJobsEditIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs': typeof EmployerJobsIndexRoute
+  '/employer/jobs/edit/$id': typeof EmployerJobsEditIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs/': typeof EmployerJobsIndexRoute
+  '/employer/jobs/edit/$id': typeof EmployerJobsEditIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs/'
+    | '/employer/jobs/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs'
+    | '/employer/jobs/edit/$id'
   id:
     | '__root__'
     | '/'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs/'
+    | '/employer/jobs/edit/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   EmployerJobsNewRoute: typeof EmployerJobsNewRoute
   SeekerJobsIdRoute: typeof SeekerJobsIdRoute
   EmployerJobsIndexRoute: typeof EmployerJobsIndexRoute
+  EmployerJobsEditIdRoute: typeof EmployerJobsEditIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -472,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployerJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/employer/jobs/edit/$id': {
+      id: '/employer/jobs/edit/$id'
+      path: '/employer/jobs/edit/$id'
+      fullPath: '/employer/jobs/edit/$id'
+      preLoaderRoute: typeof EmployerJobsEditIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -498,6 +518,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmployerJobsNewRoute: EmployerJobsNewRoute,
   SeekerJobsIdRoute: SeekerJobsIdRoute,
   EmployerJobsIndexRoute: EmployerJobsIndexRoute,
+  EmployerJobsEditIdRoute: EmployerJobsEditIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
