@@ -52,7 +52,8 @@ function Page() {
     load();
   };
   const noShow = async (id: string) => {
-    if (!confirm("이 구직자를 노쇼(미출근)로 표시할까요?")) return;
+    if (!confirm("정말 노쇼(미출근)로 처리하시겠습니까?\n노쇼 처리는 구직자에게 불이익이 가는 작업입니다.")) return;
+    if (!confirm("한 번 더 확인합니다. 노쇼 처리할까요?")) return;
     const { error } = await supabase.rpc("mark_no_show", { _app_id: id } as any);
     if (error) return toast.error(error.message);
     toast.success("노쇼 처리됨"); load();
