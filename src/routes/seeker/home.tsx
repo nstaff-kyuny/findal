@@ -54,6 +54,13 @@ function Page() {
             <Input value={q} onChange={e => setQ(e.target.value)} placeholder="공고 검색" className="pl-7" />
           </div>
         </div>
+        <div className="flex gap-1.5 flex-wrap">
+          {CATEGORIES.map(c => (
+            <Button key={c.key} size="sm" variant={category === c.key ? "default" : "outline"} onClick={() => setCategory(c.key)} className="text-xs">
+              {c.label}
+            </Button>
+          ))}
+        </div>
         <Button variant={nearby ? "default" : "outline"} size="sm" className="w-full" onClick={() => setNearby(!nearby)}>
           <Navigation size={14} className="mr-1" /> 위치기반으로 찾기
         </Button>
