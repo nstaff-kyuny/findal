@@ -30,6 +30,7 @@ function Page() {
   const [payDay, setPayDay] = useState("당일지급");
   const [prep, setPrep] = useState("");
   const [rooms, setRooms] = useState<number | "">("");
+  const [headcount, setHeadcount] = useState<number>(1);
   const [useDefaultContact, setUseDefaultContact] = useState(true);
   const [contact, setContact] = useState("");
   const [dates, setDates] = useState<string[]>([]);
