@@ -50,6 +50,7 @@ function Page() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const pdfRef = useRef<HTMLDivElement>(null);
+  const [selectedDay, setSelectedDay] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
