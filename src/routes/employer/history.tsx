@@ -233,40 +233,6 @@ function Page() {
             </div>
           </TabsContent>
         </Tabs>
-
-        <Dialog open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(null)}>
-          <DialogContent className="max-w-sm">
-            <DialogHeader>
-              <DialogTitle>{selectedDay} 확정 구직자</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-              {(selectedDay ? (confirmedByDay.get(selectedDay) ?? []) : []).length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-6">기록이 없습니다</p>
-              )}
-              {(selectedDay ? (confirmedByDay.get(selectedDay) ?? []) : []).map((e) => (
-                <Card key={e.id} className="p-3 space-y-1">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-sm">
-                        {e.profiles?.full_name ?? "(이름미입력)"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{e.profiles?.phone ?? ""}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {e.jobs?.title} · {e.jobs?.place_name}
-                      </p>
-                      <p className="text-xs font-semibold mt-1">
-                        {Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원
-                      </p>
-                    </div>
-                    <Badge className={`text-xs px-2 py-1 ${STATUS_CLASS[e.status] ?? ""}`}>
-                      {STATUS_LABEL[e.status] ?? e.status}
-                    </Badge>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </MobileLayout>
   );
