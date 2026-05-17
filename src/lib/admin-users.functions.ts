@@ -79,6 +79,53 @@ export const adminResetPassword = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminListAllUsers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.userId);
+    const users: Array<{
+      id: string;
+      email: string;
+      created_at: string;
+      last_sign_in_at: string | null;
+      banned_until: string | null;
+    }> = [];
+    let page = 1;
+    const perPage = 1000;
+    while (true) {
+      const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+      if (error) throw new Error(error.message);
+      for (const u of list.users) {
+        users.push({
+          id: u.id,
+          email: u.email ?? "",
+          created_at: u.created_at,
+          last_sign_in_at: u.last_sign_in_at ?? null,
+          banned_until: (u as any).banned_until ?? null,
+        });
+      }
+      if (list.users.length < perPage) break;
+      page++;
+      if (page > 20) break;
+    }
+    return { users };
+  });
+
+export const adminSetUserBan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({ userId: z.string().uuid(), ban: z.boolean() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    if (data.userId === context.userId) throw new Error("자기 자신은 변경할 수 없습니다");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
+      ban_duration: data.ban ? "876000h" : "none",
+    } as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const adminListUserEmails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ userIds: z.array(z.string().uuid()).max(1000) }).parse(input))
