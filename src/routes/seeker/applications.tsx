@@ -124,7 +124,7 @@ function Page() {
                           <p className="text-sm text-muted-foreground">{a.jobs?.place_name} · {Number(a.jobs?.daily_wage ?? 0).toLocaleString()}원</p>
                           <p className="text-sm text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString("ko-KR")}</p>
                         </div>
-                        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className="text-sm px-3 py-1">{STATUS_LABEL[a.status] ?? a.status}</Badge>
+                        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
                       </div>
                       {a.status === "approved" && (
                         <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirmApp(a.id)}>✋ 갈께요 (최종확정)</Button>
