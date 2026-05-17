@@ -22,16 +22,27 @@ function Onboarding() {
     if (loading) return;
     if (!user) { nav({ to: "/auth" }); return; }
     const intended = (user.user_metadata as any)?.intended_role as "seeker" | "employer" | undefined;
-    if (intended) {
-      void (async () => {
+    void (async () => {
+      // 이미 프로필이 있으면 온보딩 건너뛰기
+      if (roles.includes("employer")) {
+        const { data: ep } = await supabase.from("employer_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
+        if (ep) { nav({ to: "/employer/home" }); return; }
+      }
+      if (roles.includes("seeker")) {
+        const { data: sp } = await supabase.from("seeker_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
+        if (sp) { nav({ to: "/seeker/home" }); return; }
+      }
+      if (intended) {
         if (!roles.includes(intended)) {
           await supabase.from("user_roles").insert({ user_id: user.id, role: intended } as any);
           await refreshRoles();
         }
         setResolvedRole(intended);
-      })();
-    } else if (roles.includes("seeker")) setResolvedRole("seeker");
-    else if (roles.includes("employer")) setResolvedRole("employer");
+        return;
+      }
+      if (roles.includes("seeker")) setResolvedRole("seeker");
+      else if (roles.includes("employer")) setResolvedRole("employer");
+    })();
   }, [loading, user, roles]);
 
   if (!user) return null;
@@ -77,7 +88,7 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
     const { error: e2 } = await supabase.from("seeker_profiles").upsert({
       user_id: userId, nationality, experience, korean_ok: koreanOk, visa,
       referrer_code: referrer || null, preferred_region: region,
-    } as any);
+    } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
     toast.success("저장 완료");
@@ -134,7 +145,7 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
     const { error: e2 } = await supabase.from("employer_profiles").upsert({
       user_id: userId, company_name: company, location: `${region} ${district}`.trim(),
       manager_name: manager, contact_phone: phone,
-    } as any);
+    } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
     toast.success("저장 완료. 가입 보너스 2 크레딧 제공!");
