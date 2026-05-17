@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronLeft } from "lucide-react";
+import { BackToSettings } from "@/components/BackToSettings";
 
 export const Route = createFileRoute("/events")({ component: Page });
 
@@ -16,7 +16,7 @@ function Page() {
   return (
     <div className="min-h-screen bg-muted/30 max-w-md mx-auto">
       <header className="sticky top-0 bg-background border-b px-4 py-3 flex items-center gap-2">
-        <Link to="/seeker/me"><ChevronLeft size={20} /></Link>
+        <BackToSettings />
         <h1 className="font-bold">이벤트</h1>
       </header>
       <div className="p-3 space-y-2">
