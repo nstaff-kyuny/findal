@@ -28,6 +28,7 @@ function AuthPage() {
   const [loginPw, setLoginPw] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<"seeker" | "employer">("seeker");
@@ -68,6 +69,7 @@ function AuthPage() {
     if (password.length < 6) return toast.error("비밀번호는 6자 이상이어야 합니다");
     if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password))
       return toast.error("비밀번호는 영문, 숫자, 특수기호를 모두 포함해야 합니다");
+    if (password !== passwordConfirm) return toast.error("비밀번호 확인이 일치하지 않습니다");
     if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
@@ -138,6 +140,20 @@ function AuthPage() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="영문+숫자+특수기호 6자 이상"
               />
+            </div>
+            <div>
+              <Label>비밀번호 확인</Label>
+              <Input
+                className="h-12"
+                type="password"
+                minLength={6}
+                value={passwordConfirm}
+                onChange={e => setPasswordConfirm(e.target.value)}
+                placeholder="비밀번호를 한 번 더 입력하세요"
+              />
+              {passwordConfirm.length > 0 && password !== passwordConfirm && (
+                <p className="text-xs text-destructive mt-1">비밀번호가 일치하지 않습니다</p>
+              )}
             </div>
             <Button className="w-full h-12 text-base" onClick={signUp} disabled={loading}>회원가입</Button>
           </TabsContent>
