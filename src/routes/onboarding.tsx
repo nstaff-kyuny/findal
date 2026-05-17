@@ -20,12 +20,10 @@ function Onboarding() {
 
   useEffect(() => {
     if (loading) return;
-    if (!user) return nav({ to: "/auth" });
-    // 가입 시 선택한 역할 우선 사용, 없으면 user_roles 에서 가져옴
+    if (!user) { nav({ to: "/auth" }); return; }
     const intended = (user.user_metadata as any)?.intended_role as "seeker" | "employer" | undefined;
     if (intended) {
-      // ensure user_roles has it
-      (async () => {
+      void (async () => {
         if (!roles.includes(intended)) {
           await supabase.from("user_roles").insert({ user_id: user.id, role: intended } as any);
           await refreshRoles();
