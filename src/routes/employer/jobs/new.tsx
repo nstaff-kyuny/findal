@@ -30,6 +30,7 @@ function Page() {
   const [payDay, setPayDay] = useState("당일지급");
   const [prep, setPrep] = useState("");
   const [rooms, setRooms] = useState<number | "">("");
+  const [headcount, setHeadcount] = useState<number>(1);
   const [useDefaultContact, setUseDefaultContact] = useState(true);
   const [contact, setContact] = useState("");
   const [dates, setDates] = useState<string[]>([]);
@@ -70,7 +71,7 @@ function Page() {
       employer_id: user.id, industry, job_role: jobRole, title, place_name: placeName, location, region,
       photo_url: photoUrl, daily_wage: wage, pay_day: payDay, preparations: prep || null,
       contact_phone: useDefaultContact ? (emp?.contact_phone ?? "") : contact,
-      work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, is_active: true,
+      work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: Math.max(1, Number(headcount) || 1), is_active: true,
     } as any);
     setSaving(false);
     if (error) return toast.error(error.message);
@@ -113,6 +114,9 @@ function Page() {
           <div className="grid grid-cols-2 gap-2">
             <div><Label>일당 (원)</Label><Input type="number" value={wage} onChange={e => setWage(Number(e.target.value))} /></div>
             <div><Label>급여 지급일</Label><Input value={payDay} onChange={e => setPayDay(e.target.value)} /></div>
+          </div>
+          <div><Label>필요 인원수 <span className="text-red-500">*</span></Label>
+            <Input type="number" min={1} value={headcount} onChange={e => setHeadcount(Number(e.target.value))} />
           </div>
           {isRoomCleaningHotel && <div>
             <Label>일일 청소 객실수 <span className="text-red-500">*</span></Label>

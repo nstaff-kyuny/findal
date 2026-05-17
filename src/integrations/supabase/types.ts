@@ -319,6 +319,7 @@ export type Database = {
           created_at: string
           daily_wage: number
           employer_id: string
+          headcount: number
           id: string
           industry: Database["public"]["Enums"]["industry"]
           is_active: boolean
@@ -339,6 +340,7 @@ export type Database = {
           created_at?: string
           daily_wage: number
           employer_id: string
+          headcount?: number
           id?: string
           industry: Database["public"]["Enums"]["industry"]
           is_active?: boolean
@@ -359,6 +361,7 @@ export type Database = {
           created_at?: string
           daily_wage?: number
           employer_id?: string
+          headcount?: number
           id?: string
           industry?: Database["public"]["Enums"]["industry"]
           is_active?: boolean
