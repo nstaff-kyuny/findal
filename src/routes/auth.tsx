@@ -133,12 +133,10 @@ function AuthPage() {
               <Input
                 className="h-12"
                 type="password"
-                inputMode="numeric"
-                pattern="\d{6}"
-                maxLength={6}
+                minLength={6}
                 value={password}
-                onChange={e => setPassword(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="숫자 6자리"
+                onChange={e => setPassword(e.target.value)}
+                placeholder="영문+숫자+특수기호 6자 이상"
               />
             </div>
             <Button className="w-full h-12 text-base" onClick={signUp} disabled={loading}>회원가입</Button>
