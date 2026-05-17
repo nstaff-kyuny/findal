@@ -404,9 +404,8 @@ function ReferrersTab() {
                   <td>{r.name}</td>
                   <td>{r.phone}</td>
                   <td>
-                    <Button size="sm" variant="ghost" className="font-bold h-auto p-1"
-                      onClick={() => setExpanded(s => ({ ...s, [r.id]: !s[r.id] }))}>
-                      {users.length}명 {users.length > 0 && (isOpen ? "▲" : "▼")}
+                    <Button size="sm" variant="ghost" className="font-bold h-auto p-1" onClick={() => setExpanded(s => { const n = { ...s }; n[r.id] = !n[r.id]; return n; })}>
+                      {users.length}명 {users.length > 0 ? (isOpen ? " ▲" : " ▼") : ""}
                     </Button>
                   </td>
                   <td>
