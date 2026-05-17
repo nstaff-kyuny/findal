@@ -88,7 +88,7 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
     const { error: e2 } = await supabase.from("seeker_profiles").upsert({
       user_id: userId, nationality, experience, korean_ok: koreanOk, visa,
       referrer_code: referrer || null, preferred_region: region,
-    } as any);
+    } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
     toast.success("저장 완료");
