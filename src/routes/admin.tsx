@@ -133,6 +133,7 @@ function AdminPanel() {
 function AllUsersTab() {
   const listAll = useServerFn(adminListAllUsers);
   const setBan = useServerFn(adminSetUserBan);
+  const hardDelete = useServerFn(adminDeleteUser);
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
