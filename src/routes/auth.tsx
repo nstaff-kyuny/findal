@@ -44,7 +44,7 @@ function AuthPage() {
   };
 
   const signUp = async () => {
-    if (password.length < 4) return toast.error("비밀번호는 4자 이상으로 설정해 주세요");
+    if (!/^\d{6}$/.test(password)) return toast.error("비밀번호는 숫자 6자리로 설정해 주세요");
     if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
@@ -104,7 +104,15 @@ function AuthPage() {
             <div><Label>이메일</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
               <Label>비밀번호</Label>
-              <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="비밀번호 (4자 이상)" />
+              <Input
+                type="password"
+                inputMode="numeric"
+                pattern="\d{6}"
+                maxLength={6}
+                value={password}
+                onChange={e => setPassword(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="숫자 6자리"
+              />
             </div>
             <Button className="w-full" onClick={signUp} disabled={loading}>회원가입</Button>
           </TabsContent>
