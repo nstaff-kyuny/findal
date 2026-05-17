@@ -75,7 +75,7 @@ function Onboarding() {
 }
 
 function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) {
-  const [nationality, setNationality] = useState<string>("korean");
+  const [nationality, setNationality] = useState<string>("foreigner");
   const [experience, setExperience] = useState<string>("lt5");
   const [koreanOk, setKoreanOk] = useState(true);
   const [visa, setVisa] = useState<string>("other");
