@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -9,6 +9,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"확정(갈께요)", no_show:"노쇼" };
 const STATUS_VARIANT: Record<string, any> = { approved:"default", confirmed:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
@@ -18,7 +20,14 @@ export const Route = createFileRoute("/seeker/applications")({ component: () => 
 function Page() {
   const { user } = useAuth();
   const [apps, setApps] = useState<any[]>([]);
+  const [profile, setProfile] = useState<any>(null);
   const [filter, setFilter] = useState<"day"|"week"|"month">("month");
+  const [topTab, setTopTab] = useState<"list"|"calendar">("list");
+  const [calMonth, setCalMonth] = useState(() => {
+    const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  });
+  const pdfRef = useRef<HTMLDivElement>(null);
+
   const load = async () => {
     if (!user) return;
     const { data: appsData, error } = await supabase.from("job_applications")
@@ -27,13 +36,16 @@ function Page() {
     const list = appsData ?? [];
     const jobIds = Array.from(new Set(list.map((a: any) => a.job_id)));
     const jobsRes = jobIds.length
-      ? await supabase.from("jobs").select("id, title, place_name, daily_wage, contact_phone").in("id", jobIds)
+      ? await supabase.from("jobs").select("id, title, place_name, daily_wage, contact_phone, work_dates").in("id", jobIds)
       : { data: [] as any[] };
     const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
     setApps(list.map((a: any) => ({ ...a, jobs: jobsMap.get(a.job_id) })));
+    const { data: p } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+    setProfile(p);
   };
   useEffect(() => { load(); }, [user]);
-  const confirm = async (id: string) => {
+
+  const confirmApp = async (id: string) => {
     const { error } = await supabase.rpc("seeker_confirm_application", { _app_id: id } as any);
     if (error) return toast.error(error.message);
     toast.success("확정 완료! 구인자에게 알림이 전달됩니다.");
@@ -50,43 +62,102 @@ function Page() {
 
   const approved = filtered.filter(a => a.status === "approved");
 
+  const confirmedByDay = useMemo(() => {
+    const [y, m] = calMonth.split("-").map(Number);
+    const map = new Map<string, any[]>();
+    apps.filter(a => a.status === "confirmed" || a.status === "no_show").forEach(a => {
+      const dates: string[] = a.jobs?.work_dates ?? [];
+      dates.forEach((d: string) => {
+        const dt = new Date(d);
+        if (dt.getFullYear() === y && dt.getMonth() + 1 === m) {
+          if (!map.has(d)) map.set(d, []);
+          map.get(d)!.push(a);
+        }
+      });
+    });
+    return map;
+  }, [apps, calMonth]);
+
+  const downloadPdf = async () => {
+    if (!pdfRef.current) return;
+    toast.info("PDF 생성 중...");
+    try {
+      const canvas = await html2canvas(pdfRef.current, { scale: 2, backgroundColor: "#ffffff" });
+      const img = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+      const pageW = 210;
+      const imgH = (canvas.height * pageW) / canvas.width;
+      pdf.addImage(img, "JPEG", 0, 0, pageW, imgH);
+      pdf.save(`근무기록_${calMonth}.pdf`);
+    } catch (e: any) {
+      toast.error("PDF 생성 실패: " + e.message);
+    }
+  };
+
   return (
     <MobileLayout role="seeker">
       <div className="p-3 space-y-3">
         <h2 className="font-bold">나의 신청 내역</h2>
-        <Tabs value={filter} onValueChange={(v: any) => setFilter(v)}>
-          <TabsList className="grid grid-cols-3 w-full">
-            <TabsTrigger value="day">일</TabsTrigger>
-            <TabsTrigger value="week">주</TabsTrigger>
-            <TabsTrigger value="month">월</TabsTrigger>
+        <Tabs value={topTab} onValueChange={(v: any) => setTopTab(v)}>
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="list">전체 내역</TabsTrigger>
+            <TabsTrigger value="calendar">확정 캘린더</TabsTrigger>
           </TabsList>
-          <TabsContent value={filter} className="mt-3">
-            <div className="text-xs text-muted-foreground mb-2">총 {filtered.length}건 · 승인 {approved.length}건</div>
-            <div className="space-y-2">
-              {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">기록이 없습니다</p>}
-              {filtered.map(a => (
-                <Card key={a.id} className="p-4 space-y-3">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0">
-                      <h4 className="font-semibold text-base">{a.jobs?.title}</h4>
-                      <p className="text-sm text-muted-foreground">{a.jobs?.place_name} · {Number(a.jobs?.daily_wage ?? 0).toLocaleString()}원</p>
-                      <p className="text-sm text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString("ko-KR")}</p>
-                    </div>
-                    <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className="text-sm px-3 py-1">{STATUS_LABEL[a.status] ?? a.status}</Badge>
-                  </div>
-                  {a.status === "approved" && (
-                    <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirm(a.id)}>✋ 갈께요 (최종확정)</Button>
-                  )}
-                  {a.status === "confirmed" && a.jobs?.contact_phone && (
-                    <a href={`tel:${a.jobs.contact_phone}`} className="block">
-                      <Button size="lg" className="w-full text-base font-semibold">📞 연락하기</Button>
-                    </a>
-                  )}
-                  {a.status === "no_show" && (
-                    <p className="text-sm text-destructive text-center font-semibold">⚠️ 노쇼 처리됨</p>
-                  )}
-                </Card>
-              ))}
+
+          <TabsContent value="list" className="mt-3">
+            <Tabs value={filter} onValueChange={(v: any) => setFilter(v)}>
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="day">일</TabsTrigger>
+                <TabsTrigger value="week">주</TabsTrigger>
+                <TabsTrigger value="month">월</TabsTrigger>
+              </TabsList>
+              <TabsContent value={filter} className="mt-3">
+                <div className="text-xs text-muted-foreground mb-2">총 {filtered.length}건 · 승인 {approved.length}건</div>
+                <div className="space-y-2">
+                  {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">기록이 없습니다</p>}
+                  {filtered.map(a => (
+                    <Card key={a.id} className="p-4 space-y-3">
+                      <div className="flex justify-between items-start gap-2">
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-base">{a.jobs?.title}</h4>
+                          <p className="text-sm text-muted-foreground">{a.jobs?.place_name} · {Number(a.jobs?.daily_wage ?? 0).toLocaleString()}원</p>
+                          <p className="text-sm text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString("ko-KR")}</p>
+                        </div>
+                        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className="text-sm px-3 py-1">{STATUS_LABEL[a.status] ?? a.status}</Badge>
+                      </div>
+                      {a.status === "approved" && (
+                        <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirmApp(a.id)}>✋ 갈께요 (최종확정)</Button>
+                      )}
+                      {a.status === "confirmed" && a.jobs?.contact_phone && (
+                        <a href={`tel:${a.jobs.contact_phone}`} className="block">
+                          <Button size="lg" className="w-full text-base font-semibold">연락하기</Button>
+                        </a>
+                      )}
+                      {a.status === "no_show" && (
+                        <p className="text-sm text-destructive text-center font-semibold">⚠️ 노쇼 처리됨</p>
+                      )}
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </TabsContent>
+
+          <TabsContent value="calendar" className="mt-3 space-y-3">
+            <div className="flex items-center gap-2">
+              <input
+                type="month"
+                value={calMonth}
+                onChange={(e) => setCalMonth(e.target.value)}
+                className="flex-1 h-10 px-3 rounded-md border bg-background text-sm"
+              />
+              <Button onClick={downloadPdf}>PDF 다운로드</Button>
+            </div>
+            <p className="text-xs text-muted-foreground">확정(갈께요) 기록만 표시됩니다.</p>
+            <CalendarView month={calMonth} data={confirmedByDay} />
+
+            <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
+              <PdfDoc ref={pdfRef} month={calMonth} data={confirmedByDay} userName={profile?.full_name ?? user?.email ?? ""} />
             </div>
           </TabsContent>
         </Tabs>
@@ -94,3 +165,98 @@ function Page() {
     </MobileLayout>
   );
 }
+
+function CalendarView({ month, data }: { month: string; data: Map<string, any[]> }) {
+  const [y, m] = month.split("-").map(Number);
+  const first = new Date(y, m - 1, 1);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const startDow = first.getDay();
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < startDow; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  while (cells.length % 7 !== 0) cells.push(null);
+  const weekdays = ["일","월","화","수","목","금","토"];
+  return (
+    <div className="border rounded-md overflow-hidden bg-card">
+      <div className="grid grid-cols-7 bg-muted/50 text-xs font-semibold text-center">
+        {weekdays.map(w => <div key={w} className="p-2">{w}</div>)}
+      </div>
+      <div className="grid grid-cols-7">
+        {cells.map((d, i) => {
+          const key = d ? `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
+          const entries = d ? (data.get(key) ?? []) : [];
+          return (
+            <div key={i} className="min-h-[72px] border-t border-l p-1 text-[10px]">
+              {d && <div className="font-bold text-xs mb-0.5">{d}</div>}
+              {entries.map((e, idx) => (
+                <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5">
+                  <div className="font-semibold truncate">{e.jobs?.place_name}</div>
+                  <div className="truncate text-muted-foreground">{Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원</div>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const PdfDoc = React.forwardRef<HTMLDivElement, { month: string; data: Map<string, any[]>; userName: string }>(
+  ({ month, data, userName }, ref) => {
+    const [y, m] = month.split("-").map(Number);
+    const first = new Date(y, m - 1, 1);
+    const daysInMonth = new Date(y, m, 0).getDate();
+    const startDow = first.getDay();
+    const cells: (number | null)[] = [];
+    for (let i = 0; i < startDow; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+    const weekdays = ["일","월","화","수","목","금","토"];
+    const total = Array.from(data.values()).flat().reduce((s, e) => s + Number(e.jobs?.daily_wage ?? 0), 0);
+
+    return (
+      <div ref={ref} style={{ width: "794px", minHeight: "1123px", padding: "40px", background: "#fff", color: "#111", fontFamily: "'Malgun Gothic','Apple SD Gothic Neo','Nanum Gothic',sans-serif", boxSizing: "border-box" }}>
+        <div style={{ textAlign: "center", marginBottom: "20px" }}>
+          <h1 style={{ fontSize: "24px", fontWeight: "bold", margin: 0 }}>근무 기록 확인서</h1>
+        </div>
+        <div style={{ marginBottom: "16px", fontSize: "13px", lineHeight: 1.8 }}>
+          <div><strong>성명:</strong> {userName}</div>
+          <div><strong>확인 기간:</strong> {y}년 {m}월 ({y}-{String(m).padStart(2,"0")}-01 ~ {y}-{String(m).padStart(2,"0")}-{daysInMonth})</div>
+          <div><strong>합계 금액:</strong> {total.toLocaleString()}원</div>
+        </div>
+
+        <div style={{ border: "1px solid #333" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", background: "#f0f0f0", fontWeight: "bold", fontSize: "11px", textAlign: "center" }}>
+            {weekdays.map(w => <div key={w} style={{ padding: "6px", borderRight: "1px solid #333" }}>{w}</div>)}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
+            {cells.map((d, i) => {
+              const key = d ? `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
+              const entries = d ? (data.get(key) ?? []) : [];
+              return (
+                <div key={i} style={{ minHeight: "110px", borderTop: "1px solid #333", borderRight: "1px solid #333", padding: "4px", fontSize: "9px", boxSizing: "border-box" }}>
+                  {d && <div style={{ fontWeight: "bold", fontSize: "11px", marginBottom: "2px" }}>{d}</div>}
+                  {entries.map((e, idx) => (
+                    <div key={idx} style={{ background: "#eef4ff", borderRadius: "3px", padding: "2px 3px", marginBottom: "2px" }}>
+                      <div style={{ fontWeight: "bold" }}>{e.jobs?.place_name}</div>
+                      <div style={{ color: "#444" }}>{e.jobs?.title}</div>
+                      <div>{Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원</div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div style={{ marginTop: "40px", paddingTop: "16px", borderTop: "2px solid #333", textAlign: "center", fontSize: "11px", color: "#555" }}>
+          <div style={{ fontSize: "18px", fontWeight: "bold", color: "#1d4ed8", marginBottom: "6px", letterSpacing: "1px" }}>Find AR</div>
+          <div>본 문서는 단순 기록에 대한 확인서이며, 단순 확인용 정보 제공에 대한 기록물입니다.</div>
+          <div style={{ marginTop: "4px" }}>발급일: {new Date().toLocaleDateString("ko-KR")}</div>
+        </div>
+      </div>
+    );
+  }
+);
+PdfDoc.displayName = "PdfDoc";
