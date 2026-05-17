@@ -65,23 +65,25 @@ function Page() {
             <div className="space-y-2">
               {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">기록이 없습니다</p>}
               {filtered.map(a => (
-                <Card key={a.id} className="p-3 space-y-2">
-                  <div className="flex justify-between items-start">
+                <Card key={a.id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0">
-                      <h4 className="font-semibold text-sm">{a.jobs?.title}</h4>
-                      <p className="text-xs text-muted-foreground">{a.jobs?.place_name} · {Number(a.jobs?.daily_wage ?? 0).toLocaleString()}원</p>
-                      <p className="text-xs text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString("ko-KR")}</p>
+                      <h4 className="font-semibold text-base">{a.jobs?.title}</h4>
+                      <p className="text-sm text-muted-foreground">{a.jobs?.place_name} · {Number(a.jobs?.daily_wage ?? 0).toLocaleString()}원</p>
+                      <p className="text-sm text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString("ko-KR")}</p>
                     </div>
-                    <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
+                    <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className="text-sm px-3 py-1">{STATUS_LABEL[a.status] ?? a.status}</Badge>
                   </div>
                   {a.status === "approved" && (
-                    <Button size="sm" className="w-full" onClick={() => confirm(a.id)}>✋ 갈께요 (최종확정)</Button>
+                    <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirm(a.id)}>✋ 갈께요 (최종확정)</Button>
                   )}
                   {a.status === "confirmed" && a.jobs?.contact_phone && (
-                    <a href={`tel:${a.jobs.contact_phone}`} className="block text-xs text-primary text-center font-semibold">📞 {a.jobs.contact_phone}</a>
+                    <a href={`tel:${a.jobs.contact_phone}`} className="block">
+                      <Button size="lg" className="w-full text-base font-semibold">📞 연락하기</Button>
+                    </a>
                   )}
                   {a.status === "no_show" && (
-                    <p className="text-xs text-destructive text-center">⚠️ 노쇼 처리됨</p>
+                    <p className="text-sm text-destructive text-center font-semibold">⚠️ 노쇼 처리됨</p>
                   )}
                 </Card>
               ))}
