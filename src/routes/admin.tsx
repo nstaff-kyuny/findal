@@ -26,8 +26,24 @@ function downloadXlsx(rows: any[], sheetName: string, filename: string) {
 function Admin() {
   const { user, roles, loading, signOut } = useAuth();
   const nav = useNavigate();
+  const [isDesktop, setIsDesktop] = useState(typeof window !== "undefined" ? window.innerWidth >= 1024 : true);
   useEffect(() => { if (!loading && !user) nav({ to: "/auth" }); }, [loading, user]);
+  useEffect(() => {
+    const onResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   if (!user) return null;
+  if (!isDesktop) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6 text-center">
+        <div>
+          <h1 className="font-bold text-lg mb-2">관리자 페이지는 PC에서만 이용 가능합니다</h1>
+          <p className="text-sm text-muted-foreground">데스크탑(1024px 이상) 환경에서 접속해 주세요.</p>
+        </div>
+      </div>
+    );
+  }
   const isAdmin = roles.includes("admin");
   return (
     <div className="min-h-screen bg-muted/30">
@@ -99,9 +115,16 @@ function UsersTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const [seekers, setSeekers] = useState<any[]>([]);
   useEffect(() => { (async () => {
-    const { data: e } = await supabase.from("employer_profiles").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
-    const { data: s } = await supabase.from("seeker_profiles").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
-    setEmployers(e ?? []); setSeekers(s ?? []);
+    const { data: e } = await supabase.from("employer_profiles").select("*").order("created_at", { ascending: false });
+    const { data: s } = await supabase.from("seeker_profiles").select("*").order("created_at", { ascending: false });
+    const ids = Array.from(new Set([...(e ?? []), ...(s ?? [])].map((r: any) => r.user_id)));
+    const { data: profs } = ids.length
+      ? await supabase.from("profiles").select("id, full_name, phone").in("id", ids)
+      : { data: [] as any[] };
+    const pmap: Record<string, any> = {};
+    (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
+    setEmployers((e ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
+    setSeekers((s ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
   })(); }, []);
 
   const exportEmployers = () => {
@@ -166,8 +189,14 @@ function UsersTab() {
 function CreditsTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const load = async () => {
-    const { data } = await supabase.from("employer_profiles").select("*, profiles:user_id(full_name)").order("credits");
-    setEmployers(data ?? []);
+    const { data } = await supabase.from("employer_profiles").select("*").order("credits");
+    const ids = (data ?? []).map((r: any) => r.user_id);
+    const { data: profs } = ids.length
+      ? await supabase.from("profiles").select("id, full_name").in("id", ids)
+      : { data: [] as any[] };
+    const pmap: Record<string, any> = {};
+    (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
+    setEmployers((data ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
   };
   useEffect(() => { load(); }, []);
   const grant = async (uid: string) => {
@@ -307,9 +336,15 @@ function PurchasesTab() {
   const [list, setList] = useState<any[]>([]);
   const load = async () => {
     const { data } = await supabase.from("credit_purchase_requests")
-      .select("*, employer_profiles!inner(company_name, user_id)")
+      .select("*")
       .order("created_at", { ascending: false });
-    setList(data ?? []);
+    const ids = Array.from(new Set((data ?? []).map((r: any) => r.employer_id)));
+    const { data: emps } = ids.length
+      ? await supabase.from("employer_profiles").select("user_id, company_name").in("user_id", ids)
+      : { data: [] as any[] };
+    const emap: Record<string, any> = {};
+    (emps ?? []).forEach((e: any) => { emap[e.user_id] = e; });
+    setList((data ?? []).map((r: any) => ({ ...r, employer_profiles: emap[r.employer_id] })));
   };
   useEffect(() => { load(); }, []);
   const totalSales = list.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.amount_krw), 0);

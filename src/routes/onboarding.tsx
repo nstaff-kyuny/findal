@@ -122,16 +122,18 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
 
 function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }) {
   const [company, setCompany] = useState("");
-  const [location, setLocation] = useState("");
+  const [region, setRegion] = useState("서울");
+  const [district, setDistrict] = useState("");
   const [manager, setManager] = useState("");
   const [phone, setPhone] = useState("");
   const [saving, setSaving] = useState(false);
   const save = async () => {
-    if (!company || !location || !manager || !phone) return toast.error("모든 항목을 입력하세요");
+    if (!company || !region || !district || !manager || !phone) return toast.error("모든 항목을 입력하세요");
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "employer" } as any);
     const { error: e2 } = await supabase.from("employer_profiles").upsert({
-      user_id: userId, company_name: company, location, manager_name: manager, contact_phone: phone,
+      user_id: userId, company_name: company, location: `${region} ${district}`.trim(),
+      manager_name: manager, contact_phone: phone,
     } as any);
     setSaving(false);
     if (e2) return toast.error(e2.message);
@@ -142,7 +144,13 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
     <Card><CardContent className="p-4 space-y-4">
       <h2 className="font-bold">구인자(회사) 정보</h2>
       <div><Label>회사명</Label><Input value={company} onChange={e => setCompany(e.target.value)} /></div>
-      <div><Label>위치</Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="서울시 강남구..." /></div>
+      <div><Label>지역 (시/도)</Label>
+        <Select value={region} onValueChange={setRegion}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
+        </Select>
+      </div>
+      <div><Label>상세 위치 (구/동)</Label><Input value={district} onChange={e => setDistrict(e.target.value)} placeholder="예: 강남구 역삼동" /></div>
       <div><Label>담당자 이름</Label><Input value={manager} onChange={e => setManager(e.target.value)} /></div>
       <div><Label>담당자 연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
       <Button className="w-full" onClick={save} disabled={saving}>저장하고 시작하기</Button>
