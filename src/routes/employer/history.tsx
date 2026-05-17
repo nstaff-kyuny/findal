@@ -12,12 +12,6 @@ import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/employer/history")({
   component: () => (
