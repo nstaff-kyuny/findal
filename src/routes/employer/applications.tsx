@@ -76,7 +76,6 @@ function Page() {
                   {a.seeker_profiles?.experience && <Badge variant="outline" className="text-[10px]">{a.seeker_profiles.experience === "lt5" ? "경력 5회 미만" : "경력 5회 이상"}</Badge>}
                   {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
                 </div>
-                {a.status === "approved" && <p className="text-xs mt-2">📞 <a href={`tel:${a.profiles?.phone}`} className="text-primary font-bold">{a.profiles?.phone}</a></p>}
                 {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
               </div>
               <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
