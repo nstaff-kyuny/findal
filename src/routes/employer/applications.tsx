@@ -34,6 +34,14 @@ function Page() {
     if (error) return toast.error(error.message);
     load();
   };
+  const noShow = async (id: string) => {
+    if (!confirm("이 구직자를 노쇼(미출근)로 표시할까요?")) return;
+    const { error } = await supabase.rpc("mark_no_show", { _app_id: id } as any);
+    if (error) return toast.error(error.message);
+    toast.success("노쇼 처리됨"); load();
+  };
+  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"확정(갈께요)", no_show:"노쇼" };
+  const STATUS_VARIANT: Record<string, any> = { approved:"default", confirmed:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
 
   return (
     <MobileLayout role="employer">
@@ -54,15 +62,16 @@ function Page() {
                 {a.status === "approved" && <p className="text-xs mt-2">📞 <a href={`tel:${a.profiles?.phone}`} className="text-primary font-bold">{a.profiles?.phone}</a></p>}
                 {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
               </div>
-              <Badge variant={a.status === "approved" ? "default" : a.status === "rejected" ? "destructive" : "secondary"}>
-                {a.status === "approved" ? "승인" : a.status === "rejected" ? "거절" : "대기"}
-              </Badge>
+              <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
             </div>
             {a.status === "pending" && (
               <div className="flex gap-2">
                 <Button size="sm" variant="outline" className="flex-1" onClick={() => reject(a.id)}>거절</Button>
                 <Button size="sm" className="flex-1" onClick={() => approve(a.id)}>승인 (1크레딧)</Button>
               </div>
+            )}
+            {(a.status === "approved" || a.status === "confirmed") && (
+              <Button size="sm" variant="outline" className="w-full" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
             )}
           </CardContent></Card>
         ))}
