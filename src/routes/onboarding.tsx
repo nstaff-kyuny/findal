@@ -145,7 +145,7 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
     const { error: e2 } = await supabase.from("employer_profiles").upsert({
       user_id: userId, company_name: company, location: `${region} ${district}`.trim(),
       manager_name: manager, contact_phone: phone,
-    } as any);
+    } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
     toast.success("저장 완료. 가입 보너스 2 크레딧 제공!");
