@@ -217,7 +217,11 @@ function Page() {
               <Button onClick={downloadPdf}>PDF 다운로드</Button>
             </div>
             <p className="text-xs text-muted-foreground">확정 된 기록만 표시됩니다.</p>
-            <CalendarView month={calMonth} data={confirmedByDay} onSelectDay={setSelectedDay} />
+            <CalendarView
+              month={calMonth}
+              data={confirmedByDay}
+              onSelectDay={(d) => navigate({ to: "/employer/history/$date", params: { date: d } })}
+            />
 
             <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
               <PdfDoc
