@@ -39,21 +39,26 @@ function Page() {
         </CardContent></Card>
 
         <div className="grid grid-cols-2 gap-2">
-          <Card><CardContent className="p-4">
-            <Briefcase className="text-primary mb-1" size={20} />
-            <p className="text-xs text-muted-foreground">활성 공고</p>
-            <p className="text-2xl font-bold">{activeJobs}<span className="text-xs text-muted-foreground"> / 20</span></p>
-          </CardContent></Card>
-          <Card><CardContent className="p-4">
-            <Inbox className="text-primary mb-1" size={20} />
-            <p className="text-xs text-muted-foreground">대기 요청</p>
-            <p className="text-2xl font-bold">{pending}</p>
-          </CardContent></Card>
+          <Link to="/employer/jobs">
+            <Card className="hover:bg-accent transition-colors"><CardContent className="p-4">
+              <Briefcase className="text-primary mb-1" size={20} />
+              <p className="text-xs text-muted-foreground">활성 공고</p>
+              <p className="text-2xl font-bold">{activeJobs}<span className="text-xs text-muted-foreground"> / 20</span></p>
+            </CardContent></Card>
+          </Link>
+          <Link to="/employer/applications">
+            <Card className="hover:bg-accent transition-colors"><CardContent className="p-4">
+              <Inbox className="text-primary mb-1" size={20} />
+              <p className="text-xs text-muted-foreground">대기 요청</p>
+              <p className="text-2xl font-bold">{pending}</p>
+            </CardContent></Card>
+          </Link>
         </div>
 
-        <Link to="/employer/jobs/new"><Button className="w-full"><Plus size={16} className="mr-1" />새 공고 등록</Button></Link>
-        <Link to="/employer/jobs"><Button variant="outline" className="w-full">공고 관리</Button></Link>
-        <Link to="/employer/history"><Button variant="outline" className="w-full">승인 기록</Button></Link>
+        <Link to="/employer/jobs/new"><Button size="lg" className="w-full h-14 text-base"><Plus size={20} className="mr-1" />새 공고 등록</Button></Link>
+        <Link to="/employer/jobs"><Button size="lg" variant="outline" className="w-full h-14 text-base">공고 관리</Button></Link>
+        <Link to="/employer/applications"><Button size="lg" variant="outline" className="w-full h-14 text-base">받은 요청 관리</Button></Link>
+        <Link to="/employer/history"><Button size="lg" variant="outline" className="w-full h-14 text-base">승인 기록</Button></Link>
       </div>
     </MobileLayout>
   );
