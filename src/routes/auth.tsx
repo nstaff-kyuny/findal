@@ -65,7 +65,9 @@ function AuthPage() {
   };
 
   const signUp = async () => {
-    if (!/^\d{6}$/.test(password)) return toast.error("비밀번호는 숫자 6자리로 설정해 주세요");
+    if (password.length < 6) return toast.error("비밀번호는 6자 이상이어야 합니다");
+    if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password))
+      return toast.error("비밀번호는 영문, 숫자, 특수기호를 모두 포함해야 합니다");
     if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
@@ -131,12 +133,10 @@ function AuthPage() {
               <Input
                 className="h-12"
                 type="password"
-                inputMode="numeric"
-                pattern="\d{6}"
-                maxLength={6}
+                minLength={6}
                 value={password}
-                onChange={e => setPassword(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="숫자 6자리"
+                onChange={e => setPassword(e.target.value)}
+                placeholder="영문+숫자+특수기호 6자 이상"
               />
             </div>
             <Button className="w-full h-12 text-base" onClick={signUp} disabled={loading}>회원가입</Button>
