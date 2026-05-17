@@ -1,0 +1,1 @@
+ALTER TABLE public.jobs ADD COLUMN headcount integer NOT NULL DEFAULT 1;
