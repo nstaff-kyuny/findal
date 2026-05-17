@@ -1,0 +1,60 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { MobileLayout } from "@/components/MobileLayout";
+import { RoleGate } from "@/components/RoleGate";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
+import { Briefcase, Inbox, CreditCard, Plus } from "lucide-react";
+
+export const Route = createFileRoute("/employer/home")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
+
+function Page() {
+  const { user } = useAuth();
+  const [emp, setEmp] = useState<any>(null);
+  const [activeJobs, setActiveJobs] = useState(0);
+  const [pending, setPending] = useState(0);
+  useEffect(() => { if (!user) return; (async () => {
+    const { data: e } = await supabase.from("employer_profiles").select("*").eq("user_id", user.id).single();
+    setEmp(e);
+    const { count: c1 } = await supabase.from("jobs").select("*", { count: "exact", head: true }).eq("employer_id", user.id).eq("is_active", true);
+    setActiveJobs(c1 ?? 0);
+    const { count: c2 } = await supabase.from("job_applications").select("*", { count: "exact", head: true }).eq("employer_id", user.id).eq("status", "pending");
+    setPending(c2 ?? 0);
+  })(); }, [user]);
+
+  return (
+    <MobileLayout role="employer">
+      <div className="p-4 space-y-3">
+        <Card className="bg-primary text-primary-foreground"><CardContent className="p-5">
+          <p className="text-xs opacity-80">{emp?.company_name}</p>
+          <div className="flex items-end justify-between mt-2">
+            <div>
+              <p className="text-xs opacity-80">보유 크레딧</p>
+              <p className="text-3xl font-bold">{emp?.credits ?? 0}</p>
+            </div>
+            <Link to="/employer/credits" className="text-xs underline opacity-90">충전 →</Link>
+          </div>
+        </CardContent></Card>
+
+        <div className="grid grid-cols-2 gap-2">
+          <Card><CardContent className="p-4">
+            <Briefcase className="text-primary mb-1" size={20} />
+            <p className="text-xs text-muted-foreground">활성 공고</p>
+            <p className="text-2xl font-bold">{activeJobs}<span className="text-xs text-muted-foreground"> / 20</span></p>
+          </CardContent></Card>
+          <Card><CardContent className="p-4">
+            <Inbox className="text-primary mb-1" size={20} />
+            <p className="text-xs text-muted-foreground">대기 요청</p>
+            <p className="text-2xl font-bold">{pending}</p>
+          </CardContent></Card>
+        </div>
+
+        <Link to="/employer/jobs/new"><Button className="w-full"><Plus size={16} className="mr-1" />새 공고 등록</Button></Link>
+        <Link to="/employer/jobs"><Button variant="outline" className="w-full">공고 관리</Button></Link>
+        <Link to="/employer/history"><Button variant="outline" className="w-full">승인 기록</Button></Link>
+      </div>
+    </MobileLayout>
+  );
+}
