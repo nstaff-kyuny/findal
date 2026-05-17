@@ -47,6 +47,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_version: {
+        Row: {
+          created_at: string
+          id: string
+          is_latest: boolean
+          notes: string | null
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_latest?: boolean
+          notes?: string | null
+          version: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_latest?: boolean
+          notes?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       credit_purchase_requests: {
         Row: {
           amount_krw: number
@@ -54,6 +78,8 @@ export type Database = {
           employer_id: string
           id: string
           pack: number
+          payment_method: string | null
+          payment_ref: string | null
           status: string
         }
         Insert: {
@@ -62,6 +88,8 @@ export type Database = {
           employer_id: string
           id?: string
           pack: number
+          payment_method?: string | null
+          payment_ref?: string | null
           status?: string
         }
         Update: {
@@ -70,6 +98,8 @@ export type Database = {
           employer_id?: string
           id?: string
           pack?: number
+          payment_method?: string | null
+          payment_ref?: string | null
           status?: string
         }
         Relationships: []
@@ -109,6 +139,8 @@ export type Database = {
           credits: number
           location: string
           manager_name: string
+          notify_marketing: boolean
+          notify_push: boolean
           user_id: string
         }
         Insert: {
@@ -118,6 +150,8 @@ export type Database = {
           credits?: number
           location: string
           manager_name: string
+          notify_marketing?: boolean
+          notify_push?: boolean
           user_id: string
         }
         Update: {
@@ -127,6 +161,107 @@ export type Database = {
           credits?: number
           location?: string
           manager_name?: string
+          notify_marketing?: boolean
+          notify_push?: boolean
+          user_id?: string
+        }
+        Relationships: []
+      }
+      events: {
+        Row: {
+          active: boolean
+          body: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          image_url: string | null
+          link_url: string | null
+          starts_at: string
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          body?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          starts_at?: string
+          title: string
+        }
+        Update: {
+          active?: boolean
+          body?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          starts_at?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      faqs: {
+        Row: {
+          active: boolean
+          answer: string
+          category: string | null
+          created_at: string
+          id: string
+          question: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          answer: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          question: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          answer?: string
+          category?: string | null
+          created_at?: string
+          id?: string
+          question?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      inquiries: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          body: string
+          created_at: string
+          id: string
+          status: string
+          subject: string
+          user_id: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          status?: string
+          subject: string
+          user_id: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          status?: string
+          subject?: string
           user_id?: string
         }
         Relationships: []
@@ -241,6 +376,33 @@ export type Database = {
         }
         Relationships: []
       }
+      notices: {
+        Row: {
+          active: boolean
+          body: string
+          created_at: string
+          id: string
+          pinned: boolean
+          title: string
+        }
+        Insert: {
+          active?: boolean
+          body: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title: string
+        }
+        Update: {
+          active?: boolean
+          body?: string
+          created_at?: string
+          id?: string
+          pinned?: boolean
+          title?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -342,6 +504,8 @@ export type Database = {
           experience: Database["public"]["Enums"]["experience_level"]
           korean_ok: boolean
           nationality: Database["public"]["Enums"]["nationality"]
+          notify_marketing: boolean
+          notify_push: boolean
           preferred_region: string | null
           referrer_code: string | null
           user_id: string
@@ -352,6 +516,8 @@ export type Database = {
           experience: Database["public"]["Enums"]["experience_level"]
           korean_ok?: boolean
           nationality: Database["public"]["Enums"]["nationality"]
+          notify_marketing?: boolean
+          notify_push?: boolean
           preferred_region?: string | null
           referrer_code?: string | null
           user_id: string
@@ -362,6 +528,8 @@ export type Database = {
           experience?: Database["public"]["Enums"]["experience_level"]
           korean_ok?: boolean
           nationality?: Database["public"]["Enums"]["nationality"]
+          notify_marketing?: boolean
+          notify_push?: boolean
           preferred_region?: string | null
           referrer_code?: string | null
           user_id?: string
