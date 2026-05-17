@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { adminCreateUser, adminDeleteUser } from "@/lib/admin-users.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +12,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
-import { Download } from "lucide-react";
+import { Download, Trash2, UserPlus } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -125,7 +128,16 @@ function AdminPanel() {
 function UsersTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const [seekers, setSeekers] = useState<any[]>([]);
-  useEffect(() => { (async () => {
+  const createUser = useServerFn(adminCreateUser);
+  const deleteUser = useServerFn(adminDeleteUser);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPwd, setNewPwd] = useState("");
+  const [newName, setNewName] = useState("");
+  const [newPhone, setNewPhone] = useState("");
+  const [newRole, setNewRole] = useState<"seeker" | "employer">("seeker");
+  const [busy, setBusy] = useState(false);
+
+  const load = async () => {
     const { data: e } = await supabase.from("employer_profiles").select("*").order("created_at", { ascending: false });
     const { data: s } = await supabase.from("seeker_profiles").select("*").order("created_at", { ascending: false });
     const ids = Array.from(new Set([...(e ?? []), ...(s ?? [])].map((r: any) => r.user_id)));
@@ -136,7 +148,32 @@ function UsersTab() {
     (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
     setEmployers((e ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
     setSeekers((s ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
-  })(); }, []);
+  };
+  useEffect(() => { load(); }, []);
+
+  const handleCreate = async () => {
+    if (!newEmail || !newPwd || !newName) return toast.error("이메일, 비밀번호, 이름 필수");
+    setBusy(true);
+    try {
+      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole } });
+      toast.success("사용자가 추가되었습니다");
+      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone("");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "추가 실패");
+    } finally { setBusy(false); }
+  };
+
+  const handleDelete = async (uid: string, label: string) => {
+    if (!confirm(`'${label}' 사용자를 삭제할까요? 복구할 수 없습니다.`)) return;
+    try {
+      await deleteUser({ data: { userId: uid } });
+      toast.success("삭제되었습니다");
+      load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "삭제 실패");
+    }
+  };
 
   const exportEmployers = () => {
     const rows = employers.map(e => ({
@@ -162,37 +199,66 @@ function UsersTab() {
     downloadXlsx(rows, "구직자", `구직자_리스트_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
   return (
-    <div className="grid md:grid-cols-2 gap-4 mt-4">
-      <Card><CardContent className="p-4">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-bold">구인자 ({employers.length})</h3>
-          <Button size="sm" variant="outline" onClick={exportEmployers}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
-        </div>
-        <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {employers.map(e => (
-            <div key={e.user_id} className="p-2 border rounded text-sm">
-              <p className="font-semibold">{e.company_name}</p>
-              <p className="text-xs text-muted-foreground">{e.profiles?.full_name} · {e.contact_phone}</p>
-              <p className="text-xs">📍 {e.location} · 💰 {e.credits} 크레딧</p>
-            </div>
-          ))}
-        </div>
-      </CardContent></Card>
-      <Card><CardContent className="p-4">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-bold">구직자 ({seekers.length})</h3>
-          <Button size="sm" variant="outline" onClick={exportSeekers}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
-        </div>
-        <div className="space-y-2 max-h-[60vh] overflow-y-auto">
-          {seekers.map(s => (
-            <div key={s.user_id} className="p-2 border rounded text-sm">
-              <p className="font-semibold">{s.profiles?.full_name} <Badge variant="outline" className="ml-1 text-[10px]">{s.nationality === "foreigner" ? "외국인" : "내국인"}</Badge></p>
-              <p className="text-xs text-muted-foreground">{s.profiles?.phone} · 추천인: {s.referrer_code ?? "-"}</p>
-              <p className="text-xs">경력: {s.experience} · 한국어: {s.korean_ok ? "O" : "X"} · 비자: {s.visa}</p>
-            </div>
-          ))}
+    <div className="space-y-4 mt-4">
+      <Card><CardContent className="p-4 space-y-3">
+        <h3 className="font-bold flex items-center gap-2"><UserPlus size={16} />사용자 추가</h3>
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+          <Input placeholder="이메일" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+          <Input placeholder="비밀번호 (6자리)" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
+          <Input placeholder="이름" value={newName} onChange={e => setNewName(e.target.value)} />
+          <Input placeholder="연락처" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+          <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="seeker">구직자</SelectItem>
+              <SelectItem value="employer">구인자</SelectItem>
+            </SelectContent>
+          </Select>
+          <Button onClick={handleCreate} disabled={busy}>추가</Button>
         </div>
       </CardContent></Card>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card><CardContent className="p-4">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-bold">구인자 ({employers.length})</h3>
+            <Button size="sm" variant="outline" onClick={exportEmployers}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+          </div>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {employers.map(e => (
+              <div key={e.user_id} className="p-2 border rounded text-sm flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold truncate">{e.company_name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{e.profiles?.full_name} · {e.contact_phone}</p>
+                  <p className="text-xs">📍 {e.location} · 💰 {e.credits} 크레딧</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => handleDelete(e.user_id, e.company_name)}>
+                  <Trash2 size={14} className="text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent></Card>
+        <Card><CardContent className="p-4">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-bold">구직자 ({seekers.length})</h3>
+            <Button size="sm" variant="outline" onClick={exportSeekers}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+          </div>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+            {seekers.map(s => (
+              <div key={s.user_id} className="p-2 border rounded text-sm flex justify-between items-start gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold">{s.profiles?.full_name} <Badge variant="outline" className="ml-1 text-[10px]">{s.nationality === "foreigner" ? "외국인" : "내국인"}</Badge></p>
+                  <p className="text-xs text-muted-foreground truncate">{s.profiles?.phone} · 추천인: {s.referrer_code ?? "-"}</p>
+                  <p className="text-xs">경력: {s.experience} · 한국어: {s.korean_ok ? "O" : "X"} · 비자: {s.visa}</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={() => handleDelete(s.user_id, s.profiles?.full_name ?? "사용자")}>
+                  <Trash2 size={14} className="text-destructive" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent></Card>
+      </div>
     </div>
   );
 }
@@ -256,6 +322,12 @@ function ReferrersTab() {
     if (error) return toast.error(error.message);
     setCode(""); setName(""); setPhone(""); load();
   };
+  const del = async (id: string, label: string) => {
+    if (!confirm(`'${label}' 추천인을 삭제할까요?`)) return;
+    const { error } = await supabase.from("referrers").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("삭제되었습니다"); load();
+  };
   const exportXlsx = () => {
     const rows = list.map(r => ({
       코드: r.code, 이름: r.name, 연락처: r.phone, 가입자수: counts[r.code] ?? 0,
@@ -276,7 +348,7 @@ function ReferrersTab() {
         <Button onClick={add}>추가</Button>
       </div>
       <table className="w-full text-sm">
-        <thead><tr className="text-left border-b"><th className="py-2">코드</th><th>이름</th><th>연락처</th><th>가입자</th></tr></thead>
+        <thead><tr className="text-left border-b"><th className="py-2">코드</th><th>이름</th><th>연락처</th><th>가입자</th><th></th></tr></thead>
         <tbody>
           {list.map(r => (
             <tr key={r.id} className="border-b">
@@ -284,6 +356,11 @@ function ReferrersTab() {
               <td>{r.name}</td>
               <td>{r.phone}</td>
               <td className="font-bold">{counts[r.code] ?? 0}명</td>
+              <td>
+                <Button size="sm" variant="ghost" onClick={() => del(r.id, r.name)}>
+                  <Trash2 size={14} className="text-destructive" />
+                </Button>
+              </td>
             </tr>
           ))}
         </tbody>
