@@ -318,6 +318,7 @@ export type Database = {
           contact_phone: string
           created_at: string
           daily_wage: number
+          edit_count: number
           employer_id: string
           headcount: number
           id: string
@@ -339,6 +340,7 @@ export type Database = {
           contact_phone: string
           created_at?: string
           daily_wage: number
+          edit_count?: number
           employer_id: string
           headcount?: number
           id?: string
@@ -360,6 +362,7 @@ export type Database = {
           contact_phone?: string
           created_at?: string
           daily_wage?: number
+          edit_count?: number
           employer_id?: string
           headcount?: number
           id?: string
