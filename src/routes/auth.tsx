@@ -100,9 +100,9 @@ function AuthPage() {
             <TabsTrigger value="signup">회원가입</TabsTrigger>
           </TabsList>
           <TabsContent value="login" className="space-y-3 mt-4">
-            <div><Label>이메일</Label><Input value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
-            <div><Label>비밀번호</Label><Input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
-            <Button className="w-full" onClick={signIn} disabled={loading}>로그인</Button>
+            <div><Label>이메일</Label><Input className="h-12" value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
+            <div><Label>비밀번호</Label><Input className="h-12" type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
+            <Button className="w-full h-12 text-base" onClick={signIn} disabled={loading}>로그인</Button>
             <button type="button" onClick={forgotPassword} className="w-full text-xs text-primary hover:underline mt-1">
               비밀번호를 잊으셨나요? 비밀번호 재설정
             </button>
@@ -123,12 +123,13 @@ function AuthPage() {
                 </Label>
               </RadioGroup>
             </div>
-            <div><Label>이름</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
-            <div><Label>연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
-            <div><Label>이메일</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
+            <div><Label>이름</Label><Input className="h-12" value={name} onChange={e => setName(e.target.value)} /></div>
+            <div><Label>연락처</Label><Input className="h-12" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
+            <div><Label>이메일</Label><Input className="h-12" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
               <Label>비밀번호</Label>
               <Input
+                className="h-12"
                 type="password"
                 inputMode="numeric"
                 pattern="\d{6}"
@@ -138,7 +139,7 @@ function AuthPage() {
                 placeholder="숫자 6자리"
               />
             </div>
-            <Button className="w-full" onClick={signUp} disabled={loading}>회원가입</Button>
+            <Button className="w-full h-12 text-base" onClick={signUp} disabled={loading}>회원가입</Button>
           </TabsContent>
         </Tabs>
       </div>
