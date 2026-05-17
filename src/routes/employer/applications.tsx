@@ -58,8 +58,9 @@ function Page() {
     if (error) return toast.error(error.message);
     toast.success("노쇼 처리됨"); load();
   };
-  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"확정(갈께요)", no_show:"노쇼" };
-  const STATUS_VARIANT: Record<string, any> = { approved:"default", confirmed:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
+  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 확정(온데요)", no_show:"노쇼" };
+  const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
+  const STATUS_CLASS: Record<string,string> = { confirmed: "bg-green-600 hover:bg-green-600 text-white border-transparent" };
 
   return (
     <MobileLayout role="employer">
@@ -79,7 +80,7 @@ function Page() {
                 </div>
                 {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
               </div>
-              <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
+              <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={STATUS_CLASS[a.status]}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
             </div>
             {a.status === "pending" && (
               <div className="flex gap-2">

@@ -8,14 +8,14 @@ type Tab = { to: string; label: string; icon: any };
 const seekerTabs: Tab[] = [
   { to: "/seeker/home", label: "홈", icon: Home },
   { to: "/seeker/featured", label: "추천", icon: Star },
-  { to: "/seeker/applications", label: "신청내역", icon: FileText },
+  { to: "/seeker/applications", label: "신청/승인 내역", icon: FileText },
   { to: "/seeker/me", label: "설정", icon: Settings },
 ];
 
 const employerTabs: Tab[] = [
   { to: "/employer/home", label: "홈", icon: LayoutDashboard },
   { to: "/employer/jobs", label: "공고", icon: Briefcase },
-  { to: "/employer/applications", label: "요청", icon: Inbox },
+  { to: "/employer/applications", label: "신청/승인 내역", icon: Inbox },
   { to: "/employer/credits", label: "크레딧", icon: CreditCard },
   { to: "/employer/me", label: "설정", icon: Settings },
 ];
