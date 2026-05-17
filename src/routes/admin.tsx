@@ -189,8 +189,14 @@ function UsersTab() {
 function CreditsTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const load = async () => {
-    const { data } = await supabase.from("employer_profiles").select("*, profiles:user_id(full_name)").order("credits");
-    setEmployers(data ?? []);
+    const { data } = await supabase.from("employer_profiles").select("*").order("credits");
+    const ids = (data ?? []).map((r: any) => r.user_id);
+    const { data: profs } = ids.length
+      ? await supabase.from("profiles").select("id, full_name").in("id", ids)
+      : { data: [] as any[] };
+    const pmap: Record<string, any> = {};
+    (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
+    setEmployers((data ?? []).map((r: any) => ({ ...r, profiles: pmap[r.user_id] })));
   };
   useEffect(() => { load(); }, []);
   const grant = async (uid: string) => {
