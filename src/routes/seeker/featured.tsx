@@ -37,14 +37,25 @@ function Page() {
     }
   })(); }, []);
 
-  const card = (j: any) => (
+  const premiumCard = (j: any) => (
     <Card key={j.id} className="p-2 cursor-pointer" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
       {j.photo_url ? (
         <img src={j.photo_url} className="w-full h-24 rounded object-cover mb-1" alt={j.title} />
       ) : <div className="w-full h-24 rounded bg-muted flex items-center justify-center text-2xl mb-1">🏢</div>}
       <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
       <h3 className="text-xs font-semibold mt-1 truncate">{j.title}</h3>
+      <p className="text-[11px] text-muted-foreground truncate">🏨 {j.place_name}</p>
       <p className="text-xs text-primary font-bold">{Number(j.daily_wage).toLocaleString()}원</p>
+      <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
+    </Card>
+  );
+
+  const todayCard = (j: any) => (
+    <Card key={j.id} className="p-3 cursor-pointer" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+      <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
+      <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
+      <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>
+      <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
       <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
     </Card>
   );
@@ -55,12 +66,12 @@ function Page() {
         <section>
           <h2 className="font-bold mb-2 flex items-center gap-1">⭐ 프리미엄 추천</h2>
           {promoted.length === 0 ? <p className="text-xs text-muted-foreground">진행중인 추천 공고가 없습니다</p>
-            : <div className="grid grid-cols-2 gap-2">{promoted.map(card)}</div>}
+            : <div className="grid grid-cols-2 gap-2">{promoted.map(premiumCard)}</div>}
         </section>
         <section>
           <h2 className="font-bold mb-2">🎲 오늘의 추천</h2>
           {random.length === 0 ? <p className="text-xs text-muted-foreground">공고가 없습니다</p>
-            : <div className="grid grid-cols-2 gap-2">{random.map(card)}</div>}
+            : <div className="grid grid-cols-2 gap-2">{random.map(todayCard)}</div>}
         </section>
         <section>
           <h2 className="font-bold mb-2">📢 광고</h2>
