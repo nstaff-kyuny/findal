@@ -12,7 +12,7 @@ function Index() {
     if (!user) { nav({ to: "/auth" }); return; }
     if (roles.includes("admin")) { nav({ to: "/admin" }); return; }
     if (roles.includes("employer")) { nav({ to: "/employer/home" }); return; }
-    if (roles.includes("seeker")) { nav({ to: "/seeker/home" }); return; }
+    if (roles.includes("seeker")) { nav({ to: "/seeker/featured" }); return; }
     nav({ to: "/onboarding" });
   }, [loading, user, roles]);
   return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">불러오는 중…</div>;
