@@ -16,10 +16,27 @@ function Page() {
   const [apps, setApps] = useState<any[]>([]);
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase.from("job_applications")
-      .select("*, jobs(title, place_name), profiles:seeker_id(full_name, phone), seeker_profiles:seeker_id(nationality, experience, korean_ok, visa)")
+    const { data: appsData, error } = await supabase.from("job_applications")
+      .select("*")
       .eq("employer_id", user.id).order("created_at", { ascending: false });
-    setApps(data ?? []);
+    if (error) { toast.error(error.message); return; }
+    const list = appsData ?? [];
+    const seekerIds = Array.from(new Set(list.map((a: any) => a.seeker_id)));
+    const jobIds = Array.from(new Set(list.map((a: any) => a.job_id)));
+    const [jobsRes, profilesRes, seekerProfilesRes] = await Promise.all([
+      jobIds.length ? supabase.from("jobs").select("id, title, place_name").in("id", jobIds) : Promise.resolve({ data: [] as any[] }),
+      seekerIds.length ? supabase.from("profiles").select("id, full_name, phone").in("id", seekerIds) : Promise.resolve({ data: [] as any[] }),
+      seekerIds.length ? supabase.from("seeker_profiles").select("user_id, nationality, experience, korean_ok, visa").in("user_id", seekerIds) : Promise.resolve({ data: [] as any[] }),
+    ]);
+    const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
+    const profilesMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
+    const spMap = new Map((seekerProfilesRes.data ?? []).map((s: any) => [s.user_id, s]));
+    setApps(list.map((a: any) => ({
+      ...a,
+      jobs: jobsMap.get(a.job_id),
+      profiles: profilesMap.get(a.seeker_id),
+      seeker_profiles: spMap.get(a.seeker_id),
+    })));
   };
   useEffect(() => { load(); }, [user]);
 
