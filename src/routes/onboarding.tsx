@@ -22,16 +22,27 @@ function Onboarding() {
     if (loading) return;
     if (!user) { nav({ to: "/auth" }); return; }
     const intended = (user.user_metadata as any)?.intended_role as "seeker" | "employer" | undefined;
-    if (intended) {
-      void (async () => {
+    void (async () => {
+      // 이미 프로필이 있으면 온보딩 건너뛰기
+      if (roles.includes("employer")) {
+        const { data: ep } = await supabase.from("employer_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
+        if (ep) { nav({ to: "/employer/home" }); return; }
+      }
+      if (roles.includes("seeker")) {
+        const { data: sp } = await supabase.from("seeker_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
+        if (sp) { nav({ to: "/seeker/home" }); return; }
+      }
+      if (intended) {
         if (!roles.includes(intended)) {
           await supabase.from("user_roles").insert({ user_id: user.id, role: intended } as any);
           await refreshRoles();
         }
         setResolvedRole(intended);
-      })();
-    } else if (roles.includes("seeker")) setResolvedRole("seeker");
-    else if (roles.includes("employer")) setResolvedRole("employer");
+        return;
+      }
+      if (roles.includes("seeker")) setResolvedRole("seeker");
+      else if (roles.includes("employer")) setResolvedRole("employer");
+    })();
   }, [loading, user, roles]);
 
   if (!user) return null;
