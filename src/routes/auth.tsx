@@ -93,7 +93,14 @@ function AuthPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/10 to-background p-4">
       <div className="bg-background rounded-2xl shadow-xl p-6 w-full max-w-md border">
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary text-primary-foreground font-bold text-xl mb-3">FA</div>
+          <img
+            src="https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-192.png"
+            alt="Find AR"
+            className="inline-block w-14 h-14 rounded-2xl mb-3 object-contain bg-primary"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+          />
           <h1 className="text-2xl font-bold text-primary">Find AR <span className="text-foreground">(파인달)</span></h1>
           <p className="text-sm text-muted-foreground mt-1">일용직 일자리 찾기</p>
           <p className="text-xs text-muted-foreground">호텔·식당·요양 일용직 매칭</p>
