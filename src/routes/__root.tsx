@@ -12,6 +12,7 @@ import {
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
 import { Toaster } from "@/components/ui/sonner";
+import { EventPopup } from "@/components/EventPopup";
 
 function NotFoundComponent() {
   return (
@@ -119,6 +120,7 @@ function RootComponent() {
       <ClientOnly fallback={<div className="min-h-screen" />}>
         <AuthProvider>
           <Outlet />
+          <EventPopup />
           <Toaster />
         </AuthProvider>
       </ClientOnly>

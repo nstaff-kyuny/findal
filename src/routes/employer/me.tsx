@@ -3,10 +3,10 @@ import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
 import { SettingsPage } from "@/components/SettingsPage";
 
-export const Route = createFileRoute("/seeker/me")({
+export const Route = createFileRoute("/employer/me")({
   component: () => (
-    <RoleGate role="seeker">
-      <MobileLayout role="seeker"><SettingsPage role="seeker" /></MobileLayout>
+    <RoleGate role="employer">
+      <MobileLayout role="employer"><SettingsPage role="employer" /></MobileLayout>
     </RoleGate>
   ),
 });

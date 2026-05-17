@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
-// 관리자 테스트 계정용 alias: 아이디 "nstaff" + 비번 "0407" 입력 시
-// 실제 계정(nstaff@findar.app / 040700)으로 변환
 const ADMIN_ALIAS = "nstaff";
 const ADMIN_EMAIL = "nstaff@findar.app";
 const ADMIN_PW_ALIAS = "0407";
@@ -31,10 +30,11 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [role, setRole] = useState<"seeker" | "employer">("seeker");
   const [loading, setLoading] = useState(false);
 
   const signIn = async () => {
-    if (!loginId || !loginPw) return toast.error("아이디/비밀번호를 입력하세요");
+    if (!loginId || !loginPw) return toast.error("이메일/비밀번호를 입력하세요");
     setLoading(true);
     const { email: e, password: p } = normalizeLogin(loginId, loginPw);
     const { error } = await supabase.auth.signInWithPassword({ email: e, password: p });
@@ -44,19 +44,23 @@ function AuthPage() {
   };
 
   const signUp = async () => {
-    if (!/^\d{6}$/.test(password)) return toast.error("비밀번호는 숫자 6자리로 설정해 주세요");
+    if (password.length < 4) return toast.error("비밀번호는 4자 이상으로 설정해 주세요");
     if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email, password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: name, phone },
+        data: { full_name: name, phone, intended_role: role },
       },
     });
+    if (error) { setLoading(false); return toast.error(error.message); }
+    // 즉시 user_roles 등록 시도 (session이 바로 생기는 경우)
+    if (data.session && data.user) {
+      await supabase.from("user_roles").insert({ user_id: data.user.id, role } as any);
+    }
     setLoading(false);
-    if (error) return toast.error(error.message);
-    toast.success("가입 완료! 이메일을 확인해 주세요.");
+    toast.success("가입 완료!");
     nav({ to: "/" });
   };
 
@@ -75,21 +79,32 @@ function AuthPage() {
             <TabsTrigger value="signup">회원가입</TabsTrigger>
           </TabsList>
           <TabsContent value="login" className="space-y-3 mt-4">
-            <div><Label>아이디 (이메일)</Label><Input value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="이메일 또는 nstaff" /></div>
-            <div><Label>비밀번호</Label><Input type="password" inputMode="numeric" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
+            <div><Label>이메일</Label><Input value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
+            <div><Label>비밀번호</Label><Input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
             <Button className="w-full" onClick={signIn} disabled={loading}>로그인</Button>
-            <p className="text-[11px] text-muted-foreground text-center pt-1">관리자 테스트: <span className="font-mono">nstaff</span> / <span className="font-mono">0407</span></p>
           </TabsContent>
           <TabsContent value="signup" className="space-y-3 mt-4">
+            <div>
+              <Label>가입 유형</Label>
+              <RadioGroup value={role} onValueChange={(v) => setRole(v as any)} className="grid grid-cols-2 gap-2 mt-1">
+                <Label className={`border rounded-md p-3 text-center cursor-pointer ${role === "seeker" ? "border-primary bg-primary/5" : ""}`}>
+                  <RadioGroupItem value="seeker" className="sr-only" />
+                  <div className="text-xl">🧑‍🍳</div>
+                  <span className="text-sm font-semibold">구직자</span>
+                </Label>
+                <Label className={`border rounded-md p-3 text-center cursor-pointer ${role === "employer" ? "border-primary bg-primary/5" : ""}`}>
+                  <RadioGroupItem value="employer" className="sr-only" />
+                  <div className="text-xl">🏨</div>
+                  <span className="text-sm font-semibold">구인자</span>
+                </Label>
+              </RadioGroup>
+            </div>
             <div><Label>이름</Label><Input value={name} onChange={e => setName(e.target.value)} /></div>
             <div><Label>연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
             <div><Label>이메일</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
-              <Label>비밀번호 (숫자 6자리)</Label>
-              <Input type="password" inputMode="numeric" maxLength={6} pattern="\d{6}"
-                value={password}
-                onChange={e => setPassword(e.target.value.replace(/\D/g, "").slice(0,6))}
-                placeholder="••••••" />
+              <Label>비밀번호</Label>
+              <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="비밀번호 (4자 이상)" />
             </div>
             <Button className="w-full" onClick={signUp} disabled={loading}>회원가입</Button>
           </TabsContent>
