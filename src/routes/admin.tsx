@@ -178,6 +178,16 @@ function AllUsersTab() {
     } catch (e: any) { toast.error(e?.message ?? "실패"); }
   };
 
+  const handleHardDelete = async (uid: string, label: string) => {
+    if (!confirm(`'${label}' 사용자를 완전 삭제합니다.\n이 작업은 되돌릴 수 없습니다. 계속할까요?`)) return;
+    if (!confirm("정말로 완전 삭제하시겠습니까? 모든 관련 데이터가 영구 삭제됩니다.")) return;
+    try {
+      await hardDelete({ data: { userId: uid } });
+      toast.success("완전 삭제되었습니다");
+      load();
+    } catch (e: any) { toast.error(e?.message ?? "실패"); }
+  };
+
   const filtered = rows.filter(r => {
     if (!q) return true;
     const s = q.toLowerCase();
