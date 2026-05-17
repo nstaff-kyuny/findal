@@ -33,7 +33,7 @@ function Page() {
     if (region !== "all") qb = qb.eq("region", region);
     if (q) qb = qb.ilike("title", `%${q}%`);
     const cat = CATEGORIES.find(c => c.key === category);
-    if (cat && cat.industries.length) qb = qb.in("industry", cat.industries);
+    if (cat && cat.industries.length) qb = qb.in("industry", cat.industries as any);
     const { data } = await qb;
     setJobs(data ?? []);
   })(); }, [region, q, category]);
