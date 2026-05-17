@@ -39,8 +39,29 @@ function AuthPage() {
     const { email: e, password: p } = normalizeLogin(loginId, loginPw);
     const { error } = await supabase.auth.signInWithPassword({ email: e, password: p });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      const msg = error.message?.toLowerCase() ?? "";
+      if (msg.includes("invalid") || msg.includes("credentials") || msg.includes("password")) {
+        toast.error("비밀번호가 올바르지 않습니다. 비밀번호를 잊으셨다면 아래 '비밀번호 찾기'를 눌러주세요.");
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
     nav({ to: "/" });
+  };
+
+  const forgotPassword = async () => {
+    const target = loginId.trim() || prompt("가입한 이메일을 입력하세요:")?.trim();
+    if (!target) return;
+    if (!/^\S+@\S+\.\S+$/.test(target)) return toast.error("이메일 형식이 아닙니다");
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(target, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) return toast.error(error.message);
+    toast.success("비밀번호 재설정 링크를 이메일로 보냈습니다");
   };
 
   const signUp = async () => {
@@ -82,6 +103,9 @@ function AuthPage() {
             <div><Label>이메일</Label><Input value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
             <div><Label>비밀번호</Label><Input type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
             <Button className="w-full" onClick={signIn} disabled={loading}>로그인</Button>
+            <button type="button" onClick={forgotPassword} className="w-full text-xs text-primary hover:underline mt-1">
+              비밀번호를 잊으셨나요? 비밀번호 재설정
+            </button>
           </TabsContent>
           <TabsContent value="signup" className="space-y-3 mt-4">
             <div>
