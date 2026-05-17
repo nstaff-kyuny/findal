@@ -278,7 +278,16 @@ function CalendarView({
               onClick={() => clickable && onSelectDay(key)}
               className={`min-h-[72px] border-t border-l p-1 text-[10px] text-left ${clickable ? "hover:bg-accent cursor-pointer" : "cursor-default"}`}
             >
-              {d && <div className="font-bold text-xs mb-0.5">{d}</div>}
+              {d && (
+                <div className="flex items-center justify-between mb-0.5">
+                  <span className="font-bold text-xs">{d}</span>
+                  {entries.filter((e) => e.status === "confirmed").length >= 2 && (
+                    <span className="text-[10px] font-bold text-white bg-green-600 rounded-full px-1.5 leading-4">
+                      {entries.filter((e) => e.status === "confirmed").length}명
+                    </span>
+                  )}
+                </div>
+              )}
               {entries.map((e, idx) => (
                 <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5">
                   <div className="font-semibold truncate">{e.profiles?.full_name}</div>
