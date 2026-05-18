@@ -52,9 +52,13 @@ function Admin() {
   if (!isDesktop) {
     return (
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
-        <div>
+        <div className="max-w-sm w-full">
           <h1 className="font-bold text-lg mb-2">관리자 페이지는 PC에서만 이용 가능합니다</h1>
-          <p className="text-sm text-muted-foreground">데스크탑(1024px 이상) 환경에서 접속해 주세요.</p>
+          <p className="text-sm text-muted-foreground mb-6">데스크탑(1024px 이상) 환경에서 접속해 주세요.</p>
+          <div className="flex flex-col gap-2">
+            <Button onClick={signOut}>로그아웃</Button>
+            <Button variant="outline" onClick={() => nav({ to: "/auth" })}>로그인 화면으로</Button>
+          </div>
         </div>
       </div>
     );
