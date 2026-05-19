@@ -59,6 +59,7 @@ function Page() {
         <Link to="/employer/jobs"><Button size="lg" variant="outline" className="w-full h-14 text-base">공고 관리</Button></Link>
         <Link to="/employer/applications"><Button size="lg" variant="outline" className="w-full h-14 text-base">받은 요청 관리</Button></Link>
         <Link to="/employer/history"><Button size="lg" variant="outline" className="w-full h-14 text-base">승인 기록</Button></Link>
+        <Link to="/seeker/home" search={{ preview: "1" } as any}><Button size="lg" variant="secondary" className="w-full h-14 text-base">👀 구직자 홈 미리보기</Button></Link>
       </div>
     </MobileLayout>
   );
