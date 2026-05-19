@@ -76,7 +76,13 @@ function Page() {
       <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
       <h3 className="text-base font-bold mt-1 truncate">{j.title}</h3>
       <p className="text-sm text-muted-foreground truncate">🏨 {j.place_name}</p>
-      <p className="text-base text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
+      <div className="flex items-end justify-between mt-1 gap-2">
+        <p className="text-base text-primary font-bold">{Number(j.daily_wage).toLocaleString()}원</p>
+        <div className="text-right shrink-0">
+          <div className="text-[9px] text-muted-foreground leading-none">근무일</div>
+          <div className="text-[11px] font-semibold leading-tight">{formatWorkDatesWithWeekday(j.work_dates)?.split(", ").slice(0, 2).join("\n") || "협의"}</div>
+        </div>
+      </div>
       <p className="text-xs text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
     </Card>
   );
@@ -88,7 +94,13 @@ function Page() {
         <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
         <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
         <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>
-        <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
+        <div className="flex items-end justify-between mt-1 gap-2">
+          <p className="text-sm text-primary font-bold">{Number(j.daily_wage).toLocaleString()}원</p>
+          <div className="text-right shrink-0">
+            <div className="text-[9px] text-muted-foreground leading-none">근무일</div>
+            <div className="text-[10px] font-semibold leading-tight whitespace-pre-line">{formatWorkDatesWithWeekday(j.work_dates)?.split(", ").slice(0, 2).join("\n") || "협의"}</div>
+          </div>
+        </div>
         <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
       </div>
     </Card>
