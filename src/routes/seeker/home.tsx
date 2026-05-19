@@ -47,7 +47,7 @@ function Page() {
 
   return (
     <MobileLayout role="seeker">
-      <div className="p-3 space-y-3 sticky top-[57px] bg-muted/30 z-30 pt-3">
+      <div className="p-3 space-y-3 sticky top-[57px] bg-background z-30 pt-3 border-b shadow-sm">
         <div className="flex gap-2">
           <Select value={region} onValueChange={setRegion}>
             <SelectTrigger className="w-32"><SelectValue placeholder="지역" /></SelectTrigger>
