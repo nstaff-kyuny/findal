@@ -36,3 +36,17 @@ export function formatWorkDates(dates: string[] | null | undefined): string {
     })
     .join(", ");
 }
+
+const WEEKDAYS_KO = ["일", "월", "화", "수", "목", "금", "토"];
+
+export function formatWorkDatesWithWeekday(dates: string[] | null | undefined): string {
+  if (!dates || dates.length === 0) return "";
+  return dates
+    .map(d => {
+      const parts = d.split("-");
+      if (parts.length !== 3) return d;
+      const dt = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+      return `${parseInt(parts[1])}/${parseInt(parts[2])} (${WEEKDAYS_KO[dt.getDay()]})`;
+    })
+    .join(", ");
+}

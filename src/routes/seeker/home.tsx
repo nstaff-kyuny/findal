@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { INDUSTRY_LABEL, ROLE_LABEL, REGIONS } from "@/lib/constants";
+import { formatWorkDatesWithWeekday } from "@/lib/job-visuals";
 import { MapPin, Search, Navigation, CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -106,6 +107,12 @@ function Page() {
                 <h3 className="font-semibold text-sm truncate">{j.title}</h3>
                 <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MapPin size={10} />{j.place_name}</p>
                 <p className="text-sm font-bold text-primary mt-1">일당 {Number(j.daily_wage).toLocaleString()}원</p>
+              </div>
+              <div className="flex flex-col items-end justify-start shrink-0 text-right">
+                <span className="text-[10px] text-muted-foreground">근무일</span>
+                <span className="text-xs font-semibold text-foreground leading-tight whitespace-pre-line">
+                  {formatWorkDatesWithWeekday(j.work_dates)?.split(", ").slice(0, 2).join("\n") || "협의"}
+                </span>
               </div>
             </div>
           </Card>
