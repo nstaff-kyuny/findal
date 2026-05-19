@@ -369,6 +369,7 @@ function UsersTab() {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newRole, setNewRole] = useState<"seeker" | "employer">("seeker");
+  const [newReferrer, setNewReferrer] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -397,9 +398,9 @@ function UsersTab() {
     if (!newEmail || !newPwd || !newName) return toast.error("이메일, 비밀번호, 이름 필수");
     setBusy(true);
     try {
-      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole } });
+      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer } });
       toast.success("사용자가 추가되었습니다");
-      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone("");
+      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer("");
       load();
     } catch (e: any) {
       toast.error(e?.message ?? "추가 실패");
