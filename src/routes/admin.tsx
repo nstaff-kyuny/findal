@@ -152,7 +152,7 @@ function AllUsersTab() {
         supabase.from("profiles").select("id, full_name, phone").in("id", ids),
         supabase.from("user_roles").select("user_id, role").in("user_id", ids),
         supabase.from("seeker_profiles").select("user_id, referrer_code").in("user_id", ids),
-        supabase.from("employer_profiles").select("user_id, company_name").in("user_id", ids),
+        supabase.from("employer_profiles").select("user_id, company_name, referrer_code").in("user_id", ids),
       ]);
       const pmap: Record<string, any> = {}; (profs ?? []).forEach((p: any) => pmap[p.id] = p);
       const rmap: Record<string, string[]> = {}; (roles ?? []).forEach((r: any) => { (rmap[r.user_id] ??= []).push(r.role); });
@@ -163,7 +163,7 @@ function AllUsersTab() {
         full_name: pmap[u.id]?.full_name ?? "",
         phone: pmap[u.id]?.phone ?? "",
         roles: (rmap[u.id] ?? []).join(", "),
-        referrer_code: smap[u.id]?.referrer_code ?? "",
+        referrer_code: smap[u.id]?.referrer_code ?? emap[u.id]?.referrer_code ?? "",
         company_name: emap[u.id]?.company_name ?? "",
       })));
     } catch (e: any) {
