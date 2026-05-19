@@ -32,7 +32,7 @@ function Page() {
       seen.add(r.jobs.id);
       promotedJobs.push(r.jobs);
     });
-    setPromoted(promotedJobs);
+    setPromoted(promotedJobs.slice(0, 8));
     const { data: r } = await supabase.from("jobs").select("*").eq("is_active", true).limit(20);
     const randomJobs = (r ?? []).sort(() => Math.random() - 0.5);
     setRandom(randomJobs);
