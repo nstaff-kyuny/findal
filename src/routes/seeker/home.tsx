@@ -8,8 +8,11 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { INDUSTRY_LABEL, ROLE_LABEL, REGIONS } from "@/lib/constants";
-import { MapPin, Search, Navigation } from "lucide-react";
+import { MapPin, Search, Navigation, CalendarIcon, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
