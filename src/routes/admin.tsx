@@ -369,6 +369,7 @@ function UsersTab() {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newRole, setNewRole] = useState<"seeker" | "employer">("seeker");
+  const [newReferrer, setNewReferrer] = useState("");
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -397,9 +398,9 @@ function UsersTab() {
     if (!newEmail || !newPwd || !newName) return toast.error("이메일, 비밀번호, 이름 필수");
     setBusy(true);
     try {
-      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole } });
+      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer } });
       toast.success("사용자가 추가되었습니다");
-      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone("");
+      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer("");
       load();
     } catch (e: any) {
       toast.error(e?.message ?? "추가 실패");
@@ -459,11 +460,12 @@ function UsersTab() {
       <Card><CardContent className="p-4 space-y-3">
         <h3 className="font-bold flex items-center gap-2"><UserPlus size={16} />사용자 추가</h3>
         <p className="text-xs text-muted-foreground">⚠️ 보안상 기존 비밀번호는 볼 수 없습니다(암호화 저장). 변경이 필요하면 각 사용자의 🔑 버튼으로 새 비밀번호를 설정하세요.</p>
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
           <Input placeholder="이메일" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
           <Input placeholder="비밀번호 (6자리)" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
           <Input placeholder="이름" value={newName} onChange={e => setNewName(e.target.value)} />
           <Input placeholder="연락처" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+          <Input placeholder="추천인코드 (선택)" value={newReferrer} onChange={e => setNewReferrer(e.target.value)} />
           <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>

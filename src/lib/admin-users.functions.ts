@@ -23,6 +23,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       fullName: z.string().min(1),
       phone: z.string().optional().default(""),
       role: z.enum(["seeker", "employer"]),
+      referrerCode: z.string().optional().default(""),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -36,6 +37,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const newId = created.user!.id;
     await supabaseAdmin.from("user_roles").insert({ user_id: newId, role: data.role });
+    const refCode = (data.referrerCode || "").trim() || null;
     if (data.role === "employer") {
       await supabaseAdmin.from("employer_profiles").insert({
         user_id: newId,
@@ -43,12 +45,14 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         manager_name: data.fullName,
         contact_phone: data.phone || "",
         location: "",
+        referrer_code: refCode,
       });
     } else {
       await supabaseAdmin.from("seeker_profiles").insert({
         user_id: newId,
         nationality: "korean",
         experience: "lt5",
+        referrer_code: refCode,
       });
     }
     return { ok: true, id: newId };
