@@ -68,6 +68,22 @@ function Page() {
             </Button>
           ))}
         </div>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={selectedDate ? "default" : "outline"} size="sm" className={cn("flex-1 justify-start text-xs", !selectedDate && "text-muted-foreground")}>
+                <CalendarIcon size={14} className="mr-1" />
+                {selectedDate ? `${selectedDate.getMonth()+1}/${selectedDate.getDate()} 근무일 공고` : "날짜로 공고 찾기"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+          {selectedDate && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedDate(undefined)}><X size={14} /></Button>
+          )}
+        </div>
         <Button variant={nearby ? "default" : "outline"} size="sm" className="w-full" onClick={() => setNearby(!nearby)}>
           <Navigation size={14} className="mr-1" /> 위치기반으로 찾기
         </Button>
