@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { INDUSTRY_LABEL, ROLE_LABEL } from "@/lib/constants";
+import { INDUSTRY_FALLBACK_IMAGE, formatWorkDates } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { MapPin, Calendar, Wallet, Wrench } from "lucide-react";
