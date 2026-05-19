@@ -82,6 +82,14 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
   const [referrer, setReferrer] = useState("");
   const [region, setRegion] = useState("서울");
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    // 가입 시 입력한 추천인 코드가 있으면 미리 채워줌
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const code = (data.user?.user_metadata as any)?.referrer_code;
+      if (code) setReferrer(String(code));
+    })();
+  }, []);
   const save = async () => {
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "seeker" } as any);
@@ -140,14 +148,22 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
   const [district, setDistrict] = useState("");
   const [manager, setManager] = useState("");
   const [phone, setPhone] = useState("");
+  const [referrer, setReferrer] = useState("");
   const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.auth.getUser();
+      const code = (data.user?.user_metadata as any)?.referrer_code;
+      if (code) setReferrer(String(code));
+    })();
+  }, []);
   const save = async () => {
     if (!company || !region || !district || !manager || !phone) return toast.error("모든 항목을 입력하세요");
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "employer" } as any);
     const { error: e2 } = await supabase.from("employer_profiles").upsert({
       user_id: userId, company_name: company, location: `${region} ${district}`.trim(),
-      manager_name: manager, contact_phone: phone,
+      manager_name: manager, contact_phone: phone, referrer_code: referrer || null,
     } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
@@ -167,6 +183,7 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
       <div><Label>상세 위치 (구/동)</Label><Input value={district} onChange={e => setDistrict(e.target.value)} placeholder="예: 강남구 역삼동" /></div>
       <div><Label>담당자 이름</Label><Input value={manager} onChange={e => setManager(e.target.value)} /></div>
       <div><Label>담당자 연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
+      <div><Label>추천인 코드 (선택)</Label><Input value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
       <Button className="w-full" onClick={save} disabled={saving}>저장하고 시작하기</Button>
     </CardContent></Card>
   );

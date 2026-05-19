@@ -141,6 +141,7 @@ export type Database = {
           manager_name: string
           notify_marketing: boolean
           notify_push: boolean
+          referrer_code: string | null
           user_id: string
         }
         Insert: {
@@ -152,6 +153,7 @@ export type Database = {
           manager_name: string
           notify_marketing?: boolean
           notify_push?: boolean
+          referrer_code?: string | null
           user_id: string
         }
         Update: {
@@ -163,6 +165,7 @@ export type Database = {
           manager_name?: string
           notify_marketing?: boolean
           notify_push?: boolean
+          referrer_code?: string | null
           user_id?: string
         }
         Relationships: []

@@ -43,7 +43,7 @@ function Page() {
             <Card className="hover:bg-accent transition-colors"><CardContent className="p-4">
               <Briefcase className="text-primary mb-1" size={20} />
               <p className="text-xs text-muted-foreground">활성 공고</p>
-              <p className="text-2xl font-bold">{activeJobs}<span className="text-xs text-muted-foreground"> / 20</span></p>
+              <p className="text-2xl font-bold">{activeJobs}</p>
             </CardContent></Card>
           </Link>
           <Link to="/employer/applications">

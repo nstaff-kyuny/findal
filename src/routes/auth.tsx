@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
@@ -32,7 +33,10 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<"seeker" | "employer">("seeker");
+  const [referrer, setReferrer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSentDialog, setEmailSentDialog] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
 
   const signIn = async () => {
     if (!loginId || !loginPw) return toast.error("이메일/비밀번호를 입력하세요");
@@ -76,7 +80,7 @@ function AuthPage() {
       email, password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: name, phone, intended_role: role },
+        data: { full_name: name, phone, intended_role: role, referrer_code: referrer || null },
       },
     });
     if (error) { setLoading(false); return toast.error(error.message); }
@@ -85,8 +89,8 @@ function AuthPage() {
       await supabase.from("user_roles").insert({ user_id: data.user.id, role } as any);
     }
     setLoading(false);
-    toast.success("가입 완료!");
-    nav({ to: "/" });
+    setSentToEmail(email);
+    setEmailSentDialog(true);
   };
 
   return (
@@ -111,34 +115,34 @@ function AuthPage() {
             <TabsTrigger value="signup">회원가입</TabsTrigger>
           </TabsList>
           <TabsContent value="login" className="space-y-3 mt-4">
-            <div><Label>이메일</Label><Input className="h-12" value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
-            <div><Label>비밀번호</Label><Input className="h-12" type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
-            <Button className="w-full h-12 text-base" onClick={signIn} disabled={loading}>로그인</Button>
+            <div><Label>이메일 (E-mail)</Label><Input className="h-12" value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
+            <div><Label>비밀번호 (Password)</Label><Input className="h-12" type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
+            <Button className="w-full h-12 text-base" onClick={signIn} disabled={loading}>로그인 (Sign in)</Button>
             <button type="button" onClick={forgotPassword} className="w-full text-xs text-primary hover:underline mt-1">
               비밀번호를 잊으셨나요? 비밀번호 재설정
             </button>
           </TabsContent>
           <TabsContent value="signup" className="space-y-3 mt-4">
             <div>
-              <Label>가입 유형</Label>
+              <Label>가입 유형 (Account Type)</Label>
               <RadioGroup value={role} onValueChange={(v) => setRole(v as any)} className="grid grid-cols-2 gap-2 mt-1">
                 <Label className={`border rounded-md p-3 text-center cursor-pointer ${role === "seeker" ? "border-primary bg-primary/5" : ""}`}>
                   <RadioGroupItem value="seeker" className="sr-only" />
                   <div className="text-xl">🧑‍🍳</div>
-                  <span className="text-sm font-semibold">구직자</span>
+                  <span className="text-sm font-semibold">구직자 (Job Seeker)</span>
                 </Label>
                 <Label className={`border rounded-md p-3 text-center cursor-pointer ${role === "employer" ? "border-primary bg-primary/5" : ""}`}>
                   <RadioGroupItem value="employer" className="sr-only" />
                   <div className="text-xl">🏨</div>
-                  <span className="text-sm font-semibold">구인자</span>
+                  <span className="text-sm font-semibold">구인자 (Employer)</span>
                 </Label>
               </RadioGroup>
             </div>
-            <div><Label>이름</Label><Input className="h-12" value={name} onChange={e => setName(e.target.value)} /></div>
-            <div><Label>연락처</Label><Input className="h-12" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
-            <div><Label>이메일</Label><Input className="h-12" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
+            <div><Label>이름 (Full Name)</Label><Input className="h-12" value={name} onChange={e => setName(e.target.value)} /></div>
+            <div><Label>연락처 (Mobile)</Label><Input className="h-12" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
+            <div><Label>이메일 (E-mail)</Label><Input className="h-12" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
-              <Label>비밀번호</Label>
+              <Label>비밀번호 (Password)</Label>
               <Input
                 className="h-12"
                 type="password"
@@ -149,7 +153,7 @@ function AuthPage() {
               />
             </div>
             <div>
-              <Label>비밀번호 확인</Label>
+              <Label>비밀번호 확인 (Confirm Password)</Label>
               <Input
                 className="h-12"
                 type="password"
@@ -162,10 +166,29 @@ function AuthPage() {
                 <p className="text-xs text-destructive mt-1">비밀번호가 일치하지 않습니다</p>
               )}
             </div>
-            <Button className="w-full h-12 text-base" onClick={signUp} disabled={loading}>회원가입</Button>
+            <div>
+              <Label>추천인 코드 (Referrer Code) - 선택</Label>
+              <Input className="h-12" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" />
+            </div>
+            <Button className="w-full h-12 text-base" onClick={signUp} disabled={loading}>회원가입 (Sign up)</Button>
           </TabsContent>
         </Tabs>
       </div>
+      <AlertDialog open={emailSentDialog} onOpenChange={setEmailSentDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>가입 확인 메일을 발송했습니다 ✉️</AlertDialogTitle>
+            <AlertDialogDescription>
+              <b>{sentToEmail}</b> 주소로 가입 확인 메일을 보냈습니다.
+              <br />받은 메일함에서 메일을 확인하시고, 메일 안의 링크를 클릭하면 가입이 완료됩니다.
+              <br /><br />메일이 보이지 않는다면 스팸 메일함도 확인해 주세요.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => { setEmailSentDialog(false); nav({ to: "/" }); }}>확인</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

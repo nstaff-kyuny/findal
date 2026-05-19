@@ -18,15 +18,27 @@ function Page() {
 
   useEffect(() => { (async () => {
     const now = new Date().toISOString();
+    // 프리미엄 추천: 최신 등록순 (promoted_jobs.created_at desc)
     const { data: p } = await supabase.from("promoted_jobs")
-      .select("job_id, jobs(*)").gte("ends_at", now).limit(12);
-    const promotedJobs = (p ?? []).map((r: any) => r.jobs).filter(Boolean);
+      .select("job_id, created_at, jobs(*)").gte("ends_at", now)
+      .order("created_at", { ascending: false }).limit(20);
+    // 같은 공고가 여러 번 광고 등록된 경우 가장 최근 1건만 유지
+    const seen = new Set<string>();
+    const promotedJobs: any[] = [];
+    (p ?? []).forEach((r: any) => {
+      if (!r.jobs) return;
+      if (seen.has(r.jobs.id)) return;
+      seen.add(r.jobs.id);
+      promotedJobs.push(r.jobs);
+    });
     setPromoted(promotedJobs);
     const { data: r } = await supabase.from("jobs").select("*").eq("is_active", true).limit(20);
     const randomJobs = (r ?? []).sort(() => Math.random() - 0.5);
     setRandom(randomJobs);
-    const { data: a } = await supabase.from("ad_banners").select("*").eq("active", true).gte("ends_at", now).lte("starts_at", now).limit(3);
-    setAds(a ?? []);
+    // 광고 배너는 랜덤 순서로 노출
+    const { data: a } = await supabase.from("ad_banners").select("*").eq("active", true).gte("ends_at", now).lte("starts_at", now).limit(20);
+    const shuffledAds = (a ?? []).sort(() => Math.random() - 0.5).slice(0, 3);
+    setAds(shuffledAds);
 
     const jobIds = Array.from(new Set([...promotedJobs, ...randomJobs].map((j: any) => j.id)));
     if (jobIds.length) {

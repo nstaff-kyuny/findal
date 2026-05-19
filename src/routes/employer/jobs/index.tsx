@@ -18,6 +18,7 @@ function Page() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
+  const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
   const load = async () => {
     if (!user) return;
     const { data } = await supabase.from("jobs").select("*").eq("employer_id", user.id).order("created_at", { ascending: false });
@@ -45,14 +46,16 @@ function Page() {
       }
       return toast.error(error.message);
     }
-    toast.success("광고 등록 완료!");
+    setPromoOpenId(null);
+    toast.success("추천 배너 광고가 적용되었습니다!");
+    setTimeout(() => nav({ to: "/employer/home" }), 600);
   };
 
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-3">
         <div className="flex justify-between items-center">
-          <h2 className="font-bold text-base">내 공고 ({jobs.length}/20)</h2>
+          <h2 className="font-bold text-base">내 공고 ({jobs.length})</h2>
           <Link to="/employer/jobs/new"><Button size="default" className="h-11 px-5 text-base"><Plus size={18} className="mr-1" />등록</Button></Link>
         </div>
         {jobs.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">공고가 없습니다</p>}
@@ -79,7 +82,7 @@ function Page() {
                 <Button size="sm" variant="secondary" disabled={!canEdit}>수정</Button>
               </Link>
               <Button size="sm" variant="outline" className="flex-1" onClick={() => toggle(j)}>{j.is_active ? "비활성" : "활성"}</Button>
-              <Dialog>
+              <Dialog open={promoOpenId === j.id} onOpenChange={(o) => setPromoOpenId(o ? j.id : null)}>
                 <DialogTrigger asChild><Button size="sm" variant="outline" className="flex-1"><Megaphone size={14} className="mr-1" />광고</Button></DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>추천 배너 광고</DialogTitle></DialogHeader>
@@ -98,3 +101,4 @@ function Page() {
     </MobileLayout>
   );
 }
+
