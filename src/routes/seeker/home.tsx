@@ -109,8 +109,8 @@ function Page() {
                 <p className="text-sm font-bold text-primary mt-1">일당 {Number(j.daily_wage).toLocaleString()}원</p>
               </div>
               <div className="flex flex-col items-end justify-start shrink-0 text-right">
-                <span className="text-[10px] text-muted-foreground">근무일</span>
-                <span className="text-xs font-semibold text-foreground leading-tight whitespace-pre-line">
+                <span className="text-xs text-muted-foreground">근무일</span>
+                <span className="text-sm font-semibold text-foreground leading-tight whitespace-pre-line">
                   {formatWorkDatesWithWeekday(j.work_dates)?.split(", ").slice(0, 2).join("\n") || "협의"}
                 </span>
               </div>
