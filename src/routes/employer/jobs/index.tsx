@@ -58,6 +58,9 @@ function Page() {
           <h2 className="font-bold text-base">내 공고 ({jobs.length})</h2>
           <Link to="/employer/jobs/new"><Button size="default" className="h-11 px-5 text-base"><Plus size={18} className="mr-1" />등록</Button></Link>
         </div>
+        <Link to="/seeker/featured" search={{ preview: "1" } as any}>
+          <Button variant="secondary" className="w-full"><Megaphone size={14} className="mr-1" />추천 페이지 노출 미리보기</Button>
+        </Link>
         {jobs.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">공고가 없습니다</p>}
         {jobs.map(j => {
           const editCount = j.edit_count ?? 0;

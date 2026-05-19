@@ -8,8 +8,11 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { INDUSTRY_LABEL, ROLE_LABEL, REGIONS } from "@/lib/constants";
-import { MapPin, Search, Navigation } from "lucide-react";
+import { MapPin, Search, Navigation, CalendarIcon, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
@@ -26,17 +29,21 @@ function Page() {
   const [category, setCategory] = useState<string>("all");
   const [jobs, setJobs] = useState<any[]>([]);
   const [nearby, setNearby] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const nav = useNavigate();
 
+  const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
   useEffect(() => { (async () => {
-    let qb = supabase.from("jobs").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(50);
+    let qb = supabase.from("jobs").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(100);
     if (region !== "all") qb = qb.eq("region", region);
     if (q) qb = qb.ilike("title", `%${q}%`);
     const cat = CATEGORIES.find(c => c.key === category);
     if (cat && cat.industries.length) qb = qb.in("industry", cat.industries as any);
+    if (selectedDate) qb = qb.contains("work_dates", [toYMD(selectedDate)]);
     const { data } = await qb;
     setJobs(data ?? []);
-  })(); }, [region, q, category]);
+  })(); }, [region, q, category, selectedDate]);
 
   return (
     <MobileLayout role="seeker">
@@ -60,6 +67,22 @@ function Page() {
               {c.label}
             </Button>
           ))}
+        </div>
+        <div className="flex gap-2">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant={selectedDate ? "default" : "outline"} size="sm" className={cn("flex-1 justify-start text-xs", !selectedDate && "text-muted-foreground")}>
+                <CalendarIcon size={14} className="mr-1" />
+                {selectedDate ? `${selectedDate.getMonth()+1}/${selectedDate.getDate()} 근무일 공고` : "날짜로 공고 찾기"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="p-3 pointer-events-auto" />
+            </PopoverContent>
+          </Popover>
+          {selectedDate && (
+            <Button variant="ghost" size="sm" onClick={() => setSelectedDate(undefined)}><X size={14} /></Button>
+          )}
         </div>
         <Button variant={nearby ? "default" : "outline"} size="sm" className="w-full" onClick={() => setNearby(!nearby)}>
           <Navigation size={14} className="mr-1" /> 위치기반으로 찾기
