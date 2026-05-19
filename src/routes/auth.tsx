@@ -80,7 +80,7 @@ function AuthPage() {
       email, password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: name, phone, intended_role: role },
+        data: { full_name: name, phone, intended_role: role, referrer_code: referrer || null },
       },
     });
     if (error) { setLoading(false); return toast.error(error.message); }
@@ -89,8 +89,8 @@ function AuthPage() {
       await supabase.from("user_roles").insert({ user_id: data.user.id, role } as any);
     }
     setLoading(false);
-    toast.success("가입 완료!");
-    nav({ to: "/" });
+    setSentToEmail(email);
+    setEmailSentDialog(true);
   };
 
   return (
