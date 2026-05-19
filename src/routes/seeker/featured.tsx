@@ -66,7 +66,13 @@ function Page() {
     <Card key={j.id} className="p-3 cursor-pointer border-2 border-primary/60 shadow-md" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
       {j.photo_url ? (
         <img src={j.photo_url} className="w-full h-28 rounded object-cover mb-2" alt={j.title} />
-      ) : <div className="w-full h-28 rounded bg-muted flex items-center justify-center text-3xl mb-2">{industryIcon(j.industry)}</div>}
+      ) : (
+        <div className={`relative w-full h-28 rounded mb-2 overflow-hidden bg-gradient-to-br ${INDUSTRY_GRADIENT[j.industry] ?? "from-slate-400 to-slate-600"} flex flex-col items-center justify-center text-white`}>
+          <div className="text-3xl drop-shadow">{INDUSTRY_EMOJI[j.industry] ?? "🏢"}</div>
+          <div className="text-[10px] font-bold tracking-wide mt-1 px-2 py-0.5 rounded-full bg-white/25 backdrop-blur">{INDUSTRY_LABEL[j.industry]}</div>
+          <div className="absolute -right-3 -bottom-3 text-7xl opacity-15 select-none">{INDUSTRY_EMOJI[j.industry] ?? "🏢"}</div>
+        </div>
+      )}
       <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
       <h3 className="text-base font-bold mt-1 truncate">{j.title}</h3>
       <p className="text-sm text-muted-foreground truncate">🏨 {j.place_name}</p>
