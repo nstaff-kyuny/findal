@@ -6,6 +6,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { INDUSTRY_LABEL } from "@/lib/constants";
+import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI } from "@/lib/job-visuals";
 
 export const Route = createFileRoute("/seeker/featured")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
