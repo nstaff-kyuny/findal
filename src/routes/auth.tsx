@@ -33,7 +33,10 @@ function AuthPage() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState<"seeker" | "employer">("seeker");
+  const [referrer, setReferrer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailSentDialog, setEmailSentDialog] = useState(false);
+  const [sentToEmail, setSentToEmail] = useState("");
 
   const signIn = async () => {
     if (!loginId || !loginPw) return toast.error("이메일/비밀번호를 입력하세요");
