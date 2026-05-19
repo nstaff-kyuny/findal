@@ -92,7 +92,7 @@ function Page() {
               <div className="flex gap-2">
                 {a.profiles?.phone && (
                   <a href={`tel:${a.profiles.phone}`} className="flex-1">
-                    <Button size="sm" className="w-full">📞 연락하기</Button>
+                    <Button size="sm" className="w-full">연락하기</Button>
                   </a>
                 )}
                 <Button size="sm" variant="outline" className="flex-1" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
