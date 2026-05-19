@@ -29,17 +29,21 @@ function Page() {
   const [category, setCategory] = useState<string>("all");
   const [jobs, setJobs] = useState<any[]>([]);
   const [nearby, setNearby] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const nav = useNavigate();
 
+  const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+
   useEffect(() => { (async () => {
-    let qb = supabase.from("jobs").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(50);
+    let qb = supabase.from("jobs").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(100);
     if (region !== "all") qb = qb.eq("region", region);
     if (q) qb = qb.ilike("title", `%${q}%`);
     const cat = CATEGORIES.find(c => c.key === category);
     if (cat && cat.industries.length) qb = qb.in("industry", cat.industries as any);
+    if (selectedDate) qb = qb.contains("work_dates", [toYMD(selectedDate)]);
     const { data } = await qb;
     setJobs(data ?? []);
-  })(); }, [region, q, category]);
+  })(); }, [region, q, category, selectedDate]);
 
   return (
     <MobileLayout role="seeker">
