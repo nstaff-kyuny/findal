@@ -52,7 +52,7 @@ function Page() {
     <MobileLayout role="seeker">
       <div className="space-y-3">
         {job.photo_url ? <img src={job.photo_url} className="w-full h-56 object-cover" alt={job.title} /> :
-          <div className="w-full h-56 bg-muted flex items-center justify-center text-5xl">🏢</div>}
+          <img src={INDUSTRY_FALLBACK_IMAGE[job.industry] ?? INDUSTRY_FALLBACK_IMAGE.hotel} className="w-full h-56 object-cover" alt={INDUSTRY_LABEL[job.industry]} />}
         <div className="px-4 space-y-3">
           <div className="flex gap-1 flex-wrap">
             <Badge>{INDUSTRY_LABEL[job.industry]}</Badge>
@@ -62,9 +62,9 @@ function Page() {
           <Card><CardContent className="p-4 space-y-2 text-sm">
             <div className="flex items-center gap-2"><MapPin size={14} className="text-muted-foreground" /><span>{job.place_name} · {job.location}</span></div>
             <div className="flex items-center gap-2"><Wallet size={14} className="text-muted-foreground" /><span>일당 <b>{Number(job.daily_wage).toLocaleString()}원</b> (지급일: {job.pay_day})</span></div>
-            <div className="flex items-center gap-2"><Calendar size={14} className="text-muted-foreground" /><span>근무일: {(job.work_dates || []).join(", ") || "협의"}</span></div>
-            {job.rooms_per_day && <div className="flex items-center gap-2">🛏️ 일일 객실수: {job.rooms_per_day}개</div>}
-            {job.preparations && <div className="flex items-start gap-2"><Wrench size={14} className="text-muted-foreground mt-0.5" /><span>{job.preparations}</span></div>}
+            <div className="flex items-center gap-2"><Calendar size={14} className="text-muted-foreground" /><span>근무일: {formatWorkDates(job.work_dates)}</span></div>
+            {job.rooms_per_day && <div className="flex items-center gap-2">🛏️ 일일 정비 객실수: {job.rooms_per_day}개</div>}
+            {job.preparations && <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded p-2"><Wrench size={14} className="text-amber-700 mt-0.5" /><span className="font-semibold text-amber-900">준비물: <span className="font-bold">{job.preparations}</span></span></div>}
             <div className="text-xs text-muted-foreground pt-2">📞 담당자 연락처는 승인 후 공개됩니다.</div>
           </CardContent></Card>
 
