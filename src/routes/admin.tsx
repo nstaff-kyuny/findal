@@ -3,7 +3,7 @@ import { useEffect, useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails, adminListAllUsers, adminSetUserBan } from "@/lib/admin-users.functions";
+import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails, adminListAllUsers, adminSetUserBan, adminUpdateUserProfile } from "@/lib/admin-users.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -472,6 +472,7 @@ function IconsTab() {
 }
 
 function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: string | null; open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void }) {
+  const updateUser = useServerFn(adminUpdateUserProfile);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState<"seeker" | "employer" | "unknown">("unknown");
@@ -529,23 +530,19 @@ function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: strin
     if (!userId) return;
     setSaving(true);
     try {
-      const { error: pe } = await supabase.from("profiles").update({ full_name: fullName, phone } as any).eq("id", userId);
-      if (pe) throw pe;
-      if (role === "seeker") {
-        const { error } = await supabase.from("seeker_profiles").update({
-          nationality, visa: nationality === "korean" ? null : (visa || null),
-          korean_ok: koreanOk, experience,
-          preferred_region: regions.length ? serializeRegions(regions) : null,
-          referrer_code: seekerReferrer || null,
-        } as any).eq("user_id", userId);
-        if (error) throw error;
-      } else if (role === "employer") {
-        const { error } = await supabase.from("employer_profiles").update({
-          company_name: company, location, manager_name: manager,
-          contact_phone: phone, referrer_code: empReferrer || null,
-        } as any).eq("user_id", userId);
-        if (error) throw error;
-      }
+      await updateUser({ data: {
+        userId, role, fullName, phone,
+        seeker: role === "seeker" ? {
+          nationality: nationality as "korean" | "foreigner",
+          visa: nationality === "korean" ? null : ((visa || null) as any),
+          koreanOk, experience: experience as "lt5" | "gte5",
+          preferredRegions: regions.length ? serializeRegions(regions) : null,
+          referrerCode: seekerReferrer || null,
+        } : undefined,
+        employer: role === "employer" ? {
+          companyName: company, location, managerName: manager, referrerCode: empReferrer || null,
+        } : undefined,
+      } });
       toast.success("저장되었습니다");
       onOpenChange(false);
       onSaved();
@@ -743,7 +740,7 @@ function UsersTab() {
         {newRole === "seeker" && (
           <div>
             <Label className="text-xs">선호 지역 (구직자, 최대 3개 · 선택)</Label>
-            <div className="mt-1"><RegionPicker value={newRegions} onChange={setNewRegions} /></div>
+            <div className="mt-1"><RegionPicker value={newRegions} onChange={setNewRegions} compact /></div>
           </div>
         )}
       </CardContent></Card>
