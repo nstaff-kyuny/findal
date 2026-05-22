@@ -94,6 +94,32 @@ function Page() {
               {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
             </SelectContent>
           </Select>
+        {prefRegions.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant={prefOnly && region === "all" ? "default" : "outline"}
+              className="text-xs h-8"
+              onClick={() => { setPrefOnly(v => !v); setRegion("all"); }}
+            >
+              <MapPin size={12} className="mr-1" />
+              선호지역만 보기
+            </Button>
+            <div className="flex gap-1 flex-wrap">
+              {prefRegions.map(r => (
+                <Badge key={r} variant="secondary" className="text-[10px]">📍 {r}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Select value={region} onValueChange={setRegion}>
+            <SelectTrigger className="w-32"><SelectValue placeholder="지역" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">전체 지역</SelectItem>
+              {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+            </SelectContent>
+          </Select>
           <div className="relative flex-1">
             <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={e => setQ(e.target.value)} placeholder="공고 검색" className="pl-7" />
