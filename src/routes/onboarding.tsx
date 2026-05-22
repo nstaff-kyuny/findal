@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { NATIONALITY_LABEL, VISA_LABEL, REGIONS } from "@/lib/constants";
 import { RegionPicker, serializeRegions } from "@/components/RegionPicker";
+import { normalizeReferrerCode } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({ component: Onboarding });
 
