@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -10,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS } from "@/lib/constants";
+import { moderateText } from "@/lib/ai.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/employer/jobs/edit/$id")({
