@@ -8,7 +8,9 @@ const FAST_MODEL = "google/gemini-2.5-flash-lite";
 const IMAGE_MODEL = "google/gemini-2.5-flash-image";
 const AI_URL = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-async function callAi(messages: Array<{ role: "system" | "user"; content: any }>, json = false, model = TEXT_MODEL) {
+type AiMessage = { role: "system" | "user" | "assistant"; content: any };
+
+async function callAi(messages: AiMessage[], json = false, model = TEXT_MODEL) {
   const key = process.env.LOVABLE_API_KEY;
   if (!key) throw new Error("AI 기능을 사용할 수 없습니다");
   const res = await fetch(AI_URL, {
@@ -21,7 +23,7 @@ async function callAi(messages: Array<{ role: "system" | "user"; content: any }>
   return String(data?.choices?.[0]?.message?.content ?? "").trim();
 }
 
-async function callAiJson<T>(messages: Array<{ role: "system" | "user"; content: any }>, fallback: T, model = FAST_MODEL): Promise<T> {
+async function callAiJson<T>(messages: AiMessage[], fallback: T, model = FAST_MODEL): Promise<T> {
   try {
     const text = await callAi(messages, true, model);
     return JSON.parse(text.replace(/^```json\s*/i, "").replace(/```$/i, "")) as T;
