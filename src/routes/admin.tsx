@@ -972,7 +972,7 @@ function ReferrersTab() {
                 <tr className="border-b">
                   {editingId === r.id ? (
                     <>
-                      <td className="py-2"><Input className="h-8 font-mono text-xs" value={editForm.code} onChange={e => setEditForm({ ...editForm, code: e.target.value })} /></td>
+                      <td className="py-2"><Input className="h-8 font-mono text-xs" value={editForm.code} onChange={e => setEditForm({ ...editForm, code: normalizeReferrerCode(e.target.value) })} /></td>
                       <td><Input className="h-8 text-xs" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></td>
                       <td><Input className="h-8 text-xs" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} /></td>
                       <td>
