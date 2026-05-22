@@ -701,6 +701,12 @@ function UsersTab() {
           </Select>
           <Button onClick={handleCreate} disabled={busy}>추가</Button>
         </div>
+        {newRole === "seeker" && (
+          <div>
+            <Label className="text-xs">선호 지역 (구직자, 최대 3개 · 선택)</Label>
+            <div className="mt-1"><RegionPicker value={newRegions} onChange={setNewRegions} /></div>
+          </div>
+        )}
       </CardContent></Card>
       <div className="grid md:grid-cols-2 gap-4">
         <Card><CardContent className="p-4">
@@ -718,6 +724,9 @@ function UsersTab() {
                   <p className="text-xs">📍 {e.location} · 💰 {e.credits} 크레딧</p>
                 </div>
                 <div className="flex flex-col gap-1">
+                  <Button size="sm" variant="ghost" title="정보 수정" onClick={() => setEditUserId(e.user_id)}>
+                    <Pencil size={14} />
+                  </Button>
                   <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(e.user_id, e.company_name)}>
                     <KeyRound size={14} />
                   </Button>
@@ -742,8 +751,12 @@ function UsersTab() {
                   <p className="text-xs text-primary truncate">📧 {emails[s.user_id] ?? "..."}</p>
                   <p className="text-xs text-muted-foreground truncate">{s.profiles?.phone} · 추천인: {s.referrer_code ?? "-"}</p>
                   <p className="text-xs">경력: {s.experience === "lt5" ? "5회 미만" : s.experience === "gte5" ? "5회 이상" : s.experience} · 한국어: {s.korean_ok ? "가능" : "불가"} · 비자: {s.nationality === "korean" ? "해당없음" : (VISA_LABEL[s.visa] ?? s.visa ?? "-")}</p>
+                  <p className="text-xs">📍 선호지역: {s.preferred_region ? s.preferred_region : "-"}</p>
                 </div>
                 <div className="flex flex-col gap-1">
+                  <Button size="sm" variant="ghost" title="정보 수정" onClick={() => setEditUserId(s.user_id)}>
+                    <Pencil size={14} />
+                  </Button>
                   <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(s.user_id, s.profiles?.full_name ?? "사용자")}>
                     <KeyRound size={14} />
                   </Button>
@@ -756,9 +769,11 @@ function UsersTab() {
           </div>
         </CardContent></Card>
       </div>
+      <EditUserDialog userId={editUserId} open={!!editUserId} onOpenChange={(v) => { if (!v) setEditUserId(null); }} onSaved={load} />
     </div>
   );
 }
+
 function CreditsTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const load = async () => {
