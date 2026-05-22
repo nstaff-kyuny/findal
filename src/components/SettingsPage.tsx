@@ -21,7 +21,9 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const [version, setVersion] = useState<{ version: string; is_latest: boolean } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<any>({});
+  const [company, setCompany] = useState<CompanyInfo>(COMPANY_INFO);
   const table = role === "seeker" ? "seeker_profiles" : "employer_profiles";
+  useEffect(() => { fetchCompanyInfo().then(setCompany); }, []);
 
   const load = async () => {
     if (!user) return;
