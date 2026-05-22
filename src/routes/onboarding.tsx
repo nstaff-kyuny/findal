@@ -91,15 +91,15 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
     })();
   }, []);
   const requireVisa = nationality === "foreigner";
-  const canSave = !!nationality && !!experience && !!region && (!requireVisa || !!visa);
+  const canSave = !!nationality && !!experience && regions.length > 0 && (!requireVisa || !!visa);
   const save = async () => {
-    if (!canSave) return toast.error("추천인 코드를 제외한 모든 항목을 선택/입력해 주세요");
+    if (!canSave) return toast.error("추천인 코드를 제외한 모든 항목을 선택/입력해 주세요 (선호 지역 1개 이상)");
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "seeker" } as any);
     const { error: e2 } = await supabase.from("seeker_profiles").upsert({
       user_id: userId, nationality, experience, korean_ok: koreanOk,
       visa: nationality === "korean" ? null : visa,
-      referrer_code: referrer || null, preferred_region: region,
+      referrer_code: referrer || null, preferred_region: serializeRegions(regions),
     } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
