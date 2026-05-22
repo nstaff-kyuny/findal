@@ -62,7 +62,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         location: roleData?.location ?? "",
         contact_phone: roleData?.contact_phone ?? "",
       } : {
-        preferred_region: roleData?.preferred_region ?? "",
+        preferred_regions: parseRegions(roleData?.preferred_region),
       }),
     });
     setEditOpen(true);
