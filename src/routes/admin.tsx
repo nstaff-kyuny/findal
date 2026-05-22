@@ -19,6 +19,7 @@ import { Download, Trash2, UserPlus, KeyRound, Pencil } from "lucide-react";
 import { VISA_LABEL, NATIONALITY_LABEL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
+import { analyzeInquiryText, generateAdminAiInsights } from "@/lib/ai.functions";
 
 
 export const Route = createFileRoute("/admin")({ component: Admin });
@@ -142,6 +143,7 @@ function AdminPanel() {
         <TabsTrigger value="events">이벤트</TabsTrigger>
         <TabsTrigger value="faqs">FAQ</TabsTrigger>
         <TabsTrigger value="inquiries">1:1 문의</TabsTrigger>
+        <TabsTrigger value="ai-insights">AI 인사이트</TabsTrigger>
         <TabsTrigger value="company">사업자정보</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
@@ -157,6 +159,7 @@ function AdminPanel() {
       <TabsContent value="events"><EventsTab /></TabsContent>
       <TabsContent value="faqs"><FaqsTab /></TabsContent>
       <TabsContent value="inquiries"><InquiriesTab /></TabsContent>
+      <TabsContent value="ai-insights"><AiInsightsTab /></TabsContent>
       <TabsContent value="company"><CompanyInfoTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
       <TabsContent value="icons"><IconsTab /></TabsContent>
