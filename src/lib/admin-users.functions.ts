@@ -95,10 +95,10 @@ export const adminUpdateUserProfile = createServerFn({ method: "POST" })
       fullName: z.string().max(100).optional().default(""),
       phone: z.string().max(50).optional().default(""),
       seeker: z.object({
-        nationality: z.string().max(30),
-        visa: z.string().max(30).optional().nullable(),
+        nationality: z.enum(["korean", "foreigner"]),
+        visa: z.enum(["student", "jobseeker", "resident", "other"]).optional().nullable(),
         koreanOk: z.boolean(),
-        experience: z.string().max(30),
+        experience: z.enum(["lt5", "gte5"]),
         preferredRegions: z.string().max(100).optional().nullable(),
         referrerCode: z.string().max(50).optional().nullable(),
       }).optional(),
