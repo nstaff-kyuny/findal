@@ -955,7 +955,7 @@ function ReferrersTab() {
         <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
       </div>
       <div className="grid grid-cols-4 gap-2">
-        <Input placeholder="코드 (예: REF1234)" value={code} onChange={e => setCode(e.target.value)} />
+        <Input placeholder="코드 (영문 대문자/숫자, 예: REF1234)" value={code} onChange={e => setCode(normalizeReferrerCode(e.target.value))} />
         <Input placeholder="이름" value={name} onChange={e => setName(e.target.value)} />
         <Input placeholder="연락처" value={phone} onChange={e => setPhone(e.target.value)} />
         <Button onClick={add}>추가</Button>
