@@ -391,7 +391,9 @@ function AllUsersTab() {
           </table>
         </div>
       </CardContent></Card>
+      <EditUserDialog userId={editUserId} open={!!editUserId} onOpenChange={(v) => { if (!v) setEditUserId(null); }} onSaved={load} />
     </div>
+
   );
 }
 
