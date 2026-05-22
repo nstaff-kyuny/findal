@@ -81,19 +81,44 @@ function Admin() {
 }
 
 function AdminClaim({ userId, onClaimed }: { userId: string; onClaimed: () => void }) {
+  const { signOut } = useAuth();
+  const nav = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [adminExists, setAdminExists] = useState<boolean | null>(null);
+  useEffect(() => {
+    (async () => {
+      const { count } = await supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
+      setAdminExists((count ?? 0) > 0);
+    })();
+  }, []);
   const claim = async () => {
     setBusy(true);
     const { count } = await supabase.from("user_roles").select("*", { count: "exact", head: true }).eq("role", "admin");
-    if ((count ?? 0) > 0) { setBusy(false); return toast.error("이미 관리자가 등록되어 있습니다."); }
+    if ((count ?? 0) > 0) { setBusy(false); setAdminExists(true); return toast.error("이미 관리자가 등록되어 있습니다."); }
     const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "admin" } as any);
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("관리자 권한 부여됨"); onClaimed();
   };
+  if (adminExists === null) {
+    return <div className="text-center py-12 text-sm text-muted-foreground">확인 중...</div>;
+  }
+  if (adminExists) {
+    return (
+      <Card className="max-w-md mx-auto mt-12"><CardContent className="p-6 text-center space-y-3">
+        <h2 className="font-bold text-lg">관리자 권한이 없는 계정입니다</h2>
+        <p className="text-sm text-muted-foreground">현재 로그인한 계정으로는 관리자 페이지에 접근할 수 없습니다.<br/>관리자 계정으로 다시 로그인해 주세요.</p>
+        <div className="flex flex-col gap-2 pt-2">
+          <Button onClick={async () => { await signOut(); nav({ to: "/auth" }); }}>로그아웃 후 관리자로 로그인</Button>
+          <Button variant="outline" onClick={() => nav({ to: "/" })}>홈으로 이동</Button>
+        </div>
+      </CardContent></Card>
+    );
+  }
   return (
     <Card className="max-w-md mx-auto mt-12"><CardContent className="p-6 text-center space-y-3">
       <h2 className="font-bold text-lg">관리자 권한이 없습니다</h2>
+      <p className="text-sm text-muted-foreground">아직 등록된 관리자가 없습니다. 최초 관리자로 등록할 수 있습니다.</p>
       <Button onClick={claim} disabled={busy}>최초 관리자로 등록</Button>
     </CardContent></Card>
   );
