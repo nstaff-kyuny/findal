@@ -32,7 +32,7 @@ import { Route as EmployerJobsIndexRouteImport } from './routes/employer/jobs/in
 import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
 import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
 import { Route as EmployerHistoryDateRouteImport } from './routes/employer/history.$date'
-import { Route as EmployerCreditsHistoryRouteImport } from './routes/employer/credits/history'
+import { Route as EmployerCreditsHistoryRouteImport } from './routes/employer/credits.history'
 import { Route as EmployerJobsEditIdRouteImport } from './routes/employer/jobs/edit.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -585,3 +585,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
