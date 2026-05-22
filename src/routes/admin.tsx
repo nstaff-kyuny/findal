@@ -731,7 +731,7 @@ function UsersTab() {
           <Input placeholder="비밀번호 (6자리)" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
           <Input placeholder="이름" value={newName} onChange={e => setNewName(e.target.value)} />
           <Input placeholder="연락처" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
-          <Input placeholder="추천인코드 (선택)" value={newReferrer} onChange={e => setNewReferrer(e.target.value)} />
+          <Input placeholder="추천인코드 (영문 대문자/숫자, 선택)" value={newReferrer} onChange={e => setNewReferrer(normalizeReferrerCode(e.target.value))} />
           <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
