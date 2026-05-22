@@ -312,16 +312,34 @@ function AllUsersTab() {
   return (
     <div className="space-y-4 mt-4">
       <Card><CardContent className="p-4">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
             <h3 className="font-bold">전체 사용자 ({filtered.length}/{rows.length})</h3>
             <Input placeholder="이메일/이름/회사/전화/추천인 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+            <Select value={roleFilter} onValueChange={(v: any) => setRoleFilter(v)}>
+              <SelectTrigger className="w-32"><SelectValue placeholder="권한" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 권한</SelectItem>
+                <SelectItem value="seeker">구직자만</SelectItem>
+                <SelectItem value="employer">구인자만</SelectItem>
+                <SelectItem value="admin">관리자만</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="정렬" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_desc">가입일 최신순</SelectItem>
+                <SelectItem value="created_asc">가입일 오래된순</SelectItem>
+                <SelectItem value="role">권한순</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={load} disabled={loading}>{loading ? "로딩..." : "새로고침"}</Button>
             <Button size="sm" variant="outline" onClick={exportAll}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
           </div>
         </div>
+
         <div className="overflow-x-auto max-h-[70vh] overflow-y-auto border rounded">
           <table className="w-full text-xs">
             <thead className="bg-muted sticky top-0">
