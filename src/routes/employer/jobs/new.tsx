@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -13,7 +14,8 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS } from "@/lib/constants";
 import { toast } from "sonner";
-import { ImagePlus, CalendarDays } from "lucide-react";
+import { ImagePlus, CalendarDays, Sparkles } from "lucide-react";
+import { generateJobDraft, generateJobImage } from "@/lib/ai.functions";
 
 const MAX_WORK_DATES = 5;
 
@@ -25,6 +27,8 @@ export const Route = createFileRoute("/employer/jobs/new")({ component: () => <R
 function Page() {
   const { user } = useAuth();
   const nav = useNavigate();
+  const makeDraft = useServerFn(generateJobDraft);
+  const makeImage = useServerFn(generateJobImage);
   const [emp, setEmp] = useState<any>(null);
   const [industry, setIndustry] = useState("hotel");
   const [jobRole, setJobRole] = useState("room_cleaning");
@@ -45,6 +49,7 @@ function Page() {
   const [dateInput, setDateInput] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
+  const [aiBusy, setAiBusy] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { if (!user) return; (async () => {
@@ -79,6 +84,27 @@ function Page() {
 
 
   const isRoomCleaningHotel = ["hotel","motel","resort"].includes(industry) && jobRole === "room_cleaning";
+
+  const runAiDraft = async (tone: "default" | "friendly" | "foreigner" = "default") => {
+    setAiBusy(true);
+    try {
+      const draft = await makeDraft({ data: { industry: INDUSTRY_LABEL[industry], jobRole: ROLE_LABEL[jobRole], placeName, region: district ? `${region} ${district}` : region, wage, rooms, tone } });
+      setTitle(draft.title || title);
+      setPrep(draft.preparations || prep);
+      toast.success("AI 공고 초안이 적용되었습니다");
+    } catch (e: any) { toast.error(e?.message ?? "AI 생성 실패"); }
+    finally { setAiBusy(false); }
+  };
+
+  const runAiImage = async () => {
+    setPhotoUploading(true);
+    try {
+      const { imageUrl } = await makeImage({ data: { industry: INDUSTRY_LABEL[industry], jobRole: ROLE_LABEL[jobRole], placeName } });
+      setPhotoUrl(imageUrl);
+      toast.success("AI 대표 사진이 생성되었습니다");
+    } catch (e: any) { toast.error(e?.message ?? "이미지 생성 실패"); }
+    finally { setPhotoUploading(false); }
+  };
 
   const save = async () => {
     if (!user) return;
@@ -122,6 +148,11 @@ function Page() {
             </div>
           </div>
           <div><Label>공고 제목</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="예: 주말 객실청소 모집" /></div>
+          <div className="grid grid-cols-3 gap-1.5">
+            <Button type="button" size="sm" variant="secondary" disabled={aiBusy} onClick={() => runAiDraft("default")}><Sparkles size={14} className="mr-1" />AI 초안</Button>
+            <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("friendly")}>친근하게</Button>
+            <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("foreigner")}>외국인 친화</Button>
+          </div>
           <div><Label>일할 곳 이름</Label><Input value={placeName} onChange={e => setPlaceName(e.target.value)} /></div>
           <div><Label>상세주소</Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
           <div className="grid grid-cols-2 gap-2">
@@ -137,6 +168,7 @@ function Page() {
           </div>
           <div>
             <Label>대표 사진</Label>
+            <Button type="button" size="sm" variant="outline" className="ml-2 h-7 text-xs" disabled={photoUploading} onClick={runAiImage}>AI 사진 생성</Button>
             <div className="mt-1">
               <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-muted-foreground/30 rounded-lg cursor-pointer hover:bg-muted/30 transition">
                 {photoUrl ? (
