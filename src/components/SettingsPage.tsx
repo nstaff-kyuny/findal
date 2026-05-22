@@ -171,7 +171,9 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
                 <div><Label>대표 연락처</Label><Input value={form.contact_phone ?? ""} onChange={e => setForm({ ...form, contact_phone: e.target.value })} /></div>
               </>
             ) : (
-              <div><Label>선호 지역</Label><Input value={form.preferred_region ?? ""} onChange={e => setForm({ ...form, preferred_region: e.target.value })} /></div>
+              <div><Label>선호 지역 (최대 3개)</Label>
+                <div className="mt-2"><RegionPicker value={form.preferred_regions ?? []} onChange={(v) => setForm({ ...form, preferred_regions: v })} /></div>
+              </div>
             )}
           </div>
           <DialogFooter>
