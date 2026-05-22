@@ -205,3 +205,16 @@ export const generateAdminAiInsights = createServerFn({ method: "POST" })
       { role: "user", content: JSON.stringify({ seekers, employers, activeJobs: jobs, applications: apps, inquiries, referrers }) },
     ], { summary: "데이터를 기준으로 운영 현황을 확인하세요.", actions: ["대기 문의와 대기 신청을 우선 확인하세요."], riskSignals: [], referralChecks: [] }, TEXT_MODEL);
   });
+
+export const moderateText = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    text: z.string().min(1).max(5000),
+    context: z.enum(["job", "application", "inquiry"]).optional().default("job"),
+  }).parse(input))
+  .handler(async ({ data }) => {
+    return callAiJson<{ allow: boolean; risk: "낮음" | "보통" | "높음"; categories: string[]; reason: string; cleaned: string }>([
+      { role: "system", content: "구인-구직 플랫폼의 사용자 입력 텍스트를 검수합니다. 욕설, 차별/혐오, 성적 표현, 스팸/광고/외부 연락 유도, 사기/허위 정보, 개인정보 노출(주민번호·카드·계좌)을 감지하세요. JSON으로 {allow, risk(낮음/보통/높음), categories[], reason(한국어 1문장), cleaned(부적절 표현을 ***로 마스킹한 텍스트)} 형식으로만 답하세요. 위험이 '높음'이면 allow=false." },
+      { role: "user", content: `[${data.context}] ${data.text}` },
+    ], { allow: true, risk: "낮음", categories: [], reason: "검수 결과 정상으로 간주합니다.", cleaned: data.text });
+  });
