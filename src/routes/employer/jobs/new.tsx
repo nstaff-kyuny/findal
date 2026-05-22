@@ -101,7 +101,7 @@ function Page() {
     const fullRegion = district ? `${region} ${district}` : region;
     const { error } = await supabase.from("jobs").insert({
       employer_id: user.id, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
-      photo_url: photoUrl, daily_wage: wageNum, pay_day: payDay, preparations: prep || null,
+      photo_url: photoUrl, daily_wage: wageNum, pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
       contact_phone: useDefaultContact ? (emp?.contact_phone ?? "") : contact,
       work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: headcountNum, is_active: true,
     } as any);
