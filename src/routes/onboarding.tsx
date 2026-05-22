@@ -144,11 +144,8 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
         </Select>
       </div>
       <div className="flex items-center justify-between"><Label className="text-base">한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
-      <div><Label className="text-base">선호 지역</Label>
-        <Select value={region} onValueChange={setRegion}>
-          <SelectTrigger className="h-12 text-base mt-1"><SelectValue /></SelectTrigger>
-          <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-        </Select>
+      <div><Label className="text-base">선호 지역 (최대 3개)</Label>
+        <div className="mt-2"><RegionPicker value={regions} onChange={setRegions} /></div>
       </div>
       <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
       <Button className="w-full h-12 text-base" onClick={save} disabled={saving || !canSave}>저장하고 시작하기</Button>
