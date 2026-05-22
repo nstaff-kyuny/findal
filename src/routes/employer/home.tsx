@@ -6,7 +6,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { Briefcase, Inbox, CreditCard, Plus } from "lucide-react";
+import { ClipboardList, Inbox, Plus } from "lucide-react";
 
 export const Route = createFileRoute("/employer/home")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
@@ -41,25 +41,27 @@ function Page() {
         <div className="grid grid-cols-2 gap-2">
           <Link to="/employer/jobs">
             <Card className="hover:bg-accent transition-colors"><CardContent className="p-4">
-              <Briefcase className="text-primary mb-1" size={20} />
-              <p className="text-xs text-muted-foreground">활성 공고</p>
+              <ClipboardList className="text-primary mb-1" size={20} />
+              <p className="text-xs text-muted-foreground">공고 관리</p>
               <p className="text-2xl font-bold">{activeJobs}</p>
             </CardContent></Card>
           </Link>
           <Link to="/employer/applications">
             <Card className="hover:bg-accent transition-colors"><CardContent className="p-4">
               <Inbox className="text-primary mb-1" size={20} />
-              <p className="text-xs text-muted-foreground">대기 요청</p>
+              <p className="text-xs text-muted-foreground">받은 요청 관리</p>
               <p className="text-2xl font-bold">{pending}</p>
             </CardContent></Card>
           </Link>
         </div>
 
         <Link to="/employer/jobs/new"><Button size="lg" className="w-full h-14 text-base"><Plus size={20} className="mr-1" />새 공고 등록</Button></Link>
-        <Link to="/employer/jobs"><Button size="lg" variant="outline" className="w-full h-14 text-base">공고 관리</Button></Link>
-        <Link to="/employer/applications"><Button size="lg" variant="outline" className="w-full h-14 text-base">받은 요청 관리</Button></Link>
-        <Link to="/employer/history"><Button size="lg" variant="outline" className="w-full h-14 text-base">승인 기록</Button></Link>
-        <Link to="/seeker/home" search={{ preview: "1" } as any}><Button size="lg" variant="secondary" className="w-full h-14 text-base">👀 구직자 홈 미리보기</Button></Link>
+        <div className="pt-4">
+          <Link to="/employer/history"><Button size="lg" variant="outline" className="w-full h-14 text-base">근로자 승인 및 출근 기록</Button></Link>
+        </div>
+        <div className="pt-4">
+          <Link to="/seeker/home" search={{ preview: "1" } as any}><Button size="lg" variant="secondary" className="w-full h-14 text-base">👀 구직자 홈 미리보기</Button></Link>
+        </div>
       </div>
     </MobileLayout>
   );
