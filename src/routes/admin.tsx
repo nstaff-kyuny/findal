@@ -905,11 +905,13 @@ function ReferrersTab() {
   const cancelEdit = () => { setEditingId(null); };
   const saveEdit = async (id: string) => {
     if (!editForm.code || !editForm.name) return toast.error("코드와 이름은 필수입니다");
-    const { error } = await supabase.from("referrers")
-      .update({ code: editForm.code, name: editForm.name, phone: editForm.phone } as any)
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("수정되었습니다"); setEditingId(null); load();
+    if (!/^[A-Z0-9]+$/.test(editForm.code)) return toast.error("코드는 영문 대문자와 숫자만 사용 가능합니다");
+    try {
+      await updateReferrer({ data: { id, code: editForm.code, name: editForm.name, phone: editForm.phone } });
+      toast.success("수정되었습니다"); setEditingId(null); load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "수정 실패");
+    }
   };
   const exportXlsx = async () => {
     const wb = new ExcelJS.Workbook();
