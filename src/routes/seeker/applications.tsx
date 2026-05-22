@@ -138,8 +138,8 @@ function Page() {
                           ) : (
                             <Button size="lg" className="w-full text-base font-semibold" disabled>연락하기</Button>
                           )}
-                          <a href={`/seeker/jobs/${a.job_id}`} className="block">
-                            <Button size="lg" variant="outline" className="w-full text-base font-semibold border-orange-500 text-orange-600 hover:bg-orange-50">일자리 확인</Button>
+                          <a href={`/seeker/jobs/${a.job_id}?from=apps`} className="block">
+                            <Button size="lg" variant="outline" className="w-full text-base font-semibold border-orange-500 text-orange-600 hover:bg-orange-50">일자리(승인) 확인</Button>
                           </a>
                         </div>
                       )}
