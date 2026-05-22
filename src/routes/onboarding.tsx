@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { NATIONALITY_LABEL, VISA_LABEL, REGIONS } from "@/lib/constants";
+import { RegionPicker, serializeRegions } from "@/components/RegionPicker";
 
 export const Route = createFileRoute("/onboarding")({ component: Onboarding });
 
@@ -80,7 +81,7 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
   const [koreanOk, setKoreanOk] = useState(true);
   const [visa, setVisa] = useState<string>("");
   const [referrer, setReferrer] = useState("");
-  const [region, setRegion] = useState("서울");
+  const [regions, setRegions] = useState<string[]>(["서울"]);
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     (async () => {
@@ -90,15 +91,15 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
     })();
   }, []);
   const requireVisa = nationality === "foreigner";
-  const canSave = !!nationality && !!experience && !!region && (!requireVisa || !!visa);
+  const canSave = !!nationality && !!experience && regions.length > 0 && (!requireVisa || !!visa);
   const save = async () => {
-    if (!canSave) return toast.error("추천인 코드를 제외한 모든 항목을 선택/입력해 주세요");
+    if (!canSave) return toast.error("추천인 코드를 제외한 모든 항목을 선택/입력해 주세요 (선호 지역 1개 이상)");
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "seeker" } as any);
     const { error: e2 } = await supabase.from("seeker_profiles").upsert({
       user_id: userId, nationality, experience, korean_ok: koreanOk,
       visa: nationality === "korean" ? null : visa,
-      referrer_code: referrer || null, preferred_region: region,
+      referrer_code: referrer || null, preferred_region: serializeRegions(regions),
     } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
@@ -143,11 +144,8 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
         </Select>
       </div>
       <div className="flex items-center justify-between"><Label className="text-base">한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
-      <div><Label className="text-base">선호 지역</Label>
-        <Select value={region} onValueChange={setRegion}>
-          <SelectTrigger className="h-12 text-base mt-1"><SelectValue /></SelectTrigger>
-          <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
-        </Select>
+      <div><Label className="text-base">선호 지역 (최대 3개)</Label>
+        <div className="mt-2"><RegionPicker value={regions} onChange={setRegions} /></div>
       </div>
       <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
       <Button className="w-full h-12 text-base" onClick={save} disabled={saving || !canSave}>저장하고 시작하기</Button>

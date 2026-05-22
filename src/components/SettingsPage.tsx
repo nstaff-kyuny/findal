@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog } from "lucide-react";
 import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company";
+import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
@@ -61,7 +62,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         location: roleData?.location ?? "",
         contact_phone: roleData?.contact_phone ?? "",
       } : {
-        preferred_region: roleData?.preferred_region ?? "",
+        preferred_regions: parseRegions(roleData?.preferred_region),
       }),
     });
     setEditOpen(true);
@@ -76,7 +77,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
 
     const updates: any = role === "employer"
       ? { company_name: form.company_name, manager_name: form.manager_name, location: form.location, contact_phone: form.contact_phone }
-      : { preferred_region: form.preferred_region };
+      : { preferred_region: serializeRegions(form.preferred_regions ?? []) };
     const { error: e2 } = await supabase.from(table).update(updates).eq("user_id", user.id);
     if (e2) return toast.error(e2.message);
     toast.success("저장되었습니다");
@@ -106,7 +107,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         )}
         {role === "seeker" && roleData && (
           <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
-            <p>선호 지역: {roleData.preferred_region || "-"}</p>
+            <p>선호 지역: {parseRegions(roleData.preferred_region).join(", ") || "-"}</p>
           </div>
         )}
       </CardContent></Card>
@@ -170,7 +171,9 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
                 <div><Label>대표 연락처</Label><Input value={form.contact_phone ?? ""} onChange={e => setForm({ ...form, contact_phone: e.target.value })} /></div>
               </>
             ) : (
-              <div><Label>선호 지역</Label><Input value={form.preferred_region ?? ""} onChange={e => setForm({ ...form, preferred_region: e.target.value })} /></div>
+              <div><Label>선호 지역 (최대 3개)</Label>
+                <div className="mt-2"><RegionPicker value={form.preferred_regions ?? []} onChange={(v) => setForm({ ...form, preferred_regions: v })} /></div>
+              </div>
             )}
           </div>
           <DialogFooter>

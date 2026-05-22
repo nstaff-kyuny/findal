@@ -7,36 +7,51 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { INDUSTRY_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI, formatWorkDatesWithWeekday } from "@/lib/job-visuals";
+import { useAuth } from "@/lib/auth";
+import { parseRegions } from "@/components/RegionPicker";
 
 export const Route = createFileRoute("/seeker/featured")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
 function Page() {
+  const { user } = useAuth();
   const [promoted, setPromoted] = useState<any[]>([]);
   const [random, setRandom] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [prefRegions, setPrefRegions] = useState<string[]>([]);
   const nav = useNavigate();
 
   useEffect(() => { (async () => {
+    let myRegions: string[] = [];
+    if (user) {
+      const { data: sp } = await supabase.from("seeker_profiles")
+        .select("preferred_region").eq("user_id", user.id).maybeSingle();
+      myRegions = parseRegions(sp?.preferred_region);
+      setPrefRegions(myRegions);
+    }
+    const matches = (j: any) => myRegions.length === 0 || (j.region && myRegions.includes(j.region));
+
     const now = new Date().toISOString();
-    // 프리미엄 추천: 최신 등록순 (promoted_jobs.created_at desc)
     const { data: p } = await supabase.from("promoted_jobs")
       .select("job_id, created_at, jobs(*)").gte("ends_at", now)
-      .order("created_at", { ascending: false }).limit(20);
-    // 같은 공고가 여러 번 광고 등록된 경우 가장 최근 1건만 유지
+      .order("created_at", { ascending: false }).limit(50);
     const seen = new Set<string>();
     const promotedJobs: any[] = [];
     (p ?? []).forEach((r: any) => {
       if (!r.jobs) return;
       if (seen.has(r.jobs.id)) return;
+      if (!matches(r.jobs)) return;
       seen.add(r.jobs.id);
       promotedJobs.push(r.jobs);
     });
     setPromoted(promotedJobs.slice(0, 8));
-    const { data: r } = await supabase.from("jobs").select("*").eq("is_active", true).limit(20);
+
+    let rq = supabase.from("jobs").select("*").eq("is_active", true);
+    if (myRegions.length > 0) rq = rq.in("region", myRegions);
+    const { data: r } = await rq.limit(40);
     const randomJobs = (r ?? []).sort(() => Math.random() - 0.5);
     setRandom(randomJobs);
-    // 광고 배너는 랜덤 순서로 노출
+
     const { data: a } = await supabase.from("ad_banners").select("*").eq("active", true).gte("ends_at", now).lte("starts_at", now).limit(20);
     const shuffledAds = (a ?? []).sort(() => Math.random() - 0.5).slice(0, 3);
     setAds(shuffledAds);
@@ -48,7 +63,7 @@ function Page() {
       (apps ?? []).forEach((x: any) => { map[x.job_id] = (map[x.job_id] ?? 0) + 1; });
       setCounts(map);
     }
-  })(); }, []);
+  })(); }, [user]);
 
   const industryIcon = (ind: string) => {
     switch (ind) {
@@ -105,6 +120,14 @@ function Page() {
   return (
     <MobileLayout role="seeker">
       <div className="p-3 space-y-5">
+        <Card className="p-3 bg-primary/5 border-primary/30">
+          <p className="text-xs text-muted-foreground">내 선호 지역</p>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {prefRegions.length === 0
+              ? <span className="text-sm text-muted-foreground">설정된 선호 지역이 없습니다 · 전체 공고 표시</span>
+              : prefRegions.map(r => <Badge key={r} variant="default" className="text-xs">📍 {r}</Badge>)}
+          </div>
+        </Card>
         <section>
           <h2 className="font-bold mb-2 flex items-center gap-1">⭐ 프리미엄 추천</h2>
           {promoted.length === 0 ? <p className="text-xs text-muted-foreground">진행중인 추천 공고가 없습니다</p>
