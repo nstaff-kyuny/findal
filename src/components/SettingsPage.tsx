@@ -107,7 +107,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         )}
         {role === "seeker" && roleData && (
           <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
-            <p>선호 지역: {roleData.preferred_region || "-"}</p>
+            <p>선호 지역: {parseRegions(roleData.preferred_region).join(", ") || "-"}</p>
           </div>
         )}
       </CardContent></Card>
