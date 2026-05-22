@@ -623,14 +623,15 @@ function UsersTab() {
     if (!newEmail || !newPwd || !newName) return toast.error("이메일, 비밀번호, 이름 필수");
     setBusy(true);
     try {
-      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer } });
+      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer, preferredRegions: newRole === "seeker" ? serializeRegions(newRegions) : "" } });
       toast.success("사용자가 추가되었습니다");
-      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer("");
+      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer(""); setNewRegions([]);
       load();
     } catch (e: any) {
       toast.error(e?.message ?? "추가 실패");
     } finally { setBusy(false); }
   };
+
 
   const handleDelete = async (uid: string, label: string) => {
     if (!confirm(`'${label}' 사용자를 삭제할까요? 복구할 수 없습니다.`)) return;
