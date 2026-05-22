@@ -45,7 +45,7 @@ function Page() {
   };
   useEffect(() => { load(); }, [id, user]);
 
-  const runTranslate = async (language: "en" | "vi" | "th") => {
+  const runTranslate = async (language: "en" | "mn" | "ru" | "zh") => {
     setAiBusy(true);
     try { setTranslation(await translateJob({ data: { jobId: id, language } })); }
     catch (e: any) { toast.error(e?.message ?? "번역 실패"); }
