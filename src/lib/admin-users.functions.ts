@@ -86,6 +86,63 @@ export const adminResetPassword = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const adminUpdateUserProfile = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      userId: z.string().uuid(),
+      role: z.enum(["seeker", "employer", "unknown"]),
+      fullName: z.string().max(100).optional().default(""),
+      phone: z.string().max(50).optional().default(""),
+      seeker: z.object({
+        nationality: z.string().max(30),
+        visa: z.string().max(30).optional().nullable(),
+        koreanOk: z.boolean(),
+        experience: z.string().max(30),
+        preferredRegions: z.string().max(100).optional().nullable(),
+        referrerCode: z.string().max(50).optional().nullable(),
+      }).optional(),
+      employer: z.object({
+        companyName: z.string().max(120),
+        location: z.string().max(200),
+        managerName: z.string().max(100),
+        referrerCode: z.string().max(50).optional().nullable(),
+      }).optional(),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .upsert({ id: data.userId, full_name: data.fullName, phone: data.phone }, { onConflict: "id" });
+    if (profileError) throw new Error(profileError.message);
+
+    if (data.role === "seeker" && data.seeker) {
+      const { error } = await supabaseAdmin.from("seeker_profiles").update({
+        nationality: data.seeker.nationality,
+        visa: data.seeker.nationality === "korean" ? null : (data.seeker.visa || null),
+        korean_ok: data.seeker.koreanOk,
+        experience: data.seeker.experience,
+        preferred_region: data.seeker.preferredRegions || null,
+        referrer_code: data.seeker.referrerCode || null,
+      }).eq("user_id", data.userId);
+      if (error) throw new Error(error.message);
+    }
+
+    if (data.role === "employer" && data.employer) {
+      const { error } = await supabaseAdmin.from("employer_profiles").update({
+        company_name: data.employer.companyName,
+        location: data.employer.location,
+        manager_name: data.employer.managerName,
+        contact_phone: data.phone,
+        referrer_code: data.employer.referrerCode || null,
+      }).eq("user_id", data.userId);
+      if (error) throw new Error(error.message);
+    }
+
+    return { ok: true };
+  });
+
 export const adminListAllUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
