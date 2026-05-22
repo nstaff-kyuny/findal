@@ -172,13 +172,23 @@ function Page() {
               <Input type="number" inputMode="numeric" value={wage} onChange={e => setWage(e.target.value)} placeholder="예: 120000" />
             </div>
             <div><Label>급여 지급일</Label>
-              <Select value={payDay} onValueChange={setPayDay}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="당일지급">당일지급</SelectItem>
-                  <SelectItem value="급여일 지급">급여일 지급</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-[1fr_1fr] gap-1">
+                <Select value={payMonth} onValueChange={(v) => setPayMonth(v as "당월" | "익월")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="당월">당월</SelectItem>
+                    <SelectItem value="익월">익월</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={payDayNum} onValueChange={setPayDayNum}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(n => (
+                      <SelectItem key={n} value={String(n)}>{n}일</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <div><Label>필요 인원수 <span className="text-red-500">*</span></Label>
@@ -190,27 +200,19 @@ function Page() {
           </div>}
           <div><Label>준비물 / 출근시 필요사항</Label><Textarea value={prep} onChange={e => setPrep(e.target.value)} /></div>
           <div>
-            <Label>근무 일자</Label>
-            <div className="flex gap-1 mt-1 mb-2">
-              <Button type="button" size="sm" variant={dateMode === "single" ? "default" : "outline"} onClick={() => setDateMode("single")}>날짜별</Button>
-              <Button type="button" size="sm" variant={dateMode === "range" ? "default" : "outline"} onClick={() => setDateMode("range")}>기간별</Button>
+            <Label>근무 일자 <span className="text-xs text-muted-foreground font-normal">(최대 {MAX_WORK_DATES}일)</span></Label>
+            <div className="flex gap-2 mt-1">
+              <div className="relative flex-1">
+                <CalendarDays size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none" />
+                <Input type="date" value={dateInput} onChange={e => setDateInput(e.target.value)} className="pl-9" />
+              </div>
+              <Button type="button" onClick={addDate} disabled={dates.length >= MAX_WORK_DATES}>추가</Button>
             </div>
-            {dateMode === "single" ? (
-              <div className="flex gap-2">
-                <Input type="date" value={dateInput} onChange={e => setDateInput(e.target.value)} />
-                <Button type="button" onClick={addDate}>추가</Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-                <Input type="date" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)} placeholder="시작" />
-                <Input type="date" value={rangeTo} onChange={e => setRangeTo(e.target.value)} placeholder="종료" />
-                <Button type="button" onClick={addRange}>추가</Button>
-              </div>
-            )}
             <div className="flex flex-wrap gap-1 mt-2">
               {dates.map(d => <span key={d} className="px-2 py-1 bg-muted rounded text-xs cursor-pointer" onClick={() => setDates(dates.filter(x => x !== d))}>{d} ✕</span>)}
             </div>
           </div>
+
           <div className="flex items-center justify-between">
             <Label>가입 시 기본 연락처 사용 ({emp?.contact_phone})</Label>
             <Switch checked={useDefaultContact} onCheckedChange={setUseDefaultContact} />
