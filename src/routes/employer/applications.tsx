@@ -132,8 +132,11 @@ function Page() {
       <div className="p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold">받은 요청</h2>
-          <Button size="sm" variant="outline" onClick={runAiAnalyze} disabled={aiBusy || apps.filter(a => a.status === "pending").length === 0}>{aiBusy ? "분석 중..." : "AI 지원자 요약"}</Button>
+          <Button size="sm" variant="default" onClick={runAiAnalyze} disabled={aiBusy || apps.filter(a => a.status === "pending").length === 0}>
+            {aiBusy ? "분석 중..." : "🤖 AI 지원자 요약·노쇼 위험"}
+          </Button>
         </div>
+        <p className="text-[11px] text-muted-foreground -mt-1">대기 중 지원자를 AI가 한 줄 요약하고 노쇼 위험을 표시합니다 (최대 20명).</p>
         <Tabs defaultValue="pending">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="pending">대기 ({groups.pending.length})</TabsTrigger>
