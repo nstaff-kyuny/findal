@@ -125,7 +125,7 @@ function Page() {
           <div className="flex flex-wrap gap-1 mt-1">
             {prefRegions.length === 0
               ? <span className="text-sm text-muted-foreground">설정된 선호 지역이 없습니다 · 전체 공고 표시</span>
-              : prefRegions.map(r => <Badge key={r} variant="default" className="text-xs">📍 {r}</Badge>)}
+              : prefRegions.map(r => <Badge key={r} variant="default" className="text-xs">{r}</Badge>)}
           </div>
         </Card>
         <section>
