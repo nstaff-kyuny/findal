@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog } from "lucide-react";
-import { COMPANY_INFO } from "@/lib/company";
+import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company";
 import { toast } from "sonner";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
