@@ -108,7 +108,12 @@ function Page() {
             <div className="text-xs text-muted-foreground pt-2">📞 담당자 연락처는 승인 후 공개됩니다.</div>
           </CardContent></Card>
 
-          {app?.status === "approved" ? (
+          {from === "apps" || app?.status === "confirmed" ? (
+            <Card className="border-orange-500"><CardContent className="p-4">
+              <p className="font-bold text-orange-600 mb-1">✅ 승인 확정된 공고입니다</p>
+              {job.contact_phone && <p className="text-sm">담당자 연락처: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>}
+            </CardContent></Card>
+          ) : app?.status === "approved" ? (
             <Card className="border-green-500"><CardContent className="p-4">
               <p className="font-bold text-green-700 mb-1">✅ 승인되었습니다</p>
               <p className="text-sm">담당자 연락처: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>
@@ -125,7 +130,11 @@ function Page() {
               <Button className="w-full" onClick={apply} disabled={busy}>일하고 싶어요 (요청 보내기)</Button>
             </div>
           )}
-          <Button variant="ghost" className="w-full" onClick={() => nav({ to: "/seeker/home" })}>← 뒤로</Button>
+          {from === "apps" ? (
+            <Button variant="ghost" className="w-full" onClick={() => nav({ to: "/seeker/applications" })}>← 신청/승인 내역으로</Button>
+          ) : (
+            <Button variant="ghost" className="w-full" onClick={() => nav({ to: "/seeker/home" })}>← 뒤로</Button>
+          )}
         </div>
       </div>
     </MobileLayout>
