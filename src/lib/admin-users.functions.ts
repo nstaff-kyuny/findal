@@ -24,6 +24,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       phone: z.string().optional().default(""),
       role: z.enum(["seeker", "employer"]),
       referrerCode: z.string().optional().default(""),
+      preferredRegions: z.string().optional().default(""),
     }).parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -53,10 +54,12 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         nationality: "korean",
         experience: "lt5",
         referrer_code: refCode,
+        preferred_region: (data.preferredRegions || "").trim() || null,
       });
     }
     return { ok: true, id: newId };
   });
+
 
 export const adminDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

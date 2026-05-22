@@ -15,8 +15,11 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
-import { Download, Trash2, UserPlus, KeyRound } from "lucide-react";
-import { VISA_LABEL } from "@/lib/constants";
+import { Download, Trash2, UserPlus, KeyRound, Pencil } from "lucide-react";
+import { VISA_LABEL, NATIONALITY_LABEL } from "@/lib/constants";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
+
 
 export const Route = createFileRoute("/admin")({ component: Admin });
 
@@ -213,7 +216,11 @@ function AllUsersTab() {
   const hardDelete = useServerFn(adminDeleteUser);
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "seeker" | "employer" | "admin">("all");
+  const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "role">("created_desc");
+  const [editUserId, setEditUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
@@ -265,15 +272,26 @@ function AllUsersTab() {
     } catch (e: any) { toast.error(e?.message ?? "실패"); }
   };
 
-  const filtered = rows.filter(r => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (r.email ?? "").toLowerCase().includes(s) ||
-      (r.full_name ?? "").toLowerCase().includes(s) ||
-      (r.company_name ?? "").toLowerCase().includes(s) ||
-      (r.phone ?? "").includes(s) ||
-      (r.referrer_code ?? "").toLowerCase().includes(s);
-  });
+  const filtered = (() => {
+    let arr = rows.filter(r => {
+      if (roleFilter !== "all") {
+        const rolesArr = (r.roles ?? "").split(",").map((x: string) => x.trim()).filter(Boolean);
+        if (!rolesArr.includes(roleFilter)) return false;
+      }
+      if (!q) return true;
+      const s = q.toLowerCase();
+      return (r.email ?? "").toLowerCase().includes(s) ||
+        (r.full_name ?? "").toLowerCase().includes(s) ||
+        (r.company_name ?? "").toLowerCase().includes(s) ||
+        (r.phone ?? "").includes(s) ||
+        (r.referrer_code ?? "").toLowerCase().includes(s);
+    });
+    if (sortBy === "created_asc") arr = [...arr].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    else if (sortBy === "created_desc") arr = [...arr].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    else if (sortBy === "role") arr = [...arr].sort((a, b) => (a.roles ?? "").localeCompare(b.roles ?? ""));
+    return arr;
+  })();
+
 
   const exportAll = () => {
     const data = filtered.map(r => ({
@@ -294,16 +312,34 @@ function AllUsersTab() {
   return (
     <div className="space-y-4 mt-4">
       <Card><CardContent className="p-4">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <div className="flex items-center gap-2 flex-1">
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-1 flex-wrap">
             <h3 className="font-bold">전체 사용자 ({filtered.length}/{rows.length})</h3>
             <Input placeholder="이메일/이름/회사/전화/추천인 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+            <Select value={roleFilter} onValueChange={(v: any) => setRoleFilter(v)}>
+              <SelectTrigger className="w-32"><SelectValue placeholder="권한" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 권한</SelectItem>
+                <SelectItem value="seeker">구직자만</SelectItem>
+                <SelectItem value="employer">구인자만</SelectItem>
+                <SelectItem value="admin">관리자만</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+              <SelectTrigger className="w-40"><SelectValue placeholder="정렬" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="created_desc">가입일 최신순</SelectItem>
+                <SelectItem value="created_asc">가입일 오래된순</SelectItem>
+                <SelectItem value="role">권한순</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={load} disabled={loading}>{loading ? "로딩..." : "새로고침"}</Button>
             <Button size="sm" variant="outline" onClick={exportAll}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
           </div>
         </div>
+
         <div className="overflow-x-auto max-h-[70vh] overflow-y-auto border rounded">
           <table className="w-full text-xs">
             <thead className="bg-muted sticky top-0">
@@ -334,6 +370,9 @@ function AllUsersTab() {
                     <td className="p-2">{banned ? <Badge variant="destructive">삭제됨</Badge> : <Badge variant="outline">활성</Badge>}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" title="정보 수정" onClick={() => setEditUserId(r.id)}>
+                          <Pencil size={14} />
+                        </Button>
                         {banned ? (
                           <Button size="sm" variant="outline" onClick={() => handleBan(r.id, false, r.email)}>복구</Button>
                         ) : (
@@ -344,6 +383,7 @@ function AllUsersTab() {
                         <Button size="sm" variant="destructive" onClick={() => handleHardDelete(r.id, r.email)} title="완전 삭제">완전삭제</Button>
                       </div>
                     </td>
+
                   </tr>
                 );
               })}
@@ -351,7 +391,9 @@ function AllUsersTab() {
           </table>
         </div>
       </CardContent></Card>
+      <EditUserDialog userId={editUserId} open={!!editUserId} onOpenChange={(v) => { if (!v) setEditUserId(null); }} onSaved={load} />
     </div>
+
   );
 }
 
@@ -429,7 +471,153 @@ function IconsTab() {
   );
 }
 
+function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: string | null; open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [role, setRole] = useState<"seeker" | "employer" | "unknown">("unknown");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  // seeker
+  const [nationality, setNationality] = useState("korean");
+  const [visa, setVisa] = useState("");
+  const [koreanOk, setKoreanOk] = useState(true);
+  const [experience, setExperience] = useState("lt5");
+  const [regions, setRegions] = useState<string[]>([]);
+  const [seekerReferrer, setSeekerReferrer] = useState("");
+  // employer
+  const [company, setCompany] = useState("");
+  const [location, setLocation] = useState("");
+  const [manager, setManager] = useState("");
+  const [empReferrer, setEmpReferrer] = useState("");
+
+  useEffect(() => {
+    if (!userId || !open) return;
+    setLoading(true);
+    (async () => {
+      const [{ data: prof }, { data: rr }, { data: sp }, { data: ep }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+        supabase.from("seeker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("employer_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      ]);
+      setFullName(prof?.full_name ?? "");
+      setPhone(prof?.phone ?? "");
+      const roles = (rr ?? []).map((r: any) => r.role);
+      if (roles.includes("employer") && ep) {
+        setRole("employer");
+        setCompany(ep.company_name ?? "");
+        setLocation(ep.location ?? "");
+        setManager(ep.manager_name ?? "");
+        setEmpReferrer(ep.referrer_code ?? "");
+        setPhone(ep.contact_phone ?? prof?.phone ?? "");
+      } else if (roles.includes("seeker") && sp) {
+        setRole("seeker");
+        setNationality(sp.nationality ?? "korean");
+        setVisa(sp.visa ?? "");
+        setKoreanOk(!!sp.korean_ok);
+        setExperience(sp.experience ?? "lt5");
+        setRegions(parseRegions(sp.preferred_region));
+        setSeekerReferrer(sp.referrer_code ?? "");
+      } else {
+        setRole("unknown");
+      }
+      setLoading(false);
+    })();
+  }, [userId, open]);
+
+  const save = async () => {
+    if (!userId) return;
+    setSaving(true);
+    try {
+      const { error: pe } = await supabase.from("profiles").update({ full_name: fullName, phone } as any).eq("id", userId);
+      if (pe) throw pe;
+      if (role === "seeker") {
+        const { error } = await supabase.from("seeker_profiles").update({
+          nationality, visa: nationality === "korean" ? null : (visa || null),
+          korean_ok: koreanOk, experience,
+          preferred_region: regions.length ? serializeRegions(regions) : null,
+          referrer_code: seekerReferrer || null,
+        } as any).eq("user_id", userId);
+        if (error) throw error;
+      } else if (role === "employer") {
+        const { error } = await supabase.from("employer_profiles").update({
+          company_name: company, location, manager_name: manager,
+          contact_phone: phone, referrer_code: empReferrer || null,
+        } as any).eq("user_id", userId);
+        if (error) throw error;
+      }
+      toast.success("저장되었습니다");
+      onOpenChange(false);
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message ?? "저장 실패");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>사용자 정보 수정</DialogTitle></DialogHeader>
+        {loading ? <p className="text-sm text-muted-foreground py-6 text-center">불러오는 중...</p> : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>이름</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} /></div>
+              <div><Label>연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} /></div>
+            </div>
+            {role === "seeker" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>신분</Label>
+                    <Select value={nationality} onValueChange={(v) => { setNationality(v); if (v === "korean") setVisa(""); }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{Object.entries(NATIONALITY_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>경력</Label>
+                    <Select value={experience} onValueChange={setExperience}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lt5">5회 미만</SelectItem>
+                        <SelectItem value="gte5">5회 이상</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {nationality === "foreigner" && (
+                  <div><Label>비자</Label>
+                    <Select value={visa} onValueChange={setVisa}>
+                      <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                      <SelectContent>{Object.entries(VISA_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border rounded p-2"><Label>한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
+                <div><Label>선호 지역 (최대 3개)</Label><div className="mt-1"><RegionPicker value={regions} onChange={setRegions} /></div></div>
+                <div><Label>추천인 코드</Label><Input value={seekerReferrer} onChange={e => setSeekerReferrer(e.target.value)} /></div>
+              </>
+            )}
+            {role === "employer" && (
+              <>
+                <div><Label>회사명</Label><Input value={company} onChange={e => setCompany(e.target.value)} /></div>
+                <div><Label>위치</Label><Input value={location} onChange={e => setLocation(e.target.value)} /></div>
+                <div><Label>담당자</Label><Input value={manager} onChange={e => setManager(e.target.value)} /></div>
+                <div><Label>추천인 코드</Label><Input value={empReferrer} onChange={e => setEmpReferrer(e.target.value)} /></div>
+              </>
+            )}
+            {role === "unknown" && <p className="text-sm text-muted-foreground">이 사용자의 프로필 정보가 없습니다. 기본 정보만 수정할 수 있습니다.</p>}
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button onClick={save} disabled={saving || loading}>{saving ? "저장 중..." : "저장"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UsersTab() {
+
   const [employers, setEmployers] = useState<any[]>([]);
   const [seekers, setSeekers] = useState<any[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
@@ -443,7 +631,10 @@ function UsersTab() {
   const [newPhone, setNewPhone] = useState("");
   const [newRole, setNewRole] = useState<"seeker" | "employer">("seeker");
   const [newReferrer, setNewReferrer] = useState("");
+  const [newRegions, setNewRegions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+
 
   const load = async () => {
     const { data: e } = await supabase.from("employer_profiles").select("*").order("created_at", { ascending: false });
@@ -471,14 +662,15 @@ function UsersTab() {
     if (!newEmail || !newPwd || !newName) return toast.error("이메일, 비밀번호, 이름 필수");
     setBusy(true);
     try {
-      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer } });
+      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer, preferredRegions: newRole === "seeker" ? serializeRegions(newRegions) : "" } });
       toast.success("사용자가 추가되었습니다");
-      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer("");
+      setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer(""); setNewRegions([]);
       load();
     } catch (e: any) {
       toast.error(e?.message ?? "추가 실패");
     } finally { setBusy(false); }
   };
+
 
   const handleDelete = async (uid: string, label: string) => {
     if (!confirm(`'${label}' 사용자를 삭제할까요? 복구할 수 없습니다.`)) return;
@@ -548,6 +740,12 @@ function UsersTab() {
           </Select>
           <Button onClick={handleCreate} disabled={busy}>추가</Button>
         </div>
+        {newRole === "seeker" && (
+          <div>
+            <Label className="text-xs">선호 지역 (구직자, 최대 3개 · 선택)</Label>
+            <div className="mt-1"><RegionPicker value={newRegions} onChange={setNewRegions} /></div>
+          </div>
+        )}
       </CardContent></Card>
       <div className="grid md:grid-cols-2 gap-4">
         <Card><CardContent className="p-4">
@@ -565,6 +763,9 @@ function UsersTab() {
                   <p className="text-xs">📍 {e.location} · 💰 {e.credits} 크레딧</p>
                 </div>
                 <div className="flex flex-col gap-1">
+                  <Button size="sm" variant="ghost" title="정보 수정" onClick={() => setEditUserId(e.user_id)}>
+                    <Pencil size={14} />
+                  </Button>
                   <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(e.user_id, e.company_name)}>
                     <KeyRound size={14} />
                   </Button>
@@ -589,8 +790,12 @@ function UsersTab() {
                   <p className="text-xs text-primary truncate">📧 {emails[s.user_id] ?? "..."}</p>
                   <p className="text-xs text-muted-foreground truncate">{s.profiles?.phone} · 추천인: {s.referrer_code ?? "-"}</p>
                   <p className="text-xs">경력: {s.experience === "lt5" ? "5회 미만" : s.experience === "gte5" ? "5회 이상" : s.experience} · 한국어: {s.korean_ok ? "가능" : "불가"} · 비자: {s.nationality === "korean" ? "해당없음" : (VISA_LABEL[s.visa] ?? s.visa ?? "-")}</p>
+                  <p className="text-xs">📍 선호지역: {s.preferred_region ? s.preferred_region : "-"}</p>
                 </div>
                 <div className="flex flex-col gap-1">
+                  <Button size="sm" variant="ghost" title="정보 수정" onClick={() => setEditUserId(s.user_id)}>
+                    <Pencil size={14} />
+                  </Button>
                   <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(s.user_id, s.profiles?.full_name ?? "사용자")}>
                     <KeyRound size={14} />
                   </Button>
@@ -603,9 +808,11 @@ function UsersTab() {
           </div>
         </CardContent></Card>
       </div>
+      <EditUserDialog userId={editUserId} open={!!editUserId} onOpenChange={(v) => { if (!v) setEditUserId(null); }} onSaved={load} />
     </div>
   );
 }
+
 function CreditsTab() {
   const [employers, setEmployers] = useState<any[]>([]);
   const load = async () => {
