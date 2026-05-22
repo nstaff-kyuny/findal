@@ -99,7 +99,7 @@ function Page() {
             </Button>
             <div className="flex gap-1 flex-wrap">
               {prefRegions.map(r => (
-                <Badge key={r} variant="secondary" className="text-[10px]">📍 {r}</Badge>
+                <Badge key={r} variant="secondary" className="text-sm">{r}</Badge>
               ))}
             </div>
           </div>
