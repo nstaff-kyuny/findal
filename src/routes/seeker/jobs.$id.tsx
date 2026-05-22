@@ -13,7 +13,7 @@ import { INDUSTRY_FALLBACK_IMAGE, formatWorkDates } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck } from "lucide-react";
-import { generateScreeningQuestions, translateJobDetails } from "@/lib/ai.functions";
+import { generateScreeningQuestions, translateJobDetails, moderateText } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/jobs/$id")({
   component: () => <RoleGate role="seeker"><Page /></RoleGate>,
