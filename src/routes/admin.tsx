@@ -689,6 +689,19 @@ function ReferrersTab() {
     if (error) return toast.error(error.message);
     toast.success("삭제되었습니다"); load();
   };
+  const startEdit = (r: any) => {
+    setEditingId(r.id);
+    setEditForm({ code: r.code ?? "", name: r.name ?? "", phone: r.phone ?? "" });
+  };
+  const cancelEdit = () => { setEditingId(null); };
+  const saveEdit = async (id: string) => {
+    if (!editForm.code || !editForm.name) return toast.error("코드와 이름은 필수입니다");
+    const { error } = await supabase.from("referrers")
+      .update({ code: editForm.code, name: editForm.name, phone: editForm.phone } as any)
+      .eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("수정되었습니다"); setEditingId(null); load();
+  };
   const exportXlsx = async () => {
     const wb = new ExcelJS.Workbook();
     const ws1 = wb.addWorksheet("추천인");
