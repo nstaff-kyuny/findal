@@ -27,6 +27,7 @@ function Page() {
   const nav = useNavigate();
   const translateJob = useServerFn(translateJobDetails);
   const makeQuestions = useServerFn(generateScreeningQuestions);
+  const moderate = useServerFn(moderateText);
   const [job, setJob] = useState<any>(null);
   const [app, setApp] = useState<any>(null);
   const [msg, setMsg] = useState("");
