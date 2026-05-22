@@ -71,6 +71,45 @@ export type Database = {
         }
         Relationships: []
       }
+      company_info: {
+        Row: {
+          address: string
+          app_name: string
+          biz_no: string
+          ceo: string
+          email: string
+          id: boolean
+          mail_order_no: string
+          name: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string
+          app_name?: string
+          biz_no?: string
+          ceo?: string
+          email?: string
+          id?: boolean
+          mail_order_no?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          app_name?: string
+          biz_no?: string
+          ceo?: string
+          email?: string
+          id?: boolean
+          mail_order_no?: string
+          name?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_purchase_requests: {
         Row: {
           amount_krw: number

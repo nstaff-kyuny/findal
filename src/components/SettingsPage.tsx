@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog } from "lucide-react";
-import { COMPANY_INFO } from "@/lib/company";
+import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company";
 import { toast } from "sonner";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
@@ -21,7 +21,9 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const [version, setVersion] = useState<{ version: string; is_latest: boolean } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [form, setForm] = useState<any>({});
+  const [company, setCompany] = useState<CompanyInfo>(COMPANY_INFO);
   const table = role === "seeker" ? "seeker_profiles" : "employer_profiles";
+  useEffect(() => { fetchCompanyInfo().then(setCompany); }, []);
 
   const load = async () => {
     if (!user) return;
@@ -87,15 +89,15 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
       <Card><CardContent className="p-4 space-y-2">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="font-bold">{profile?.full_name ?? user?.email}</h2>
-            <p className="text-xs text-muted-foreground">{profile?.phone}</p>
-            <p className="text-xs text-muted-foreground"><span style={{ pointerEvents: "none" }}>{user?.email}</span></p>
-            <p className="text-[10px] mt-1 text-primary">{role === "seeker" ? "구직자 계정" : "구인자 계정"}</p>
+            <h2 className="font-bold text-lg">{profile?.full_name ?? user?.email}</h2>
+            <p className="text-sm text-muted-foreground">{profile?.phone}</p>
+            <p className="text-sm text-muted-foreground"><span style={{ pointerEvents: "none" }}>{user?.email}</span></p>
+            <p className="text-xs mt-1 text-primary font-semibold">{role === "seeker" ? "구직자 계정" : "구인자 계정"}</p>
           </div>
           <Button size="sm" variant="outline" onClick={openEdit}><UserCog size={14} className="mr-1" />수정</Button>
         </div>
         {role === "employer" && roleData && (
-          <div className="text-xs text-muted-foreground border-t pt-2 space-y-0.5">
+          <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
             <p>업체명: {roleData.company_name}</p>
             <p>담당자: {roleData.manager_name}</p>
             <p>위치: {roleData.location}</p>
@@ -103,7 +105,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           </div>
         )}
         {role === "seeker" && roleData && (
-          <div className="text-xs text-muted-foreground border-t pt-2 space-y-0.5">
+          <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
             <p>선호 지역: {roleData.preferred_region || "-"}</p>
           </div>
         )}
@@ -145,10 +147,13 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
 
       <Card className="bg-muted/40"><CardContent className="p-4 text-[11px] text-muted-foreground space-y-0.5">
         <p className="font-semibold text-foreground mb-1">사업자 정보</p>
-        <p>회사명: {COMPANY_INFO.name}</p>
-        <p>대표자: {COMPANY_INFO.ceo}</p>
-        <p>사업자등록번호: {COMPANY_INFO.bizNo}</p>
-        <p>통신판매업등록번호: {COMPANY_INFO.mailOrderNo}</p>
+        <p>회사명: {company.name}</p>
+        <p>대표자: {company.ceo}</p>
+        <p>사업자등록번호: {company.bizNo}</p>
+        <p>통신판매업등록번호: {company.mailOrderNo}</p>
+        {company.address && <p>주소: {company.address}</p>}
+        {company.phone && <p>연락처: {company.phone}</p>}
+        {company.email && <p>이메일: {company.email}</p>}
       </CardContent></Card>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>

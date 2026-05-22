@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Search, Building2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
@@ -110,52 +111,69 @@ function AuthPage() {
           <p className="text-xs text-muted-foreground">호텔·식당·요양 일용직 매칭</p>
         </div>
         <Tabs defaultValue="login">
-          <TabsList className="grid grid-cols-2 w-full">
-            <TabsTrigger value="login">로그인</TabsTrigger>
-            <TabsTrigger value="signup">회원가입</TabsTrigger>
+          <TabsList className="grid grid-cols-2 w-full h-12">
+            <TabsTrigger value="login" className="text-base">로그인</TabsTrigger>
+            <TabsTrigger value="signup" className="text-base">회원가입</TabsTrigger>
           </TabsList>
-          <TabsContent value="login" className="space-y-3 mt-4">
-            <div><Label>이메일 (E-mail)</Label><Input className="h-12" value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
-            <div><Label>비밀번호 (Password)</Label><Input className="h-12" type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
-            <Button className="w-full h-12 text-base" onClick={signIn} disabled={loading}>로그인 (Sign in)</Button>
-            <button type="button" onClick={forgotPassword} className="w-full text-xs text-primary hover:underline mt-1">
+          <TabsContent value="login" className="space-y-4 mt-5">
+            <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
+            <div><Label className="text-base">비밀번호 (Password)</Label><Input className="h-14 text-base mt-1" type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
+            <Button className="w-full h-14 text-lg" onClick={signIn} disabled={loading}>로그인 (Sign in)</Button>
+            <button type="button" onClick={forgotPassword} className="w-full text-sm text-primary hover:underline mt-1">
               비밀번호를 잊으셨나요? 비밀번호 재설정
             </button>
           </TabsContent>
-          <TabsContent value="signup" className="space-y-3 mt-4">
+          <TabsContent value="signup" className="space-y-4 mt-5">
             <div>
-              <Label>가입 유형 (Account Type)</Label>
-              <RadioGroup value={role} onValueChange={(v) => setRole(v as any)} className="grid grid-cols-2 gap-2 mt-1">
-                <Label className={`border rounded-md p-3 text-center cursor-pointer ${role === "seeker" ? "border-primary bg-primary/5" : ""}`}>
+              <Label className="text-base">가입 유형 (Account Type)</Label>
+              <RadioGroup value={role} onValueChange={(v) => setRole(v as any)} className="grid grid-cols-2 gap-3 mt-2">
+                <Label className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all ${role === "seeker" ? "border-primary bg-primary/10 shadow-md" : "border-border hover:border-primary/40"}`}>
                   <RadioGroupItem value="seeker" className="sr-only" />
-                  <div className="text-xl">🧑‍🍳</div>
-                  <span className="text-sm font-semibold">구직자 (Job Seeker)</span>
+                  {role === "seeker" && <CheckCircle2 size={18} className="absolute top-2 right-2 text-primary" />}
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${role === "seeker" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/70"}`}>
+                      <Search size={28} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-base">구직자</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Job Seeker<br/>일자리 찾기</p>
+                    </div>
+                  </div>
                 </Label>
-                <Label className={`border rounded-md p-3 text-center cursor-pointer ${role === "employer" ? "border-primary bg-primary/5" : ""}`}>
+                <Label className={`relative border-2 rounded-xl p-4 cursor-pointer transition-all ${role === "employer" ? "border-primary bg-primary/10 shadow-md" : "border-border hover:border-primary/40"}`}>
                   <RadioGroupItem value="employer" className="sr-only" />
-                  <div className="text-xl">🏨</div>
-                  <span className="text-sm font-semibold">구인자 (Employer)</span>
+                  {role === "employer" && <CheckCircle2 size={18} className="absolute top-2 right-2 text-primary" />}
+                  <div className="flex flex-col items-center gap-2 text-center">
+                    <div className={`w-14 h-14 rounded-full flex items-center justify-center ${role === "employer" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/70"}`}>
+                      <Building2 size={28} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-base">구인자</p>
+                      <p className="text-[11px] text-muted-foreground leading-tight">Employer<br/>일자리 등록</p>
+                    </div>
+                  </div>
                 </Label>
               </RadioGroup>
             </div>
-            <div><Label>이름 (Full Name)</Label><Input className="h-12" value={name} onChange={e => setName(e.target.value)} /></div>
-            <div><Label>연락처 (Mobile)</Label><Input className="h-12" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
-            <div><Label>이메일 (E-mail)</Label><Input className="h-12" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
+            <div><Label className="text-base">이름 (Full Name)</Label><Input className="h-14 text-base mt-1" value={name} onChange={e => setName(e.target.value)} /></div>
+            <div><Label className="text-base">연락처 (Mobile)</Label><Input className="h-14 text-base mt-1" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
+            <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
-              <Label>비밀번호 (Password)</Label>
+              <Label className="text-base">비밀번호 (Password)</Label>
               <Input
-                className="h-12"
+                className="h-14 text-base mt-1"
                 type="password"
                 minLength={6}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 placeholder="영문+숫자+특수기호 6자 이상"
               />
+              <p className="text-xs text-muted-foreground mt-1">영문·숫자·특수기호를 모두 포함, 6자 이상</p>
             </div>
             <div>
-              <Label>비밀번호 확인 (Confirm Password)</Label>
+              <Label className="text-base">비밀번호 확인 (Confirm Password)</Label>
               <Input
-                className="h-12"
+                className="h-14 text-base mt-1"
                 type="password"
                 minLength={6}
                 value={passwordConfirm}
@@ -167,10 +185,10 @@ function AuthPage() {
               )}
             </div>
             <div>
-              <Label>추천인 코드 (Referrer Code) - 선택</Label>
-              <Input className="h-12" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" />
+              <Label className="text-base">추천인 코드 (Referrer Code) - 선택</Label>
+              <Input className="h-14 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" />
             </div>
-            <Button className="w-full h-12 text-base" onClick={signUp} disabled={loading}>회원가입 (Sign up)</Button>
+            <Button className="w-full h-14 text-lg" onClick={signUp} disabled={loading}>회원가입 (Sign up)</Button>
           </TabsContent>
         </Tabs>
       </div>

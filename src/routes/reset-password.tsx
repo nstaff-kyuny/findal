@@ -26,6 +26,8 @@ function ResetPasswordPage() {
 
   const submit = async () => {
     if (pw.length < 6) return toast.error("비밀번호는 최소 6자리여야 합니다");
+    if (!/[A-Za-z]/.test(pw) || !/\d/.test(pw) || !/[^A-Za-z0-9]/.test(pw))
+      return toast.error("비밀번호는 영문, 숫자, 특수기호를 모두 포함해야 합니다");
     if (pw !== pw2) return toast.error("두 비밀번호가 일치하지 않습니다");
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password: pw });
@@ -46,7 +48,11 @@ function ResetPasswordPage() {
           </p>
         ) : (
           <>
-            <div><Label>새 비밀번호</Label><Input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="최소 6자리" /></div>
+            <div className="p-3 rounded-md bg-primary/5 border border-primary/20 text-xs text-foreground">
+              <p className="font-semibold mb-1">비밀번호 설정 규칙</p>
+              <p className="text-muted-foreground">영문 + 숫자 + 특수기호를 모두 포함하여 <b>6자 이상</b>으로 입력해 주세요.</p>
+            </div>
+            <div><Label>새 비밀번호</Label><Input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="영문+숫자+특수기호 6자 이상" /></div>
             <div><Label>비밀번호 확인</Label><Input type="password" value={pw2} onChange={e => setPw2(e.target.value)} /></div>
             <Button className="w-full" onClick={submit} disabled={loading}>변경하기</Button>
           </>

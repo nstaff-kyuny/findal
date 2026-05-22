@@ -78,19 +78,21 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
   const [nationality, setNationality] = useState<string>("foreigner");
   const [experience, setExperience] = useState<string>("lt5");
   const [koreanOk, setKoreanOk] = useState(true);
-  const [visa, setVisa] = useState<string>("other");
+  const [visa, setVisa] = useState<string>("");
   const [referrer, setReferrer] = useState("");
   const [region, setRegion] = useState("서울");
   const [saving, setSaving] = useState(false);
   useEffect(() => {
-    // 가입 시 입력한 추천인 코드가 있으면 미리 채워줌
     (async () => {
       const { data } = await supabase.auth.getUser();
       const code = (data.user?.user_metadata as any)?.referrer_code;
       if (code) setReferrer(String(code));
     })();
   }, []);
+  const requireVisa = nationality === "foreigner";
+  const canSave = !!nationality && !!experience && !!region && (!requireVisa || !!visa);
   const save = async () => {
+    if (!canSave) return toast.error("추천인 코드를 제외한 모든 항목을 선택/입력해 주세요");
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "seeker" } as any);
     const { error: e2 } = await supabase.from("seeker_profiles").upsert({
@@ -105,39 +107,50 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
   };
   return (
     <Card><CardContent className="p-4 space-y-4">
-      <h2 className="font-bold">구직자 정보</h2>
-      <div><Label>신분</Label>
-        <Select value={nationality} onValueChange={setNationality}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+      <h2 className="font-bold text-lg">구직자 정보</h2>
+      <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">추천인 코드를 제외한 모든 항목은 필수입니다. 모두 입력해야 "저장하고 시작하기"가 활성화됩니다.</p>
+      <div><Label className="text-base">신분</Label>
+        <Select value={nationality} onValueChange={(v) => { setNationality(v); if (v === "korean") setVisa(""); }}>
+          <SelectTrigger className="h-12 text-base mt-1"><SelectValue /></SelectTrigger>
           <SelectContent>{Object.entries(NATIONALITY_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
         </Select>
       </div>
-      <div><Label>경력</Label>
+      {nationality === "foreigner" && (
+        <div>
+          <Label className="text-base">비자 상태</Label>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {Object.entries(VISA_LABEL).map(([k, v]) => (
+              <Button
+                key={k}
+                type="button"
+                variant={visa === k ? "default" : "outline"}
+                className="h-12 text-sm justify-center"
+                onClick={() => setVisa(k)}
+              >
+                {v}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+      <div><Label className="text-base">경력</Label>
         <Select value={experience} onValueChange={setExperience}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-12 text-base mt-1"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="lt5">5회 미만</SelectItem>
             <SelectItem value="gte5">5회 이상</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <div className="flex items-center justify-between"><Label>한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
-      {nationality === "foreigner" && (
-        <div><Label>비자 상태</Label>
-          <Select value={visa} onValueChange={setVisa}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{Object.entries(VISA_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-      )}
-      <div><Label>선호 지역</Label>
+      <div className="flex items-center justify-between"><Label className="text-base">한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
+      <div><Label className="text-base">선호 지역</Label>
         <Select value={region} onValueChange={setRegion}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-12 text-base mt-1"><SelectValue /></SelectTrigger>
           <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
         </Select>
       </div>
-      <div><Label>추천인 코드 (선택)</Label><Input value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
-      <Button className="w-full" onClick={save} disabled={saving}>저장하고 시작하기</Button>
+      <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
+      <Button className="w-full h-12 text-base" onClick={save} disabled={saving || !canSave}>저장하고 시작하기</Button>
     </CardContent></Card>
   );
 }
@@ -157,8 +170,9 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
       if (code) setReferrer(String(code));
     })();
   }, []);
+  const canSave = !!company && !!region && !!district && !!manager && !!phone;
   const save = async () => {
-    if (!company || !region || !district || !manager || !phone) return toast.error("모든 항목을 입력하세요");
+    if (!canSave) return toast.error("추천인 코드를 제외한 모든 항목을 입력해 주세요");
     setSaving(true);
     await supabase.from("user_roles").insert({ user_id: userId, role: "employer" } as any);
     const { error: e2 } = await supabase.from("employer_profiles").upsert({
@@ -172,19 +186,20 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
   };
   return (
     <Card><CardContent className="p-4 space-y-4">
-      <h2 className="font-bold">구인자(회사) 정보</h2>
-      <div><Label>회사명</Label><Input value={company} onChange={e => setCompany(e.target.value)} /></div>
-      <div><Label>지역 (시/도)</Label>
+      <h2 className="font-bold text-lg">구인자(회사) 정보</h2>
+      <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">추천인 코드를 제외한 모든 항목은 필수입니다. 모두 입력해야 "저장하고 시작하기"가 활성화됩니다.</p>
+      <div><Label className="text-base">회사명</Label><Input className="h-12 text-base mt-1" value={company} onChange={e => setCompany(e.target.value)} /></div>
+      <div><Label className="text-base">지역 (시/도)</Label>
         <Select value={region} onValueChange={setRegion}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-12 text-base mt-1"><SelectValue /></SelectTrigger>
           <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
         </Select>
       </div>
-      <div><Label>상세 위치 (구/동)</Label><Input value={district} onChange={e => setDistrict(e.target.value)} placeholder="예: 강남구 역삼동" /></div>
-      <div><Label>담당자 이름</Label><Input value={manager} onChange={e => setManager(e.target.value)} /></div>
-      <div><Label>담당자 연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
-      <div><Label>추천인 코드 (선택)</Label><Input value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
-      <Button className="w-full" onClick={save} disabled={saving}>저장하고 시작하기</Button>
+      <div><Label className="text-base">상세 위치 (구/동)</Label><Input className="h-12 text-base mt-1" value={district} onChange={e => setDistrict(e.target.value)} placeholder="예: 강남구 역삼동" /></div>
+      <div><Label className="text-base">담당자 이름</Label><Input className="h-12 text-base mt-1" value={manager} onChange={e => setManager(e.target.value)} /></div>
+      <div><Label className="text-base">담당자 연락처</Label><Input className="h-12 text-base mt-1" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
+      <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
+      <Button className="w-full h-12 text-base" onClick={save} disabled={saving || !canSave}>저장하고 시작하기</Button>
     </CardContent></Card>
   );
 }
