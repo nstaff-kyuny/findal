@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/employer/credits/history")({
+export const Route = createFileRoute("/employer/credits_/history")({
   component: () => <RoleGate role="employer"><Page /></RoleGate>,
 });
 
