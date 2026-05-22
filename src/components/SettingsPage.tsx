@@ -87,15 +87,15 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
       <Card><CardContent className="p-4 space-y-2">
         <div className="flex justify-between items-start">
           <div>
-            <h2 className="font-bold">{profile?.full_name ?? user?.email}</h2>
-            <p className="text-xs text-muted-foreground">{profile?.phone}</p>
-            <p className="text-xs text-muted-foreground"><span style={{ pointerEvents: "none" }}>{user?.email}</span></p>
-            <p className="text-[10px] mt-1 text-primary">{role === "seeker" ? "구직자 계정" : "구인자 계정"}</p>
+            <h2 className="font-bold text-lg">{profile?.full_name ?? user?.email}</h2>
+            <p className="text-sm text-muted-foreground">{profile?.phone}</p>
+            <p className="text-sm text-muted-foreground"><span style={{ pointerEvents: "none" }}>{user?.email}</span></p>
+            <p className="text-xs mt-1 text-primary font-semibold">{role === "seeker" ? "구직자 계정" : "구인자 계정"}</p>
           </div>
           <Button size="sm" variant="outline" onClick={openEdit}><UserCog size={14} className="mr-1" />수정</Button>
         </div>
         {role === "employer" && roleData && (
-          <div className="text-xs text-muted-foreground border-t pt-2 space-y-0.5">
+          <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
             <p>업체명: {roleData.company_name}</p>
             <p>담당자: {roleData.manager_name}</p>
             <p>위치: {roleData.location}</p>
@@ -103,7 +103,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           </div>
         )}
         {role === "seeker" && roleData && (
-          <div className="text-xs text-muted-foreground border-t pt-2 space-y-0.5">
+          <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
             <p>선호 지역: {roleData.preferred_region || "-"}</p>
           </div>
         )}
