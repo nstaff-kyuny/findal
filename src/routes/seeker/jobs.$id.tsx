@@ -45,7 +45,7 @@ function Page() {
   };
   useEffect(() => { load(); }, [id, user]);
 
-  const runTranslate = async (language: "en" | "vi" | "th") => {
+  const runTranslate = async (language: "en" | "mn" | "ru" | "zh") => {
     setAiBusy(true);
     try { setTranslation(await translateJob({ data: { jobId: id, language } })); }
     catch (e: any) { toast.error(e?.message ?? "번역 실패"); }
@@ -86,16 +86,20 @@ function Page() {
           <h1 className="text-xl font-bold">{job.title}</h1>
           <Card><CardContent className="p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold"><Languages size={16} className="text-primary" />AI 다국어 보기</div>
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="grid grid-cols-4 gap-1.5">
               <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("en")}>English</Button>
-              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("vi")}>Tiếng Việt</Button>
-              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("th")}>ไทย</Button>
+              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("mn")}>Монгол</Button>
+              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("ru")}>Русский</Button>
+              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("zh")}>中文</Button>
             </div>
-            {translation && <div className="rounded bg-muted/50 p-2 text-sm space-y-1">
-              <p className="font-bold">{translation.title}</p>
-              <p>{translation.summary}</p>
-              <p className="text-primary font-semibold">{translation.wage}</p>
-              <p>{translation.preparation}</p>
+            {translation && <div className="rounded bg-muted/50 p-2 text-sm space-y-1.5">
+              <p className="font-bold text-base">{translation.title}</p>
+              {translation.summary && <p>{translation.summary}</p>}
+              <p>📍 {translation.place} · {translation.location}</p>
+              <p>🏷️ {translation.industry} · {translation.jobRole}</p>
+              <p className="text-primary font-semibold">💰 {translation.wage}</p>
+              {translation.schedule && <p>📅 {translation.schedule}</p>}
+              {translation.preparation && <p>🧰 {translation.preparation}</p>}
               <p className="text-xs text-muted-foreground">{translation.caution}</p>
             </div>}
           </CardContent></Card>
