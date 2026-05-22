@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -9,6 +10,7 @@ import { INDUSTRY_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI, formatWorkDatesWithWeekday } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { parseRegions } from "@/components/RegionPicker";
+import { generateSeekerMatchReasons } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/featured")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
@@ -18,7 +20,9 @@ function Page() {
   const [random, setRandom] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
+  const [matches, setMatches] = useState<Record<string, { score: number; reason: string }>>({});
   const [prefRegions, setPrefRegions] = useState<string[]>([]);
+  const getReasons = useServerFn(generateSeekerMatchReasons);
   const nav = useNavigate();
 
   useEffect(() => { (async () => {
@@ -62,6 +66,10 @@ function Page() {
       const map: Record<string, number> = {};
       (apps ?? []).forEach((x: any) => { map[x.job_id] = (map[x.job_id] ?? 0) + 1; });
       setCounts(map);
+      try {
+        const picked = [...promotedJobs.slice(0, 6), ...randomJobs.slice(0, 6)].map((j: any) => ({ id: j.id, title: j.title, region: j.region, industry: j.industry, daily_wage: j.daily_wage }));
+        setMatches(await getReasons({ data: { jobs: picked } }));
+      } catch {}
     }
   })(); }, [user]);
 
@@ -89,7 +97,9 @@ function Page() {
         </div>
       )}
       <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
+      {matches[j.id] && <Badge variant="default" className="text-[10px] ml-1">AI {matches[j.id].score}점</Badge>}
       <h3 className="text-base font-bold mt-1 truncate">{j.title}</h3>
+      {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
       <p className="text-sm text-muted-foreground truncate">🏨 {j.place_name}</p>
       <p className="text-base text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
       <div className="mt-0.5">
@@ -105,7 +115,9 @@ function Page() {
       <div className="absolute right-1 bottom-1 text-6xl opacity-10 pointer-events-none select-none">{industryIcon(j.industry)}</div>
       <div className="relative">
         <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
+        {matches[j.id] && <Badge variant="default" className="text-[10px] ml-1">AI {matches[j.id].score}점</Badge>}
         <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
+        {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
         <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>
         <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
         <div className="mt-0.5">
