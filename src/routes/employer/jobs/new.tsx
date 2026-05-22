@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS } from "@/lib/constants";
 import { toast } from "sonner";
 import { ImagePlus, CalendarDays, Sparkles } from "lucide-react";
-import { generateJobDraft, generateJobImage } from "@/lib/ai.functions";
+import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
 
 const MAX_WORK_DATES = 5;
 
@@ -29,6 +29,7 @@ function Page() {
   const nav = useNavigate();
   const makeDraft = useServerFn(generateJobDraft);
   const makeImage = useServerFn(generateJobImage);
+  const moderate = useServerFn(moderateText);
   const [emp, setEmp] = useState<any>(null);
   const [industry, setIndustry] = useState("hotel");
   const [jobRole, setJobRole] = useState("room_cleaning");
@@ -115,17 +116,27 @@ function Page() {
     if (!headcountNum || headcountNum < 1) return toast.error("필요 인원수를 입력하세요");
     if (isRoomCleaningHotel && !rooms) return toast.error("객실청소 공고는 일일 객실수가 필수입니다");
     setSaving(true);
-    const fullRegion = district ? `${region} ${district}` : region;
-    const { error } = await supabase.from("jobs").insert({
-      employer_id: user.id, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
-      photo_url: photoUrl, daily_wage: wageNum, pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
-      contact_phone: useDefaultContact ? (emp?.contact_phone ?? "") : contact,
-      work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: headcountNum, is_active: true,
-    } as any);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("공고 등록 완료");
-    nav({ to: "/employer/jobs" });
+    try {
+      const combined = `${title}\n${prep ?? ""}\n${placeName}`.trim();
+      const mod = await moderate({ data: { text: combined, context: "job" } });
+      if (!mod.allow) {
+        toast.error(`부적절한 표현이 감지되어 공고를 등록할 수 없습니다: ${mod.reason}`);
+        return;
+      }
+      if (mod.risk === "보통") toast.warning(`주의 표현이 감지되었습니다: ${mod.reason}`);
+      const fullRegion = district ? `${region} ${district}` : region;
+      const { error } = await supabase.from("jobs").insert({
+        employer_id: user.id, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
+        photo_url: photoUrl, daily_wage: wageNum, pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
+        contact_phone: useDefaultContact ? (emp?.contact_phone ?? "") : contact,
+        work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: headcountNum, is_active: true,
+      } as any);
+      if (error) return toast.error(error.message);
+      toast.success("공고 등록 완료");
+      nav({ to: "/employer/jobs" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
