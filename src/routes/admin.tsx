@@ -592,7 +592,10 @@ function UsersTab() {
   const [newPhone, setNewPhone] = useState("");
   const [newRole, setNewRole] = useState<"seeker" | "employer">("seeker");
   const [newReferrer, setNewReferrer] = useState("");
+  const [newRegions, setNewRegions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [editUserId, setEditUserId] = useState<string | null>(null);
+
 
   const load = async () => {
     const { data: e } = await supabase.from("employer_profiles").select("*").order("created_at", { ascending: false });
