@@ -432,7 +432,153 @@ function IconsTab() {
   );
 }
 
+function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: string | null; open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void }) {
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [role, setRole] = useState<"seeker" | "employer" | "unknown">("unknown");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  // seeker
+  const [nationality, setNationality] = useState("korean");
+  const [visa, setVisa] = useState("");
+  const [koreanOk, setKoreanOk] = useState(true);
+  const [experience, setExperience] = useState("lt5");
+  const [regions, setRegions] = useState<string[]>([]);
+  const [seekerReferrer, setSeekerReferrer] = useState("");
+  // employer
+  const [company, setCompany] = useState("");
+  const [location, setLocation] = useState("");
+  const [manager, setManager] = useState("");
+  const [empReferrer, setEmpReferrer] = useState("");
+
+  useEffect(() => {
+    if (!userId || !open) return;
+    setLoading(true);
+    (async () => {
+      const [{ data: prof }, { data: rr }, { data: sp }, { data: ep }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+        supabase.from("seeker_profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("employer_profiles").select("*").eq("user_id", userId).maybeSingle(),
+      ]);
+      setFullName(prof?.full_name ?? "");
+      setPhone(prof?.phone ?? "");
+      const roles = (rr ?? []).map((r: any) => r.role);
+      if (roles.includes("employer") && ep) {
+        setRole("employer");
+        setCompany(ep.company_name ?? "");
+        setLocation(ep.location ?? "");
+        setManager(ep.manager_name ?? "");
+        setEmpReferrer(ep.referrer_code ?? "");
+        setPhone(ep.contact_phone ?? prof?.phone ?? "");
+      } else if (roles.includes("seeker") && sp) {
+        setRole("seeker");
+        setNationality(sp.nationality ?? "korean");
+        setVisa(sp.visa ?? "");
+        setKoreanOk(!!sp.korean_ok);
+        setExperience(sp.experience ?? "lt5");
+        setRegions(parseRegions(sp.preferred_region));
+        setSeekerReferrer(sp.referrer_code ?? "");
+      } else {
+        setRole("unknown");
+      }
+      setLoading(false);
+    })();
+  }, [userId, open]);
+
+  const save = async () => {
+    if (!userId) return;
+    setSaving(true);
+    try {
+      const { error: pe } = await supabase.from("profiles").update({ full_name: fullName, phone } as any).eq("id", userId);
+      if (pe) throw pe;
+      if (role === "seeker") {
+        const { error } = await supabase.from("seeker_profiles").update({
+          nationality, visa: nationality === "korean" ? null : (visa || null),
+          korean_ok: koreanOk, experience,
+          preferred_region: regions.length ? serializeRegions(regions) : null,
+          referrer_code: seekerReferrer || null,
+        } as any).eq("user_id", userId);
+        if (error) throw error;
+      } else if (role === "employer") {
+        const { error } = await supabase.from("employer_profiles").update({
+          company_name: company, location, manager_name: manager,
+          contact_phone: phone, referrer_code: empReferrer || null,
+        } as any).eq("user_id", userId);
+        if (error) throw error;
+      }
+      toast.success("저장되었습니다");
+      onOpenChange(false);
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.message ?? "저장 실패");
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader><DialogTitle>사용자 정보 수정</DialogTitle></DialogHeader>
+        {loading ? <p className="text-sm text-muted-foreground py-6 text-center">불러오는 중...</p> : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>이름</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} /></div>
+              <div><Label>연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} /></div>
+            </div>
+            {role === "seeker" && (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>신분</Label>
+                    <Select value={nationality} onValueChange={(v) => { setNationality(v); if (v === "korean") setVisa(""); }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>{Object.entries(NATIONALITY_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>경력</Label>
+                    <Select value={experience} onValueChange={setExperience}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lt5">5회 미만</SelectItem>
+                        <SelectItem value="gte5">5회 이상</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {nationality === "foreigner" && (
+                  <div><Label>비자</Label>
+                    <Select value={visa} onValueChange={setVisa}>
+                      <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                      <SelectContent>{Object.entries(VISA_LABEL).map(([k,v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div className="flex items-center justify-between border rounded p-2"><Label>한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
+                <div><Label>선호 지역 (최대 3개)</Label><div className="mt-1"><RegionPicker value={regions} onChange={setRegions} /></div></div>
+                <div><Label>추천인 코드</Label><Input value={seekerReferrer} onChange={e => setSeekerReferrer(e.target.value)} /></div>
+              </>
+            )}
+            {role === "employer" && (
+              <>
+                <div><Label>회사명</Label><Input value={company} onChange={e => setCompany(e.target.value)} /></div>
+                <div><Label>위치</Label><Input value={location} onChange={e => setLocation(e.target.value)} /></div>
+                <div><Label>담당자</Label><Input value={manager} onChange={e => setManager(e.target.value)} /></div>
+                <div><Label>추천인 코드</Label><Input value={empReferrer} onChange={e => setEmpReferrer(e.target.value)} /></div>
+              </>
+            )}
+            {role === "unknown" && <p className="text-sm text-muted-foreground">이 사용자의 프로필 정보가 없습니다. 기본 정보만 수정할 수 있습니다.</p>}
+          </div>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>취소</Button>
+          <Button onClick={save} disabled={saving || loading}>{saving ? "저장 중..." : "저장"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function UsersTab() {
+
   const [employers, setEmployers] = useState<any[]>([]);
   const [seekers, setSeekers] = useState<any[]>([]);
   const [emails, setEmails] = useState<Record<string, string>>({});
