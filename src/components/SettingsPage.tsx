@@ -147,10 +147,13 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
 
       <Card className="bg-muted/40"><CardContent className="p-4 text-[11px] text-muted-foreground space-y-0.5">
         <p className="font-semibold text-foreground mb-1">사업자 정보</p>
-        <p>회사명: {COMPANY_INFO.name}</p>
-        <p>대표자: {COMPANY_INFO.ceo}</p>
-        <p>사업자등록번호: {COMPANY_INFO.bizNo}</p>
-        <p>통신판매업등록번호: {COMPANY_INFO.mailOrderNo}</p>
+        <p>회사명: {company.name}</p>
+        <p>대표자: {company.ceo}</p>
+        <p>사업자등록번호: {company.bizNo}</p>
+        <p>통신판매업등록번호: {company.mailOrderNo}</p>
+        {company.address && <p>주소: {company.address}</p>}
+        {company.phone && <p>연락처: {company.phone}</p>}
+        {company.email && <p>이메일: {company.email}</p>}
       </CardContent></Card>
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
