@@ -100,11 +100,15 @@ function Page() {
             {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
           </div>
           {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
-          {aiNotes[a.id] && <div className="mt-2 rounded bg-primary/5 border border-primary/20 p-2 text-xs">
-            <p className="font-semibold text-primary">AI 요약 · 노쇼 위험 {aiNotes[a.id].noShowRisk}</p>
-            <p className="mt-0.5">{aiNotes[a.id].summary}</p>
-            <p className="mt-0.5 text-muted-foreground">확인 질문: {aiNotes[a.id].question}</p>
-          </div>}
+          {aiNotes[a.id] && (() => {
+            const r = aiNotes[a.id].noShowRisk;
+            const riskCls = r === "높음" ? "bg-red-50 border-red-200 text-red-700" : r === "보통" ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-emerald-50 border-emerald-200 text-emerald-700";
+            return <div className={`mt-2 rounded border p-2 text-xs ${riskCls}`}>
+              <p className="font-semibold">🤖 AI 요약 · 노쇼 위험 {r}</p>
+              <p className="mt-0.5 text-foreground">{aiNotes[a.id].summary}</p>
+              <p className="mt-0.5 text-muted-foreground">확인 질문: {aiNotes[a.id].question}</p>
+            </div>;
+          })()}
         </div>
         <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 font-semibold ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
       </div>
