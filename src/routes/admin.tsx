@@ -370,6 +370,9 @@ function AllUsersTab() {
                     <td className="p-2">{banned ? <Badge variant="destructive">삭제됨</Badge> : <Badge variant="outline">활성</Badge>}</td>
                     <td className="p-2">
                       <div className="flex gap-1">
+                        <Button size="sm" variant="ghost" title="정보 수정" onClick={() => setEditUserId(r.id)}>
+                          <Pencil size={14} />
+                        </Button>
                         {banned ? (
                           <Button size="sm" variant="outline" onClick={() => handleBan(r.id, false, r.email)}>복구</Button>
                         ) : (
@@ -380,6 +383,7 @@ function AllUsersTab() {
                         <Button size="sm" variant="destructive" onClick={() => handleHardDelete(r.id, r.email)} title="완전 삭제">완전삭제</Button>
                       </div>
                     </td>
+
                   </tr>
                 );
               })}
