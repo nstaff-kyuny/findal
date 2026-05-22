@@ -15,10 +15,14 @@ import { toast } from "sonner";
 import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck } from "lucide-react";
 import { generateScreeningQuestions, translateJobDetails } from "@/lib/ai.functions";
 
-export const Route = createFileRoute("/seeker/jobs/$id")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
+export const Route = createFileRoute("/seeker/jobs/$id")({
+  component: () => <RoleGate role="seeker"><Page /></RoleGate>,
+  validateSearch: (s: Record<string, unknown>) => ({ from: (s.from as string) || "" }),
+});
 
 function Page() {
   const { id } = useParams({ from: "/seeker/jobs/$id" });
+  const { from } = useSearch({ from: "/seeker/jobs/$id" });
   const { user } = useAuth();
   const nav = useNavigate();
   const translateJob = useServerFn(translateJobDetails);
