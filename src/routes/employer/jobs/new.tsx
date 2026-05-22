@@ -29,6 +29,7 @@ function Page() {
   const nav = useNavigate();
   const makeDraft = useServerFn(generateJobDraft);
   const makeImage = useServerFn(generateJobImage);
+  const moderate = useServerFn(moderateText);
   const [emp, setEmp] = useState<any>(null);
   const [industry, setIndustry] = useState("hotel");
   const [jobRole, setJobRole] = useState("room_cleaning");
