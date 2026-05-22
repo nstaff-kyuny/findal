@@ -7,6 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { INDUSTRY_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI, formatWorkDatesWithWeekday } from "@/lib/job-visuals";
+import { useAuth } from "@/lib/auth";
+import { parseRegions } from "@/components/RegionPicker";
 
 export const Route = createFileRoute("/seeker/featured")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
