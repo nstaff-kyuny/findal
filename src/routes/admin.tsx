@@ -216,7 +216,11 @@ function AllUsersTab() {
   const hardDelete = useServerFn(adminDeleteUser);
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"all" | "seeker" | "employer" | "admin">("all");
+  const [sortBy, setSortBy] = useState<"created_desc" | "created_asc" | "role">("created_desc");
+  const [editUserId, setEditUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
 
   const load = async () => {
     setLoading(true);
