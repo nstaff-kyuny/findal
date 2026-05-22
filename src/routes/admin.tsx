@@ -855,6 +855,7 @@ function CreditsTab() {
 }
 
 function ReferrersTab() {
+  const updateReferrer = useServerFn(adminUpdateReferrer);
   const [list, setList] = useState<any[]>([]);
   const [signups, setSignups] = useState<Record<string, any[]>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
