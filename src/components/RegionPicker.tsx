@@ -13,8 +13,8 @@ export function serializeRegions(arr: string[]): string {
 }
 
 export function RegionPicker({
-  value, onChange, max = MAX_REGIONS,
-}: { value: string[]; onChange: (v: string[]) => void; max?: number }) {
+  value, onChange, max = MAX_REGIONS, compact = false,
+}: { value: string[]; onChange: (v: string[]) => void; max?: number; compact?: boolean }) {
   const toggle = (r: string) => {
     if (value.includes(r)) {
       onChange(value.filter(x => x !== r));
@@ -28,14 +28,14 @@ export function RegionPicker({
   };
   return (
     <div>
-      <div className="grid grid-cols-4 gap-1.5">
+      <div className={compact ? "grid grid-cols-9 gap-1" : "grid grid-cols-4 gap-1.5"}>
         {REGIONS.map(r => (
           <Button
             key={r}
             type="button"
             size="sm"
             variant={value.includes(r) ? "default" : "outline"}
-            className="h-10 text-sm"
+            className={compact ? "h-7 px-2 text-[11px]" : "h-10 text-sm"}
             onClick={() => toggle(r)}
           >
             {r}

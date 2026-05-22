@@ -1,5 +1,6 @@
 import { createFileRoute, useParams, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -11,7 +12,8 @@ import { INDUSTRY_LABEL, ROLE_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, formatWorkDates } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { MapPin, Calendar, Wallet, Wrench } from "lucide-react";
+import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck } from "lucide-react";
+import { generateScreeningQuestions, translateJobDetails } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/jobs/$id")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
@@ -19,9 +21,14 @@ function Page() {
   const { id } = useParams({ from: "/seeker/jobs/$id" });
   const { user } = useAuth();
   const nav = useNavigate();
+  const translateJob = useServerFn(translateJobDetails);
+  const makeQuestions = useServerFn(generateScreeningQuestions);
   const [job, setJob] = useState<any>(null);
   const [app, setApp] = useState<any>(null);
   const [msg, setMsg] = useState("");
+  const [translation, setTranslation] = useState<any>(null);
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [aiBusy, setAiBusy] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = async () => {
@@ -33,6 +40,20 @@ function Page() {
     }
   };
   useEffect(() => { load(); }, [id, user]);
+
+  const runTranslate = async (language: "en" | "vi" | "th") => {
+    setAiBusy(true);
+    try { setTranslation(await translateJob({ data: { jobId: id, language } })); }
+    catch (e: any) { toast.error(e?.message ?? "번역 실패"); }
+    finally { setAiBusy(false); }
+  };
+
+  const runScreening = async () => {
+    setAiBusy(true);
+    try { const res = await makeQuestions({ data: { jobId: id } }); setQuestions(res.questions ?? []); }
+    catch (e: any) { toast.error(e?.message ?? "AI 질문 생성 실패"); }
+    finally { setAiBusy(false); }
+  };
 
   const apply = async () => {
     if (!job || !user) return;
@@ -59,6 +80,21 @@ function Page() {
             <Badge variant="outline">{ROLE_LABEL[job.job_role]}</Badge>
           </div>
           <h1 className="text-xl font-bold">{job.title}</h1>
+          <Card><CardContent className="p-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold"><Languages size={16} className="text-primary" />AI 다국어 보기</div>
+            <div className="grid grid-cols-3 gap-1.5">
+              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("en")}>English</Button>
+              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("vi")}>Tiếng Việt</Button>
+              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("th")}>ไทย</Button>
+            </div>
+            {translation && <div className="rounded bg-muted/50 p-2 text-sm space-y-1">
+              <p className="font-bold">{translation.title}</p>
+              <p>{translation.summary}</p>
+              <p className="text-primary font-semibold">{translation.wage}</p>
+              <p>{translation.preparation}</p>
+              <p className="text-xs text-muted-foreground">{translation.caution}</p>
+            </div>}
+          </CardContent></Card>
           <Card><CardContent className="p-4 space-y-2 text-sm">
             <div className="flex items-center gap-2"><MapPin size={14} className="text-muted-foreground" /><span>{job.place_name} · {job.location}</span></div>
             <div className="flex items-center gap-2"><Wallet size={14} className="text-muted-foreground" /><span>일당 <b>{Number(job.daily_wage).toLocaleString()}원</b> (지급일: {job.pay_day})</span></div>
@@ -79,6 +115,8 @@ function Page() {
             <Button className="w-full" disabled variant="outline">거절됨</Button>
           ) : (
             <div className="space-y-2">
+              <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />AI 신청 전 확인 질문</Button>
+              {questions.length > 0 && <Card className="p-3 bg-muted/40"><ul className="text-sm space-y-1 list-disc list-inside">{questions.map((q, i) => <li key={i}>{q}</li>)}</ul></Card>}
               <Textarea placeholder="구인자에게 보낼 메시지 (선택)" value={msg} onChange={e => setMsg(e.target.value)} />
               <Button className="w-full" onClick={apply} disabled={busy}>일하고 싶어요 (요청 보내기)</Button>
             </div>

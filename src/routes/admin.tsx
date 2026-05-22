@@ -3,7 +3,7 @@ import { useEffect, useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails, adminListAllUsers, adminSetUserBan } from "@/lib/admin-users.functions";
+import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails, adminListAllUsers, adminSetUserBan, adminUpdateUserProfile } from "@/lib/admin-users.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import { Download, Trash2, UserPlus, KeyRound, Pencil } from "lucide-react";
 import { VISA_LABEL, NATIONALITY_LABEL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
+import { analyzeInquiryText, generateAdminAiInsights } from "@/lib/ai.functions";
 
 
 export const Route = createFileRoute("/admin")({ component: Admin });
@@ -142,6 +143,7 @@ function AdminPanel() {
         <TabsTrigger value="events">이벤트</TabsTrigger>
         <TabsTrigger value="faqs">FAQ</TabsTrigger>
         <TabsTrigger value="inquiries">1:1 문의</TabsTrigger>
+        <TabsTrigger value="ai-insights">AI 인사이트</TabsTrigger>
         <TabsTrigger value="company">사업자정보</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
@@ -157,6 +159,7 @@ function AdminPanel() {
       <TabsContent value="events"><EventsTab /></TabsContent>
       <TabsContent value="faqs"><FaqsTab /></TabsContent>
       <TabsContent value="inquiries"><InquiriesTab /></TabsContent>
+      <TabsContent value="ai-insights"><AiInsightsTab /></TabsContent>
       <TabsContent value="company"><CompanyInfoTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
       <TabsContent value="icons"><IconsTab /></TabsContent>
@@ -472,6 +475,7 @@ function IconsTab() {
 }
 
 function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: string | null; open: boolean; onOpenChange: (v: boolean) => void; onSaved: () => void }) {
+  const updateUser = useServerFn(adminUpdateUserProfile);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [role, setRole] = useState<"seeker" | "employer" | "unknown">("unknown");
@@ -529,23 +533,19 @@ function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: strin
     if (!userId) return;
     setSaving(true);
     try {
-      const { error: pe } = await supabase.from("profiles").update({ full_name: fullName, phone } as any).eq("id", userId);
-      if (pe) throw pe;
-      if (role === "seeker") {
-        const { error } = await supabase.from("seeker_profiles").update({
-          nationality, visa: nationality === "korean" ? null : (visa || null),
-          korean_ok: koreanOk, experience,
-          preferred_region: regions.length ? serializeRegions(regions) : null,
-          referrer_code: seekerReferrer || null,
-        } as any).eq("user_id", userId);
-        if (error) throw error;
-      } else if (role === "employer") {
-        const { error } = await supabase.from("employer_profiles").update({
-          company_name: company, location, manager_name: manager,
-          contact_phone: phone, referrer_code: empReferrer || null,
-        } as any).eq("user_id", userId);
-        if (error) throw error;
-      }
+      await updateUser({ data: {
+        userId, role, fullName, phone,
+        seeker: role === "seeker" ? {
+          nationality: nationality as "korean" | "foreigner",
+          visa: nationality === "korean" ? null : ((visa || null) as any),
+          koreanOk, experience: experience as "lt5" | "gte5",
+          preferredRegions: regions.length ? serializeRegions(regions) : null,
+          referrerCode: seekerReferrer || null,
+        } : undefined,
+        employer: role === "employer" ? {
+          companyName: company, location, managerName: manager, referrerCode: empReferrer || null,
+        } : undefined,
+      } });
       toast.success("저장되었습니다");
       onOpenChange(false);
       onSaved();
@@ -743,7 +743,7 @@ function UsersTab() {
         {newRole === "seeker" && (
           <div>
             <Label className="text-xs">선호 지역 (구직자, 최대 3개 · 선택)</Label>
-            <div className="mt-1"><RegionPicker value={newRegions} onChange={setNewRegions} /></div>
+            <div className="mt-1"><RegionPicker value={newRegions} onChange={setNewRegions} compact /></div>
           </div>
         )}
       </CardContent></Card>
@@ -1354,9 +1354,12 @@ function FaqsTab() {
 }
 
 function InquiriesTab() {
+  const analyzeText = useServerFn(analyzeInquiryText);
   const [list, setList] = useState<any[]>([]);
   const [answering, setAnswering] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState("");
+  const [analysis, setAnalysis] = useState<Record<string, any>>({});
+  const [aiBusyId, setAiBusyId] = useState<string | null>(null);
   const load = async () => {
     const { data } = await supabase.from("inquiries").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
     setList(data ?? []);
@@ -1369,6 +1372,16 @@ function InquiriesTab() {
     } as any).eq("id", id);
     if (error) return toast.error(error.message);
     setAnswering(null); setAnswerText(""); toast.success("답변 등록됨"); load();
+  };
+  const runAi = async (q: any) => {
+    setAiBusyId(q.id);
+    try {
+      const res = await analyzeText({ data: { subject: q.subject, body: q.body } });
+      setAnalysis(prev => ({ ...prev, [q.id]: res }));
+      setAnswering(q.id);
+      setAnswerText(res.suggestedAnswer ?? "");
+    } catch (e: any) { toast.error(e?.message ?? "AI 분석 실패"); }
+    finally { setAiBusyId(null); }
   };
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-3">
@@ -1384,6 +1397,11 @@ function InquiriesTab() {
             <Badge variant={q.status === "answered" ? "default" : "secondary"}>{q.status === "answered" ? "답변완료" : "대기"}</Badge>
           </div>
           <p className="text-sm whitespace-pre-wrap p-2 bg-muted/40 rounded">{q.body}</p>
+          {analysis[q.id] && (
+            <div className="p-2 bg-muted/40 border rounded text-xs space-y-1">
+              <p className="font-semibold">AI 분류: {analysis[q.id].category} · 스팸/욕설 위험 {analysis[q.id].spamRisk} · {analysis[q.id].needsHuman ? "관리자 확인 권장" : "AI 답변 가능"}</p>
+            </div>
+          )}
           {q.answer ? (
             <div className="p-2 bg-primary/5 border-l-2 border-primary rounded">
               <p className="text-[10px] text-primary font-semibold">답변</p>
@@ -1398,10 +1416,69 @@ function InquiriesTab() {
               </div>
             </div>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setAnswering(q.id)}>답변하기</Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => runAi(q)} disabled={aiBusyId === q.id}>{aiBusyId === q.id ? "분석 중..." : "AI 답변 초안"}</Button>
+              <Button size="sm" variant="outline" onClick={() => setAnswering(q.id)}>답변하기</Button>
+            </div>
           )}
         </CardContent></Card>
       ))}
+    </CardContent></Card>
+  );
+}
+
+function AiInsightsTab() {
+  const getInsights = useServerFn(generateAdminAiInsights);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<any>(null);
+
+  const run = async () => {
+    setLoading(true);
+    try {
+      setData(await getInsights({}));
+      toast.success("AI 인사이트가 생성되었습니다");
+    } catch (e: any) {
+      toast.error(e?.message ?? "AI 인사이트 생성 실패");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 space-y-4">
+      <Card><CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="font-bold">AI 운영 인사이트</h3>
+            <p className="text-xs text-muted-foreground mt-1">사용자, 공고, 신청, 문의, 추천인 데이터를 기반으로 운영 포인트를 요약합니다.</p>
+          </div>
+          <Button onClick={run} disabled={loading}>{loading ? "분석 중..." : "AI 분석 실행"}</Button>
+        </div>
+      </CardContent></Card>
+      {data && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <Card className="md:col-span-2"><CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">요약</p>
+            <p className="text-sm whitespace-pre-wrap">{data.summary}</p>
+          </CardContent></Card>
+          <InsightList title="추천 액션" items={data.actions} />
+          <InsightList title="위험 신호" items={data.riskSignals} />
+          <InsightList title="추천인 점검" items={data.referralChecks} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InsightList({ title, items }: { title: string; items?: string[] }) {
+  return (
+    <Card><CardContent className="p-4">
+      <h4 className="font-semibold text-sm mb-2">{title}</h4>
+      {!items?.length ? <p className="text-xs text-muted-foreground">표시할 항목이 없습니다</p> : (
+        <ul className="list-disc list-inside text-sm space-y-1">
+          {items.map((item, i) => <li key={i}>{item}</li>)}
+        </ul>
+      )}
     </CardContent></Card>
   );
 }
