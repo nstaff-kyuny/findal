@@ -31,6 +31,7 @@ function Page() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [nearby, setNearby] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [searchVisible, setSearchVisible] = useState(true);
   const nav = useNavigate();
 
   const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
@@ -46,9 +47,32 @@ function Page() {
     setJobs(data ?? []);
   })(); }, [region, q, category, selectedDate]);
 
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let ticking = false;
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      window.requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const dy = y - lastY;
+        if (y < 10) setSearchVisible(true);
+        else if (dy > 6) setSearchVisible(false);
+        else if (dy < -6) setSearchVisible(true);
+        lastY = y;
+        ticking = false;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <MobileLayout role="seeker">
-      <div className="p-3 space-y-3 sticky top-[57px] bg-background z-30 pt-3 border-b shadow-sm">
+      <div className={cn(
+        "p-3 space-y-3 sticky top-[57px] bg-background z-30 pt-3 border-b shadow-sm transition-transform duration-300 will-change-transform",
+        searchVisible ? "translate-y-0" : "-translate-y-[calc(100%+57px)]"
+      )}>
         <div className="flex gap-2">
           <Select value={region} onValueChange={setRegion}>
             <SelectTrigger className="w-32"><SelectValue placeholder="지역" /></SelectTrigger>
