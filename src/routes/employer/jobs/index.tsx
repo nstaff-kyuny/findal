@@ -39,6 +39,11 @@ function Page() {
   const promote = async (jobId: string, dur: string) => {
     const { error } = await supabase.rpc("promote_job", { _job_id: jobId, _duration: dur } as any);
     if (error) {
+      if (error.message?.includes("SLOTS_FULL")) {
+        toast.error("지금은 가능한 광고 여분의 자리가 없습니다. 잠시 후 다시 신청해주세요.", { duration: 6000 });
+        setPromoOpenId(null);
+        return;
+      }
       if (error.message?.includes("크레딧")) {
         toast.error("크레딧이 부족합니다. 크레딧 구매 페이지로 이동합니다.");
         setTimeout(() => nav({ to: "/employer/credits" }), 600);
