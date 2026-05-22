@@ -123,15 +123,15 @@ export const getGuideAiReply = createServerFn({ method: "POST" })
 
 export const translateJobDetails = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ jobId: z.string().uuid(), language: z.enum(["en", "vi", "th"]) }).parse(input))
+  .inputValidator((input) => z.object({ jobId: z.string().uuid(), language: z.enum(["en", "mn", "ru", "zh"]) }).parse(input))
   .handler(async ({ data, context }) => {
-    const { data: job, error } = await context.supabase.from("jobs").select("title, place_name, location, daily_wage, pay_day, preparations, work_dates, rooms_per_day").eq("id", data.jobId).single();
+    const { data: job, error } = await context.supabase.from("jobs").select("title, place_name, location, region, industry, job_role, daily_wage, pay_day, preparations, work_dates, rooms_per_day, headcount").eq("id", data.jobId).single();
     if (error) throw new Error(error.message);
-    const lang = data.language === "en" ? "English" : data.language === "vi" ? "Vietnamese" : "Thai";
-    return callAiJson<{ title: string; summary: string; wage: string; preparation: string; caution: string }>([
-      { role: "system", content: `Translate Korean job information into ${lang}. Keep numbers and dates accurate. Return JSON only.` },
+    const langName = { en: "English", mn: "Mongolian (Монгол)", ru: "Russian (Русский)", zh: "Simplified Chinese (简体中文)" }[data.language];
+    return callAiJson<{ title: string; place: string; location: string; industry: string; jobRole: string; summary: string; wage: string; schedule: string; preparation: string; caution: string }>([
+      { role: "system", content: `You translate a Korean short-term job posting into ${langName}. Translate every field naturally (do not leave Korean). Keep numbers, dates, and place names accurate. Return JSON only with keys: title, place, location, industry, jobRole, summary, wage, schedule, preparation, caution.` },
       { role: "user", content: JSON.stringify(job) },
-    ], { title: job.title, summary: "", wage: String(job.daily_wage), preparation: job.preparations ?? "", caution: "Contact is visible after approval." });
+    ], { title: job.title, place: job.place_name, location: job.location, industry: String(job.industry), jobRole: String(job.job_role), summary: "", wage: String(job.daily_wage), schedule: (job.work_dates ?? []).join(", "), preparation: job.preparations ?? "", caution: "Contact is visible after approval." });
   });
 
 export const generateScreeningQuestions = createServerFn({ method: "POST" })
