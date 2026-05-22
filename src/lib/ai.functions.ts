@@ -134,6 +134,20 @@ export const translateJobDetails = createServerFn({ method: "POST" })
     ], { title: job.title, place: job.place_name, location: job.location, industry: String(job.industry), jobRole: String(job.job_role), summary: "", wage: String(job.daily_wage), schedule: (job.work_dates ?? []).join(", "), preparation: job.preparations ?? "", caution: "Contact is visible after approval." });
   });
 
+export const translateTexts = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    texts: z.array(z.string().max(2000)).min(1).max(40),
+    language: z.enum(["en", "mn", "ru", "zh"]),
+  }).parse(input))
+  .handler(async ({ data }) => {
+    const langName = { en: "English", mn: "Mongolian (Монгол)", ru: "Russian (Русский)", zh: "Simplified Chinese (简体中文)" }[data.language];
+    return callAiJson<{ items: string[] }>([
+      { role: "system", content: `Translate each Korean string into ${langName} naturally. Keep meaning, numbers, and emojis. Return JSON only: {"items":["...","..."]} in the same order and length as the input.` },
+      { role: "user", content: JSON.stringify({ items: data.texts }) },
+    ], { items: data.texts });
+  });
+
 export const generateScreeningQuestions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ jobId: z.string().uuid() }).parse(input))
