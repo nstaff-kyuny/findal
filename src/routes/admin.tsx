@@ -759,19 +759,43 @@ function ReferrersTab() {
             return (
               <Fragment key={r.id}>
                 <tr className="border-b">
-                  <td className="py-2 font-mono">{r.code}</td>
-                  <td>{r.name}</td>
-                  <td>{r.phone}</td>
-                  <td>
-                    <Button size="sm" variant="ghost" className="font-bold h-auto p-1" onClick={toggle}>
-                      {users.length}명 {users.length > 0 ? (isOpen ? " ▲" : " ▼") : ""}
-                    </Button>
-                  </td>
-                  <td>
-                    <Button size="sm" variant="ghost" onClick={() => del(r.id, r.name)}>
-                      <Trash2 size={14} className="text-destructive" />
-                    </Button>
-                  </td>
+                  {editingId === r.id ? (
+                    <>
+                      <td className="py-2"><Input className="h-8 font-mono text-xs" value={editForm.code} onChange={e => setEditForm({ ...editForm, code: e.target.value })} /></td>
+                      <td><Input className="h-8 text-xs" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></td>
+                      <td><Input className="h-8 text-xs" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} /></td>
+                      <td>
+                        <Button size="sm" variant="ghost" className="font-bold h-auto p-1" onClick={toggle}>
+                          {users.length}명 {users.length > 0 ? (isOpen ? " ▲" : " ▼") : ""}
+                        </Button>
+                      </td>
+                      <td>
+                        <div className="flex gap-1">
+                          <Button size="sm" onClick={() => saveEdit(r.id)}>저장</Button>
+                          <Button size="sm" variant="outline" onClick={cancelEdit}>취소</Button>
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="py-2 font-mono">{r.code}</td>
+                      <td>{r.name}</td>
+                      <td>{r.phone}</td>
+                      <td>
+                        <Button size="sm" variant="ghost" className="font-bold h-auto p-1" onClick={toggle}>
+                          {users.length}명 {users.length > 0 ? (isOpen ? " ▲" : " ▼") : ""}
+                        </Button>
+                      </td>
+                      <td>
+                        <div className="flex gap-1">
+                          <Button size="sm" variant="outline" onClick={() => startEdit(r)}>수정</Button>
+                          <Button size="sm" variant="ghost" onClick={() => del(r.id, r.name)}>
+                            <Trash2 size={14} className="text-destructive" />
+                          </Button>
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
                 {isOpen && users.length > 0 && (
                   <tr key={r.id + "-detail"} className="border-b bg-muted/30">
