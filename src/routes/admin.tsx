@@ -1039,11 +1039,31 @@ function BannersTab() {
   const [list, setList] = useState<any[]>([]);
   const [title, setTitle] = useState(""); const [img, setImg] = useState(""); const [url, setUrl] = useState("");
   const [start, setStart] = useState(""); const [end, setEnd] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
   const load = async () => {
     const { data } = await supabase.from("ad_banners").select("*").order("created_at", { ascending: false });
     setList(data ?? []);
   };
   useEffect(() => { load(); }, []);
+
+  const uploadFile = async (file: File, setter: (v: string) => void) => {
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "png").toLowerCase();
+      const path = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from("ad-banners").upload(path, file, { upsert: false });
+      if (error) throw error;
+      const { data } = supabase.storage.from("ad-banners").getPublicUrl(path);
+      setter(data.publicUrl);
+      toast.success("이미지 업로드 완료");
+    } catch (e: any) {
+      toast.error(e.message || "업로드 실패");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const add = async () => {
     if (!title || !end) return toast.error("제목과 종료일 필수");
     const { error } = await supabase.from("ad_banners").insert({
@@ -1052,20 +1072,65 @@ function BannersTab() {
     } as any);
     if (error) return toast.error(error.message);
     setTitle(""); setImg(""); setUrl(""); setStart(""); setEnd(""); load();
+    toast.success("배너가 등록되었습니다");
   };
   const toggle = async (b: any) => { await supabase.from("ad_banners").update({ active: !b.active }).eq("id", b.id); load(); };
   const del = async (id: string) => { if (confirm("삭제할까요?")) { await supabase.from("ad_banners").delete().eq("id", id); load(); } };
+
+  const saveEdit = async () => {
+    if (!editing) return;
+    if (!editing.title || !editing.ends_at) return toast.error("제목과 종료일 필수");
+    const { error } = await supabase.from("ad_banners").update({
+      title: editing.title,
+      image_url: editing.image_url || null,
+      link_url: editing.link_url || null,
+      starts_at: editing.starts_at,
+      ends_at: editing.ends_at,
+      active: editing.active,
+    }).eq("id", editing.id);
+    if (error) return toast.error(error.message);
+    setEditing(null); load();
+    toast.success("수정되었습니다");
+  };
+
+  const toLocalInput = (iso: string) => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-4">
       <h3 className="font-bold">광고 배너 관리</h3>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-        <Input placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} />
-        <Input placeholder="이미지 URL" value={img} onChange={e => setImg(e.target.value)} />
-        <Input placeholder="링크 URL" value={url} onChange={e => setUrl(e.target.value)} />
-        <Input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
-        <Input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <Label>제목 *</Label>
+          <Input placeholder="제목" value={title} onChange={e => setTitle(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label>링크 URL</Label>
+          <Input placeholder="https://..." value={url} onChange={e => setUrl(e.target.value)} />
+        </div>
+        <div className="space-y-1 md:col-span-2">
+          <Label>이미지 (URL 입력 또는 파일 업로드)</Label>
+          <div className="flex gap-2">
+            <Input placeholder="이미지 URL" value={img} onChange={e => setImg(e.target.value)} />
+            <Input type="file" accept="image/*" disabled={uploading} className="max-w-[220px]"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f, setImg); e.currentTarget.value = ""; }} />
+          </div>
+          {img && <img src={img} alt="미리보기" className="h-20 mt-1 rounded border object-cover" />}
+        </div>
+        <div className="space-y-1">
+          <Label>시작일시</Label>
+          <Input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label>종료일시 *</Label>
+          <Input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} />
+        </div>
       </div>
-      <Button onClick={add}>등록</Button>
+      <Button onClick={add} disabled={uploading}>등록</Button>
       <table className="w-full text-sm">
         <thead><tr className="text-left border-b"><th className="py-2">제목</th><th>기간</th><th>활성</th><th></th></tr></thead>
         <tbody>
@@ -1075,6 +1140,7 @@ function BannersTab() {
               <td className="text-xs">{new Date(b.starts_at).toLocaleDateString()} ~ {new Date(b.ends_at).toLocaleDateString()}</td>
               <td><Badge variant={b.active ? "default" : "secondary"}>{b.active ? "활성" : "비활성"}</Badge></td>
               <td className="flex gap-1">
+                <Button size="sm" variant="outline" onClick={() => setEditing({ ...b })}><Pencil className="h-3 w-3" /></Button>
                 <Button size="sm" variant="outline" onClick={() => toggle(b)}>{b.active ? "비활성" : "활성"}</Button>
                 <Button size="sm" variant="destructive" onClick={() => del(b.id)}>삭제</Button>
               </td>
@@ -1082,6 +1148,53 @@ function BannersTab() {
           ))}
         </tbody>
       </table>
+
+      <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>배너 수정</DialogTitle></DialogHeader>
+          {editing && (
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>제목 *</Label>
+                <Input value={editing.title || ""} onChange={e => setEditing({ ...editing, title: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>링크 URL</Label>
+                <Input value={editing.link_url || ""} onChange={e => setEditing({ ...editing, link_url: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>이미지 (URL 입력 또는 파일 업로드)</Label>
+                <div className="flex gap-2">
+                  <Input value={editing.image_url || ""} onChange={e => setEditing({ ...editing, image_url: e.target.value })} placeholder="이미지 URL" />
+                  <Input type="file" accept="image/*" disabled={uploading} className="max-w-[180px]"
+                    onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f, (v) => setEditing((cur: any) => ({ ...cur, image_url: v }))); e.currentTarget.value = ""; }} />
+                </div>
+                {editing.image_url && <img src={editing.image_url} alt="미리보기" className="h-20 mt-1 rounded border object-cover" />}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label>시작일시</Label>
+                  <Input type="datetime-local" value={toLocalInput(editing.starts_at)}
+                    onChange={e => setEditing({ ...editing, starts_at: e.target.value ? new Date(e.target.value).toISOString() : editing.starts_at })} />
+                </div>
+                <div className="space-y-1">
+                  <Label>종료일시 *</Label>
+                  <Input type="datetime-local" value={toLocalInput(editing.ends_at)}
+                    onChange={e => setEditing({ ...editing, ends_at: e.target.value ? new Date(e.target.value).toISOString() : editing.ends_at })} />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Switch checked={!!editing.active} onCheckedChange={(v) => setEditing({ ...editing, active: v })} />
+                <span className="text-sm">활성</span>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditing(null)}>취소</Button>
+            <Button onClick={saveEdit} disabled={uploading}>저장</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </CardContent></Card>
   );
 }
