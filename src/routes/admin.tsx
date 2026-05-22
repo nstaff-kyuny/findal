@@ -602,7 +602,7 @@ function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: strin
                 <div><Label>회사명</Label><Input value={company} onChange={e => setCompany(e.target.value)} /></div>
                 <div><Label>위치</Label><Input value={location} onChange={e => setLocation(e.target.value)} /></div>
                 <div><Label>담당자</Label><Input value={manager} onChange={e => setManager(e.target.value)} /></div>
-                <div><Label>추천인 코드</Label><Input value={empReferrer} onChange={e => setEmpReferrer(e.target.value)} /></div>
+                <div><Label>추천인 코드</Label><Input value={empReferrer} onChange={e => setEmpReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만" /></div>
               </>
             )}
             {role === "unknown" && <p className="text-sm text-muted-foreground">이 사용자의 프로필 정보가 없습니다. 기본 정보만 수정할 수 있습니다.</p>}
