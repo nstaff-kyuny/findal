@@ -19,17 +19,8 @@ const MAX_WORK_DATES = 5;
 
 export const Route = createFileRoute("/employer/jobs/new")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
-function expandRange(from: string, to: string): string[] {
-  if (!from || !to) return [];
-  const start = new Date(from);
-  const end = new Date(to);
-  if (isNaN(+start) || isNaN(+end) || start > end) return [];
-  const out: string[] = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    out.push(d.toISOString().slice(0, 10));
-  }
-  return out;
-}
+
+
 
 function Page() {
   const { user } = useAuth();
