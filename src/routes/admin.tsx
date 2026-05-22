@@ -594,7 +594,7 @@ function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: strin
                 )}
                 <div className="flex items-center justify-between border rounded p-2"><Label>한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
                 <div><Label>선호 지역 (최대 3개)</Label><div className="mt-1"><RegionPicker value={regions} onChange={setRegions} /></div></div>
-                <div><Label>추천인 코드</Label><Input value={seekerReferrer} onChange={e => setSeekerReferrer(e.target.value)} /></div>
+                <div><Label>추천인 코드</Label><Input value={seekerReferrer} onChange={e => setSeekerReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만" /></div>
               </>
             )}
             {role === "employer" && (
