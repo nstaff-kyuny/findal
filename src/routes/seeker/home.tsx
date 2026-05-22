@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { INDUSTRY_LABEL, ROLE_LABEL, REGIONS } from "@/lib/constants";
 import { formatWorkDatesWithWeekday } from "@/lib/job-visuals";
-import { MapPin, Search, Navigation, CalendarIcon, X } from "lucide-react";
+import { MapPin, Search, Navigation, CalendarIcon, X, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { parseRegions } from "@/components/RegionPicker";
