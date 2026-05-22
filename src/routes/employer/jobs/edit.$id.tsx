@@ -23,6 +23,7 @@ const MAX_EDITS = 2;
 function Page() {
   const { id } = Route.useParams();
   const nav = useNavigate();
+  const moderate = useServerFn(moderateText);
   const [job, setJob] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
