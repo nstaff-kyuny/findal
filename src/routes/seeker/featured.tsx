@@ -33,7 +33,7 @@ function Page() {
       myRegions = parseRegions(sp?.preferred_region);
       setPrefRegions(myRegions);
     }
-    const matches = (j: any) => myRegions.length === 0 || (j.region && myRegions.includes(j.region));
+    const inRegion = (j: any) => myRegions.length === 0 || (j.region && myRegions.includes(j.region));
 
     const now = new Date().toISOString();
     const { data: p } = await supabase.from("promoted_jobs")
@@ -44,7 +44,7 @@ function Page() {
     (p ?? []).forEach((r: any) => {
       if (!r.jobs) return;
       if (seen.has(r.jobs.id)) return;
-      if (!matches(r.jobs)) return;
+      if (!inRegion(r.jobs)) return;
       seen.add(r.jobs.id);
       promotedJobs.push(r.jobs);
     });
