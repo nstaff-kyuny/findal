@@ -79,16 +79,13 @@ function Page() {
   };
 
   const addDate = () => {
-    if (dateInput && !dates.includes(dateInput)) setDates([...dates, dateInput].sort());
+    if (!dateInput) return;
+    if (dates.includes(dateInput)) { setDateInput(""); return; }
+    if (dates.length >= MAX_WORK_DATES) return toast.error(`근무일은 최대 ${MAX_WORK_DATES}일까지 선택할 수 있습니다`);
+    setDates([...dates, dateInput].sort());
     setDateInput("");
   };
-  const addRange = () => {
-    const expanded = expandRange(rangeFrom, rangeTo);
-    if (expanded.length === 0) return toast.error("올바른 시작/종료 날짜를 입력하세요");
-    const merged = Array.from(new Set([...dates, ...expanded])).sort();
-    setDates(merged);
-    setRangeFrom(""); setRangeTo("");
-  };
+
 
   const isRoomCleaningHotel = ["hotel","motel","resort"].includes(industry) && jobRole === "room_cleaning";
 
