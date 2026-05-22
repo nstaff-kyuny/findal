@@ -2,6 +2,7 @@ import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft } from "lucide-react";
+import { GuideAiChat } from "@/components/GuideAiChat";
 
 export const Route = createFileRoute("/guide/$role")({ component: Page });
 
@@ -48,6 +49,7 @@ function Page() {
               : "공고 등록부터 신청 승인, 출근 확인, 노쇼 처리까지 순서대로 안내합니다."}
           </p>
         </Card>
+        <GuideAiChat role={isSeeker ? "seeker" : "employer"} />
         {steps.map((s, i) => (
           <Card key={i} className="p-4">
             <div className="flex items-start gap-3">
