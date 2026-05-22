@@ -1,8 +1,13 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, Languages } from "lucide-react";
 import { GuideAiChat } from "@/components/GuideAiChat";
+import { translateTexts } from "@/lib/ai.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/guide/$role")({ component: Page });
 
@@ -27,30 +32,83 @@ const EMPLOYER_STEPS: Step[] = [
   { badge: "★", title: "프리미엄 추천 광고", desc: "공고 목록의 [광고] 버튼으로 추천 페이지 상단에 노출시킬 수 있습니다. 동시에 노출 가능한 자리가 한정되어 있어 가득 찬 경우 안내가 표시됩니다." },
 ];
 
+type Lang = "ko" | "en" | "mn" | "ru" | "zh";
+const LANG_LABEL: Record<Exclude<Lang, "ko">, string> = { en: "English", mn: "Монгол", ru: "Русский", zh: "中文" };
+
 function Page() {
   const { role } = useParams({ from: "/guide/$role" });
   const isSeeker = role === "seeker";
-  const steps = isSeeker ? SEEKER_STEPS : EMPLOYER_STEPS;
+  const baseSteps = isSeeker ? SEEKER_STEPS : EMPLOYER_STEPS;
   const backTo = isSeeker ? "/seeker/me" : "/employer/me";
   const title = isSeeker ? "구직자 사용 설명서" : "구인자 사용 설명서";
+
+  const translate = useServerFn(translateTexts);
+  const [lang, setLang] = useState<Lang>("ko");
+  const [busy, setBusy] = useState(false);
+  const [tSteps, setTSteps] = useState<Step[] | null>(null);
+  const [tTitle, setTTitle] = useState<string | null>(null);
+  const [tIntro, setTIntro] = useState<string | null>(null);
+
+  const intro = isSeeker
+    ? "공고 신청부터 출근 확정, 노쇼 주의사항까지 순서대로 안내합니다."
+    : "공고 등록부터 신청 승인, 출근 확인, 노쇼 처리까지 순서대로 안내합니다.";
+
+  const runTranslate = async (target: Exclude<Lang, "ko">) => {
+    if (busy) return;
+    setBusy(true);
+    setLang(target);
+    try {
+      const texts: string[] = [title, intro];
+      baseSteps.forEach((s) => { texts.push(s.title); texts.push(s.desc); });
+      const { items } = await translate({ data: { texts, language: target } });
+      setTTitle(items[0] ?? title);
+      setTIntro(items[1] ?? intro);
+      const out: Step[] = baseSteps.map((s, i) => ({
+        badge: s.badge,
+        title: items[2 + i * 2] ?? s.title,
+        desc: items[3 + i * 2] ?? s.desc,
+      }));
+      setTSteps(out);
+    } catch (e: any) {
+      toast.error(e?.message ?? "번역 실패");
+      setLang("ko");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const resetLang = () => { setLang("ko"); setTSteps(null); setTTitle(null); setTIntro(null); };
+
+  const displayedTitle = lang === "ko" ? title : (tTitle ?? title);
+  const displayedIntro = lang === "ko" ? intro : (tIntro ?? intro);
+  const displayedSteps = lang === "ko" || !tSteps ? baseSteps : tSteps;
 
   return (
     <div className="min-h-screen bg-muted/30 max-w-md mx-auto">
       <header className="sticky top-0 bg-background border-b px-4 py-3 flex items-center gap-2 z-10">
         <Link to={backTo} aria-label="뒤로 가기"><ChevronLeft size={20} /></Link>
-        <h1 className="font-bold">{title}</h1>
+        <h1 className="font-bold">{displayedTitle}</h1>
       </header>
       <div className="p-3 space-y-3">
+        <Card className="p-3 bg-background">
+          <div className="flex items-center gap-2 mb-2 text-xs text-muted-foreground">
+            <Languages size={14} /> 다국어 보기 (AI 번역)
+          </div>
+          <div className="grid grid-cols-5 gap-1.5">
+            <Button size="sm" variant={lang === "ko" ? "default" : "outline"} onClick={resetLang} disabled={busy}>한국어</Button>
+            {(Object.keys(LANG_LABEL) as Array<Exclude<Lang, "ko">>).map((k) => (
+              <Button key={k} size="sm" variant={lang === k ? "default" : "outline"} onClick={() => runTranslate(k)} disabled={busy}>
+                {busy && lang === k ? "..." : LANG_LABEL[k]}
+              </Button>
+            ))}
+          </div>
+        </Card>
         <Card className="p-4 bg-primary/5 border-primary/30">
-          <p className="text-sm font-semibold mb-1">앱 사용 흐름 안내</p>
-          <p className="text-xs text-muted-foreground">
-            {isSeeker
-              ? "공고 신청부터 출근 확정, 노쇼 주의사항까지 순서대로 안내합니다."
-              : "공고 등록부터 신청 승인, 출근 확인, 노쇼 처리까지 순서대로 안내합니다."}
-          </p>
+          <p className="text-sm font-semibold mb-1">{lang === "ko" ? "앱 사용 흐름 안내" : displayedTitle}</p>
+          <p className="text-xs text-muted-foreground">{displayedIntro}</p>
         </Card>
         <GuideAiChat role={isSeeker ? "seeker" : "employer"} />
-        {steps.map((s, i) => (
+        {displayedSteps.map((s, i) => (
           <Card key={i} className="p-4">
             <div className="flex items-start gap-3">
               <Badge variant="default" className="text-base px-3 py-1 shrink-0">{s.badge}</Badge>
