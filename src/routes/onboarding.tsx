@@ -11,6 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { NATIONALITY_LABEL, VISA_LABEL, REGIONS } from "@/lib/constants";
 import { RegionPicker, serializeRegions } from "@/components/RegionPicker";
+import { normalizeReferrerCode } from "@/lib/utils";
 
 export const Route = createFileRoute("/onboarding")({ component: Onboarding });
 
@@ -147,7 +148,7 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
       <div><Label className="text-base">선호 지역 (최대 3개)</Label>
         <div className="mt-2"><RegionPicker value={regions} onChange={setRegions} /></div>
       </div>
-      <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
+      <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만 (예: REF1234)" /></div>
       <Button className="w-full h-12 text-base" onClick={save} disabled={saving || !canSave}>저장하고 시작하기</Button>
     </CardContent></Card>
   );
@@ -196,7 +197,7 @@ function EmployerForm({ userId, onDone }: { userId: string; onDone: () => void }
       <div><Label className="text-base">상세 위치 (구/동)</Label><Input className="h-12 text-base mt-1" value={district} onChange={e => setDistrict(e.target.value)} placeholder="예: 강남구 역삼동" /></div>
       <div><Label className="text-base">담당자 이름</Label><Input className="h-12 text-base mt-1" value={manager} onChange={e => setManager(e.target.value)} /></div>
       <div><Label className="text-base">담당자 연락처</Label><Input className="h-12 text-base mt-1" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
-      <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" /></div>
+      <div><Label className="text-base">추천인 코드 (선택)</Label><Input className="h-12 text-base mt-1" value={referrer} onChange={e => setReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만 (예: REF1234)" /></div>
       <Button className="w-full h-12 text-base" onClick={save} disabled={saving || !canSave}>저장하고 시작하기</Button>
     </CardContent></Card>
   );

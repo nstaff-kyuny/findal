@@ -215,3 +215,24 @@ export const adminListUserEmails = createServerFn({ method: "POST" })
     }
     return { emails: map };
   });
+
+export const adminUpdateReferrer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z.object({
+      id: z.string().uuid(),
+      code: z.string().min(1).max(50).regex(/^[A-Z0-9]+$/, "코드는 영문 대문자와 숫자만 사용 가능합니다"),
+      name: z.string().min(1).max(100),
+      phone: z.string().max(50).optional().default(""),
+    }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const { error } = await supabaseAdmin
+      .from("referrers")
+      .update({ code: data.code, name: data.name, phone: data.phone })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+

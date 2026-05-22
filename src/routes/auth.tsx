@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Search, Building2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { normalizeReferrerCode } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth")({ component: AuthPage });
 
@@ -186,7 +187,8 @@ function AuthPage() {
             </div>
             <div>
               <Label className="text-base">추천인 코드 (Referrer Code) - 선택</Label>
-              <Input className="h-14 text-base mt-1" value={referrer} onChange={e => setReferrer(e.target.value)} placeholder="예: REF1234" />
+              <Input className="h-14 text-base mt-1" value={referrer} onChange={e => setReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만 (예: REF1234)" />
+              <p className="text-xs text-muted-foreground mt-1">영문 대문자(A-Z)와 숫자(0-9)만 입력 가능합니다.</p>
             </div>
             <Button className="w-full h-14 text-lg" onClick={signUp} disabled={loading}>회원가입 (Sign up)</Button>
           </TabsContent>

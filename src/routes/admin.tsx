@@ -3,7 +3,8 @@ import { useEffect, useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails, adminListAllUsers, adminSetUserBan, adminUpdateUserProfile } from "@/lib/admin-users.functions";
+import { adminCreateUser, adminDeleteUser, adminResetPassword, adminListUserEmails, adminListAllUsers, adminSetUserBan, adminUpdateUserProfile, adminUpdateReferrer } from "@/lib/admin-users.functions";
+import { normalizeReferrerCode } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -593,7 +594,7 @@ function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: strin
                 )}
                 <div className="flex items-center justify-between border rounded p-2"><Label>한국어 가능</Label><Switch checked={koreanOk} onCheckedChange={setKoreanOk} /></div>
                 <div><Label>선호 지역 (최대 3개)</Label><div className="mt-1"><RegionPicker value={regions} onChange={setRegions} /></div></div>
-                <div><Label>추천인 코드</Label><Input value={seekerReferrer} onChange={e => setSeekerReferrer(e.target.value)} /></div>
+                <div><Label>추천인 코드</Label><Input value={seekerReferrer} onChange={e => setSeekerReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만" /></div>
               </>
             )}
             {role === "employer" && (
@@ -601,7 +602,7 @@ function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: strin
                 <div><Label>회사명</Label><Input value={company} onChange={e => setCompany(e.target.value)} /></div>
                 <div><Label>위치</Label><Input value={location} onChange={e => setLocation(e.target.value)} /></div>
                 <div><Label>담당자</Label><Input value={manager} onChange={e => setManager(e.target.value)} /></div>
-                <div><Label>추천인 코드</Label><Input value={empReferrer} onChange={e => setEmpReferrer(e.target.value)} /></div>
+                <div><Label>추천인 코드</Label><Input value={empReferrer} onChange={e => setEmpReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만" /></div>
               </>
             )}
             {role === "unknown" && <p className="text-sm text-muted-foreground">이 사용자의 프로필 정보가 없습니다. 기본 정보만 수정할 수 있습니다.</p>}
@@ -730,7 +731,7 @@ function UsersTab() {
           <Input placeholder="비밀번호 (6자리)" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
           <Input placeholder="이름" value={newName} onChange={e => setNewName(e.target.value)} />
           <Input placeholder="연락처" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
-          <Input placeholder="추천인코드 (선택)" value={newReferrer} onChange={e => setNewReferrer(e.target.value)} />
+          <Input placeholder="추천인코드 (영문 대문자/숫자, 선택)" value={newReferrer} onChange={e => setNewReferrer(normalizeReferrerCode(e.target.value))} />
           <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -854,6 +855,7 @@ function CreditsTab() {
 }
 
 function ReferrersTab() {
+  const updateReferrer = useServerFn(adminUpdateReferrer);
   const [list, setList] = useState<any[]>([]);
   const [signups, setSignups] = useState<Record<string, any[]>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -903,11 +905,13 @@ function ReferrersTab() {
   const cancelEdit = () => { setEditingId(null); };
   const saveEdit = async (id: string) => {
     if (!editForm.code || !editForm.name) return toast.error("코드와 이름은 필수입니다");
-    const { error } = await supabase.from("referrers")
-      .update({ code: editForm.code, name: editForm.name, phone: editForm.phone } as any)
-      .eq("id", id);
-    if (error) return toast.error(error.message);
-    toast.success("수정되었습니다"); setEditingId(null); load();
+    if (!/^[A-Z0-9]+$/.test(editForm.code)) return toast.error("코드는 영문 대문자와 숫자만 사용 가능합니다");
+    try {
+      await updateReferrer({ data: { id, code: editForm.code, name: editForm.name, phone: editForm.phone } });
+      toast.success("수정되었습니다"); setEditingId(null); load();
+    } catch (e: any) {
+      toast.error(e?.message ?? "수정 실패");
+    }
   };
   const exportXlsx = async () => {
     const wb = new ExcelJS.Workbook();
@@ -951,7 +955,7 @@ function ReferrersTab() {
         <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
       </div>
       <div className="grid grid-cols-4 gap-2">
-        <Input placeholder="코드 (예: REF1234)" value={code} onChange={e => setCode(e.target.value)} />
+        <Input placeholder="코드 (영문 대문자/숫자, 예: REF1234)" value={code} onChange={e => setCode(normalizeReferrerCode(e.target.value))} />
         <Input placeholder="이름" value={name} onChange={e => setName(e.target.value)} />
         <Input placeholder="연락처" value={phone} onChange={e => setPhone(e.target.value)} />
         <Button onClick={add}>추가</Button>
@@ -968,7 +972,7 @@ function ReferrersTab() {
                 <tr className="border-b">
                   {editingId === r.id ? (
                     <>
-                      <td className="py-2"><Input className="h-8 font-mono text-xs" value={editForm.code} onChange={e => setEditForm({ ...editForm, code: e.target.value })} /></td>
+                      <td className="py-2"><Input className="h-8 font-mono text-xs" value={editForm.code} onChange={e => setEditForm({ ...editForm, code: normalizeReferrerCode(e.target.value) })} /></td>
                       <td><Input className="h-8 text-xs" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></td>
                       <td><Input className="h-8 text-xs" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} /></td>
                       <td>
