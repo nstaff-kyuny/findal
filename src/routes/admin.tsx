@@ -139,6 +139,7 @@ function AdminPanel() {
         <TabsTrigger value="events">이벤트</TabsTrigger>
         <TabsTrigger value="faqs">FAQ</TabsTrigger>
         <TabsTrigger value="inquiries">1:1 문의</TabsTrigger>
+        <TabsTrigger value="company">사업자정보</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
       </TabsList>
@@ -153,9 +154,56 @@ function AdminPanel() {
       <TabsContent value="events"><EventsTab /></TabsContent>
       <TabsContent value="faqs"><FaqsTab /></TabsContent>
       <TabsContent value="inquiries"><InquiriesTab /></TabsContent>
+      <TabsContent value="company"><CompanyInfoTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
       <TabsContent value="icons"><IconsTab /></TabsContent>
     </Tabs>
+  );
+}
+
+function CompanyInfoTab() {
+  const [data, setData] = useState<any>({
+    name: "", ceo: "", biz_no: "", mail_order_no: "", app_name: "", address: "", phone: "", email: "",
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const { data: row } = await (supabase as any).from("company_info").select("*").eq("id", true).maybeSingle();
+      if (row) setData({
+        name: row.name ?? "", ceo: row.ceo ?? "", biz_no: row.biz_no ?? "",
+        mail_order_no: row.mail_order_no ?? "", app_name: row.app_name ?? "",
+        address: row.address ?? "", phone: row.phone ?? "", email: row.email ?? "",
+      });
+      setLoading(false);
+    })();
+  }, []);
+  const save = async () => {
+    setSaving(true);
+    const { error } = await (supabase as any).from("company_info").upsert({ id: true, ...data }, { onConflict: "id" });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("사업자 정보가 저장되었습니다");
+  };
+  if (loading) return <div className="text-sm text-muted-foreground py-8 text-center">불러오는 중...</div>;
+  return (
+    <Card className="mt-4 max-w-2xl"><CardContent className="p-4 space-y-3">
+      <div>
+        <h3 className="font-bold">사업자 정보 관리</h3>
+        <p className="text-xs text-muted-foreground mt-1">아래 정보는 설정 페이지 하단에 표시됩니다.</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>회사명</Label><Input value={data.name} onChange={e => setData({ ...data, name: e.target.value })} /></div>
+        <div><Label>대표자</Label><Input value={data.ceo} onChange={e => setData({ ...data, ceo: e.target.value })} /></div>
+        <div><Label>사업자등록번호</Label><Input value={data.biz_no} onChange={e => setData({ ...data, biz_no: e.target.value })} /></div>
+        <div><Label>통신판매업등록번호</Label><Input value={data.mail_order_no} onChange={e => setData({ ...data, mail_order_no: e.target.value })} /></div>
+        <div><Label>앱 이름</Label><Input value={data.app_name} onChange={e => setData({ ...data, app_name: e.target.value })} /></div>
+        <div><Label>대표 연락처</Label><Input value={data.phone} onChange={e => setData({ ...data, phone: e.target.value })} /></div>
+        <div className="col-span-2"><Label>주소</Label><Input value={data.address} onChange={e => setData({ ...data, address: e.target.value })} /></div>
+        <div className="col-span-2"><Label>이메일</Label><Input type="email" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} /></div>
+      </div>
+      <Button onClick={save} disabled={saving}>{saving ? "저장 중..." : "저장"}</Button>
+    </CardContent></Card>
   );
 }
 
