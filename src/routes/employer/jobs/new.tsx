@@ -13,7 +13,9 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS } from "@/lib/constants";
 import { toast } from "sonner";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, CalendarDays } from "lucide-react";
+
+const MAX_WORK_DATES = 5;
 
 export const Route = createFileRoute("/employer/jobs/new")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
