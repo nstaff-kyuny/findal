@@ -120,6 +120,14 @@ function Page() {
   return (
     <MobileLayout role="seeker">
       <div className="p-3 space-y-5">
+        <Card className="p-3 bg-primary/5 border-primary/30">
+          <p className="text-xs text-muted-foreground">내 선호 지역</p>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {prefRegions.length === 0
+              ? <span className="text-sm text-muted-foreground">설정된 선호 지역이 없습니다 · 전체 공고 표시</span>
+              : prefRegions.map(r => <Badge key={r} variant="default" className="text-xs">📍 {r}</Badge>)}
+          </div>
+        </Card>
         <section>
           <h2 className="font-bold mb-2 flex items-center gap-1">⭐ 프리미엄 추천</h2>
           {promoted.length === 0 ? <p className="text-xs text-muted-foreground">진행중인 추천 공고가 없습니다</p>
