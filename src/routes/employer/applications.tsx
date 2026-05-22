@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -9,12 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
+import { analyzeApplications } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/employer/applications")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
 function Page() {
   const { user } = useAuth();
   const [apps, setApps] = useState<any[]>([]);
+  const [aiNotes, setAiNotes] = useState<Record<string, { summary: string; noShowRisk: "낮음" | "보통" | "높음"; question: string }>>({});
+  const [aiBusy, setAiBusy] = useState(false);
+  const analyze = useServerFn(analyzeApplications);
   const load = async () => {
     if (!user) return;
     const { data: appsData, error } = await supabase.from("job_applications")
@@ -40,6 +45,20 @@ function Page() {
     })));
   };
   useEffect(() => { load(); }, [user]);
+
+  const runAiAnalyze = async () => {
+    setAiBusy(true);
+    try {
+      const pending = apps.filter((a) => a.status === "pending").slice(0, 20).map((a) => ({
+        id: a.id, jobTitle: a.jobs?.title, applicantName: a.profiles?.full_name,
+        nationality: a.seeker_profiles?.nationality, experience: a.seeker_profiles?.experience,
+        koreanOk: !!a.seeker_profiles?.korean_ok, message: a.message, status: a.status,
+      }));
+      setAiNotes(await analyze({ data: { applications: pending } }));
+      toast.success("AI 지원자 요약이 생성되었습니다");
+    } catch (e: any) { toast.error(e?.message ?? "AI 분석 실패"); }
+    finally { setAiBusy(false); }
+  };
 
   const approve = async (id: string) => {
     const { error } = await supabase.rpc("approve_application", { _app_id: id } as any);
@@ -81,6 +100,11 @@ function Page() {
             {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
           </div>
           {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
+          {aiNotes[a.id] && <div className="mt-2 rounded bg-primary/5 border border-primary/20 p-2 text-xs">
+            <p className="font-semibold text-primary">AI 요약 · 노쇼 위험 {aiNotes[a.id].noShowRisk}</p>
+            <p className="mt-0.5">{aiNotes[a.id].summary}</p>
+            <p className="mt-0.5 text-muted-foreground">확인 질문: {aiNotes[a.id].question}</p>
+          </div>}
         </div>
         <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 font-semibold ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
       </div>
@@ -106,7 +130,10 @@ function Page() {
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-2">
-        <h2 className="font-bold">받은 요청</h2>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-bold">받은 요청</h2>
+          <Button size="sm" variant="outline" onClick={runAiAnalyze} disabled={aiBusy || apps.filter(a => a.status === "pending").length === 0}>{aiBusy ? "분석 중..." : "AI 지원자 요약"}</Button>
+        </div>
         <Tabs defaultValue="pending">
           <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="pending">대기 ({groups.pending.length})</TabsTrigger>
