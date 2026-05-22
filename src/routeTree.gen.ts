@@ -23,6 +23,7 @@ import { Route as SeekerMeRouteImport } from './routes/seeker/me'
 import { Route as SeekerHomeRouteImport } from './routes/seeker/home'
 import { Route as SeekerFeaturedRouteImport } from './routes/seeker/featured'
 import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
+import { Route as GuideRoleRouteImport } from './routes/guide.$role'
 import { Route as EmployerMeRouteImport } from './routes/employer/me'
 import { Route as EmployerHomeRouteImport } from './routes/employer/home'
 import { Route as EmployerHistoryRouteImport } from './routes/employer/history'
@@ -105,6 +106,11 @@ const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
   path: '/seeker/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GuideRoleRoute = GuideRoleRouteImport.update({
+  id: '/guide/$role',
+  path: '/guide/$role',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmployerMeRoute = EmployerMeRouteImport.update({
   id: '/employer/me',
   path: '/employer/me',
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/employer/history': typeof EmployerHistoryRouteWithChildren
   '/employer/home': typeof EmployerHomeRoute
   '/employer/me': typeof EmployerMeRoute
+  '/guide/$role': typeof GuideRoleRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/employer/history': typeof EmployerHistoryRouteWithChildren
   '/employer/home': typeof EmployerHomeRoute
   '/employer/me': typeof EmployerMeRoute
+  '/guide/$role': typeof GuideRoleRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/employer/history': typeof EmployerHistoryRouteWithChildren
   '/employer/home': typeof EmployerHomeRoute
   '/employer/me': typeof EmployerMeRoute
+  '/guide/$role': typeof GuideRoleRoute
   '/seeker/applications': typeof SeekerApplicationsRoute
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/employer/history'
     | '/employer/home'
     | '/employer/me'
+    | '/guide/$role'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/employer/history'
     | '/employer/home'
     | '/employer/me'
+    | '/guide/$role'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
@@ -315,6 +326,7 @@ export interface FileRouteTypes {
     | '/employer/history'
     | '/employer/home'
     | '/employer/me'
+    | '/guide/$role'
     | '/seeker/applications'
     | '/seeker/featured'
     | '/seeker/home'
@@ -343,6 +355,7 @@ export interface RootRouteChildren {
   EmployerHistoryRoute: typeof EmployerHistoryRouteWithChildren
   EmployerHomeRoute: typeof EmployerHomeRoute
   EmployerMeRoute: typeof EmployerMeRoute
+  GuideRoleRoute: typeof GuideRoleRoute
   SeekerApplicationsRoute: typeof SeekerApplicationsRoute
   SeekerFeaturedRoute: typeof SeekerFeaturedRoute
   SeekerHomeRoute: typeof SeekerHomeRoute
@@ -454,6 +467,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeekerApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/guide/$role': {
+      id: '/guide/$role'
+      path: '/guide/$role'
+      fullPath: '/guide/$role'
+      preLoaderRoute: typeof GuideRoleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/employer/me': {
       id: '/employer/me'
       path: '/employer/me'
@@ -562,6 +582,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmployerHistoryRoute: EmployerHistoryRouteWithChildren,
   EmployerHomeRoute: EmployerHomeRoute,
   EmployerMeRoute: EmployerMeRoute,
+  GuideRoleRoute: GuideRoleRoute,
   SeekerApplicationsRoute: SeekerApplicationsRoute,
   SeekerFeaturedRoute: SeekerFeaturedRoute,
   SeekerHomeRoute: SeekerHomeRoute,

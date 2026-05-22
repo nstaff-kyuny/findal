@@ -6,7 +6,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { ClipboardList, Inbox, Plus } from "lucide-react";
+import { ClipboardList, Inbox, Plus, BookOpen } from "lucide-react";
 
 export const Route = createFileRoute("/employer/home")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
@@ -56,6 +56,9 @@ function Page() {
         </div>
 
         <Link to="/employer/jobs/new"><Button size="lg" className="w-full h-14 text-base"><Plus size={20} className="mr-1" />새 공고 등록</Button></Link>
+        <Link to="/guide/$role" params={{ role: "employer" }}>
+          <Button size="lg" variant="outline" className="w-full h-12 text-sm border-primary/40 text-primary"><BookOpen size={18} className="mr-1" />앱 사용법 확인</Button>
+        </Link>
         <div className="pt-4">
           <Link to="/employer/history"><Button size="lg" variant="outline" className="w-full h-14 text-base">근로자 승인 및 출근 기록</Button></Link>
         </div>

@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { INDUSTRY_LABEL, ROLE_LABEL, REGIONS } from "@/lib/constants";
 import { formatWorkDatesWithWeekday } from "@/lib/job-visuals";
-import { MapPin, Search, Navigation, CalendarIcon, X } from "lucide-react";
+import { MapPin, Search, Navigation, CalendarIcon, X, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { parseRegions } from "@/components/RegionPicker";
@@ -145,6 +145,13 @@ function Page() {
         </Button>
       </div>
       <div className="p-3 space-y-2">
+        <Link to="/guide/$role" params={{ role: "seeker" }}>
+          <Card className="p-3 bg-primary text-primary-foreground flex items-center gap-2">
+            <BookOpen size={18} />
+            <span className="text-sm font-semibold flex-1">앱 사용법 확인 (신청·승인·확정·노쇼 안내)</span>
+            <span>→</span>
+          </Card>
+        </Link>
         {jobs.length === 0 && <div className="text-center text-sm text-muted-foreground py-12">공고가 없습니다</div>}
         {jobs.map(j => (
           <Card key={j.id} className="p-3 cursor-pointer" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
