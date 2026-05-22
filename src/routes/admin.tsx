@@ -272,15 +272,26 @@ function AllUsersTab() {
     } catch (e: any) { toast.error(e?.message ?? "실패"); }
   };
 
-  const filtered = rows.filter(r => {
-    if (!q) return true;
-    const s = q.toLowerCase();
-    return (r.email ?? "").toLowerCase().includes(s) ||
-      (r.full_name ?? "").toLowerCase().includes(s) ||
-      (r.company_name ?? "").toLowerCase().includes(s) ||
-      (r.phone ?? "").includes(s) ||
-      (r.referrer_code ?? "").toLowerCase().includes(s);
-  });
+  const filtered = (() => {
+    let arr = rows.filter(r => {
+      if (roleFilter !== "all") {
+        const rolesArr = (r.roles ?? "").split(",").map((x: string) => x.trim()).filter(Boolean);
+        if (!rolesArr.includes(roleFilter)) return false;
+      }
+      if (!q) return true;
+      const s = q.toLowerCase();
+      return (r.email ?? "").toLowerCase().includes(s) ||
+        (r.full_name ?? "").toLowerCase().includes(s) ||
+        (r.company_name ?? "").toLowerCase().includes(s) ||
+        (r.phone ?? "").includes(s) ||
+        (r.referrer_code ?? "").toLowerCase().includes(s);
+    });
+    if (sortBy === "created_asc") arr = [...arr].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    else if (sortBy === "created_desc") arr = [...arr].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    else if (sortBy === "role") arr = [...arr].sort((a, b) => (a.roles ?? "").localeCompare(b.roles ?? ""));
+    return arr;
+  })();
+
 
   const exportAll = () => {
     const data = filtered.map(r => ({
