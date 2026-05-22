@@ -31,7 +31,7 @@ function Onboarding() {
       }
       if (roles.includes("seeker")) {
         const { data: sp } = await supabase.from("seeker_profiles").select("user_id").eq("user_id", user.id).maybeSingle();
-        if (sp) { nav({ to: "/seeker/home" }); return; }
+        if (sp) { nav({ to: "/seeker/featured" }); return; }
       }
       if (intended) {
         if (!roles.includes(intended)) {
@@ -68,7 +68,7 @@ function Onboarding() {
             </Card>
           </div>
         )}
-        {resolvedRole === "seeker" && <SeekerForm onDone={async () => { await refreshRoles(); nav({ to: "/seeker/home" }); }} userId={user.id} />}
+        {resolvedRole === "seeker" && <SeekerForm onDone={async () => { await refreshRoles(); nav({ to: "/seeker/featured" }); }} userId={user.id} />}
         {resolvedRole === "employer" && <EmployerForm onDone={async () => { await refreshRoles(); nav({ to: "/employer/home" }); }} userId={user.id} />}
       </div>
     </div>
