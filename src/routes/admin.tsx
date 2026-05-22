@@ -1427,6 +1427,62 @@ function InquiriesTab() {
   );
 }
 
+function AiInsightsTab() {
+  const getInsights = useServerFn(generateAdminAiInsights);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState<any>(null);
+
+  const run = async () => {
+    setLoading(true);
+    try {
+      setData(await getInsights({}));
+      toast.success("AI 인사이트가 생성되었습니다");
+    } catch (e: any) {
+      toast.error(e?.message ?? "AI 인사이트 생성 실패");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="mt-4 space-y-4">
+      <Card><CardContent className="p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="font-bold">AI 운영 인사이트</h3>
+            <p className="text-xs text-muted-foreground mt-1">사용자, 공고, 신청, 문의, 추천인 데이터를 기반으로 운영 포인트를 요약합니다.</p>
+          </div>
+          <Button onClick={run} disabled={loading}>{loading ? "분석 중..." : "AI 분석 실행"}</Button>
+        </div>
+      </CardContent></Card>
+      {data && (
+        <div className="grid md:grid-cols-2 gap-4">
+          <Card className="md:col-span-2"><CardContent className="p-4">
+            <p className="text-xs text-muted-foreground mb-1">요약</p>
+            <p className="text-sm whitespace-pre-wrap">{data.summary}</p>
+          </CardContent></Card>
+          <InsightList title="추천 액션" items={data.actions} />
+          <InsightList title="위험 신호" items={data.riskSignals} />
+          <InsightList title="추천인 점검" items={data.referralChecks} />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function InsightList({ title, items }: { title: string; items?: string[] }) {
+  return (
+    <Card><CardContent className="p-4">
+      <h4 className="font-semibold text-sm mb-2">{title}</h4>
+      {!items?.length ? <p className="text-xs text-muted-foreground">표시할 항목이 없습니다</p> : (
+        <ul className="list-disc list-inside text-sm space-y-1">
+          {items.map((item, i) => <li key={i}>{item}</li>)}
+        </ul>
+      )}
+    </CardContent></Card>
+  );
+}
+
 function VersionTab() {
   const [list, setList] = useState<any[]>([]);
   const [version, setVersion] = useState(""); const [notes, setNotes] = useState("");
