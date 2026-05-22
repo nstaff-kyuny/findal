@@ -86,14 +86,6 @@ function Page() {
         "p-3 space-y-3 sticky top-[57px] bg-background z-30 pt-3 border-b shadow-sm transition-transform duration-300 will-change-transform",
         searchVisible ? "translate-y-0" : "-translate-y-[calc(100%+57px)]"
       )}>
-        <div className="flex gap-2">
-          <Select value={region} onValueChange={setRegion}>
-            <SelectTrigger className="w-32"><SelectValue placeholder="지역" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체 지역</SelectItem>
-              {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
         {prefRegions.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <Button
