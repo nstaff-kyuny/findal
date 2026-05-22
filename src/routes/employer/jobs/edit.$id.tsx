@@ -43,18 +43,30 @@ function Page() {
   const save = async () => {
     if (reached) return toast.error(`수정은 최대 ${MAX_EDITS}회까지만 가능합니다`);
     setSaving(true);
-    const { error } = await supabase.from("jobs").update({
-      title: job.title, place_name: job.place_name, location: job.location, region: job.region,
-      industry: job.industry, job_role: job.job_role, daily_wage: Number(job.daily_wage) || 0,
-      pay_day: job.pay_day, preparations: job.preparations, headcount: Math.max(1, Number(job.headcount) || 1),
-      rooms_per_day: job.rooms_per_day ? Number(job.rooms_per_day) : null,
-      contact_phone: job.contact_phone, photo_url: job.photo_url,
-      edit_count: editCount + 1,
-    } as any).eq("id", id);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success(`수정 완료 (${editCount + 1}/${MAX_EDITS})`);
-    nav({ to: "/employer/jobs" });
+    try {
+      const combined = `${job.title ?? ""}\n${job.preparations ?? ""}\n${job.place_name ?? ""}`.trim();
+      if (combined) {
+        const mod = await moderate({ data: { text: combined, context: "job" } });
+        if (!mod.allow) {
+          toast.error(`부적절한 표현이 감지되어 수정할 수 없습니다: ${mod.reason}`);
+          return;
+        }
+        if (mod.risk === "보통") toast.warning(`주의 표현이 감지되었습니다: ${mod.reason}`);
+      }
+      const { error } = await supabase.from("jobs").update({
+        title: job.title, place_name: job.place_name, location: job.location, region: job.region,
+        industry: job.industry, job_role: job.job_role, daily_wage: Number(job.daily_wage) || 0,
+        pay_day: job.pay_day, preparations: job.preparations, headcount: Math.max(1, Number(job.headcount) || 1),
+        rooms_per_day: job.rooms_per_day ? Number(job.rooms_per_day) : null,
+        contact_phone: job.contact_phone, photo_url: job.photo_url,
+        edit_count: editCount + 1,
+      } as any).eq("id", id);
+      if (error) return toast.error(error.message);
+      toast.success(`수정 완료 (${editCount + 1}/${MAX_EDITS})`);
+      nav({ to: "/employer/jobs" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const set = (k: string, v: any) => setJob({ ...job, [k]: v });
