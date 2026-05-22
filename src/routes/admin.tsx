@@ -650,6 +650,8 @@ function ReferrersTab() {
   const [list, setList] = useState<any[]>([]);
   const [signups, setSignups] = useState<Record<string, any[]>>({});
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ code: string; name: string; phone: string }>({ code: "", name: "", phone: "" });
   const [code, setCode] = useState(""); const [name, setName] = useState(""); const [phone, setPhone] = useState("");
   const load = async () => {
     const { data } = await supabase.from("referrers").select("*").order("created_at", { ascending: false });
