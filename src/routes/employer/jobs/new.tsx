@@ -13,21 +13,14 @@ import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS } from "@/lib/constants";
 import { toast } from "sonner";
-import { ImagePlus } from "lucide-react";
+import { ImagePlus, CalendarDays } from "lucide-react";
+
+const MAX_WORK_DATES = 5;
 
 export const Route = createFileRoute("/employer/jobs/new")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
-function expandRange(from: string, to: string): string[] {
-  if (!from || !to) return [];
-  const start = new Date(from);
-  const end = new Date(to);
-  if (isNaN(+start) || isNaN(+end) || start > end) return [];
-  const out: string[] = [];
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    out.push(d.toISOString().slice(0, 10));
-  }
-  return out;
-}
+
+
 
 function Page() {
   const { user } = useAuth();
@@ -41,17 +34,15 @@ function Page() {
   const [region, setRegion] = useState("서울");
   const [district, setDistrict] = useState("");
   const [wage, setWage] = useState<string>("");
-  const [payDay, setPayDay] = useState("당일지급");
+  const [payMonth, setPayMonth] = useState<"당월" | "익월">("당월");
+  const [payDayNum, setPayDayNum] = useState<string>("10");
   const [prep, setPrep] = useState("");
   const [rooms, setRooms] = useState<string>("");
   const [headcount, setHeadcount] = useState<string>("");
   const [useDefaultContact, setUseDefaultContact] = useState(true);
   const [contact, setContact] = useState("");
   const [dates, setDates] = useState<string[]>([]);
-  const [dateMode, setDateMode] = useState<"single" | "range">("single");
   const [dateInput, setDateInput] = useState("");
-  const [rangeFrom, setRangeFrom] = useState("");
-  const [rangeTo, setRangeTo] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -79,16 +70,13 @@ function Page() {
   };
 
   const addDate = () => {
-    if (dateInput && !dates.includes(dateInput)) setDates([...dates, dateInput].sort());
+    if (!dateInput) return;
+    if (dates.includes(dateInput)) { setDateInput(""); return; }
+    if (dates.length >= MAX_WORK_DATES) return toast.error(`근무일은 최대 ${MAX_WORK_DATES}일까지 선택할 수 있습니다`);
+    setDates([...dates, dateInput].sort());
     setDateInput("");
   };
-  const addRange = () => {
-    const expanded = expandRange(rangeFrom, rangeTo);
-    if (expanded.length === 0) return toast.error("올바른 시작/종료 날짜를 입력하세요");
-    const merged = Array.from(new Set([...dates, ...expanded])).sort();
-    setDates(merged);
-    setRangeFrom(""); setRangeTo("");
-  };
+
 
   const isRoomCleaningHotel = ["hotel","motel","resort"].includes(industry) && jobRole === "room_cleaning";
 
@@ -104,7 +92,7 @@ function Page() {
     const fullRegion = district ? `${region} ${district}` : region;
     const { error } = await supabase.from("jobs").insert({
       employer_id: user.id, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
-      photo_url: photoUrl, daily_wage: wageNum, pay_day: payDay, preparations: prep || null,
+      photo_url: photoUrl, daily_wage: wageNum, pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
       contact_phone: useDefaultContact ? (emp?.contact_phone ?? "") : contact,
       work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: headcountNum, is_active: true,
     } as any);
@@ -175,13 +163,23 @@ function Page() {
               <Input type="number" inputMode="numeric" value={wage} onChange={e => setWage(e.target.value)} placeholder="예: 120000" />
             </div>
             <div><Label>급여 지급일</Label>
-              <Select value={payDay} onValueChange={setPayDay}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="당일지급">당일지급</SelectItem>
-                  <SelectItem value="급여일 지급">급여일 지급</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="grid grid-cols-[1fr_1fr] gap-1">
+                <Select value={payMonth} onValueChange={(v) => setPayMonth(v as "당월" | "익월")}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="당월">당월</SelectItem>
+                    <SelectItem value="익월">익월</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={payDayNum} onValueChange={setPayDayNum}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map(n => (
+                      <SelectItem key={n} value={String(n)}>{n}일</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
           <div><Label>필요 인원수 <span className="text-red-500">*</span></Label>
@@ -193,27 +191,19 @@ function Page() {
           </div>}
           <div><Label>준비물 / 출근시 필요사항</Label><Textarea value={prep} onChange={e => setPrep(e.target.value)} /></div>
           <div>
-            <Label>근무 일자</Label>
-            <div className="flex gap-1 mt-1 mb-2">
-              <Button type="button" size="sm" variant={dateMode === "single" ? "default" : "outline"} onClick={() => setDateMode("single")}>날짜별</Button>
-              <Button type="button" size="sm" variant={dateMode === "range" ? "default" : "outline"} onClick={() => setDateMode("range")}>기간별</Button>
+            <Label>근무 일자 <span className="text-xs text-muted-foreground font-normal">(최대 {MAX_WORK_DATES}일)</span></Label>
+            <div className="flex gap-2 mt-1">
+              <div className="relative flex-1">
+                <CalendarDays size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none" />
+                <Input type="date" value={dateInput} onChange={e => setDateInput(e.target.value)} className="pl-9" />
+              </div>
+              <Button type="button" onClick={addDate} disabled={dates.length >= MAX_WORK_DATES}>추가</Button>
             </div>
-            {dateMode === "single" ? (
-              <div className="flex gap-2">
-                <Input type="date" value={dateInput} onChange={e => setDateInput(e.target.value)} />
-                <Button type="button" onClick={addDate}>추가</Button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-center">
-                <Input type="date" value={rangeFrom} onChange={e => setRangeFrom(e.target.value)} placeholder="시작" />
-                <Input type="date" value={rangeTo} onChange={e => setRangeTo(e.target.value)} placeholder="종료" />
-                <Button type="button" onClick={addRange}>추가</Button>
-              </div>
-            )}
             <div className="flex flex-wrap gap-1 mt-2">
               {dates.map(d => <span key={d} className="px-2 py-1 bg-muted rounded text-xs cursor-pointer" onClick={() => setDates(dates.filter(x => x !== d))}>{d} ✕</span>)}
             </div>
           </div>
+
           <div className="flex items-center justify-between">
             <Label>가입 시 기본 연락처 사용 ({emp?.contact_phone})</Label>
             <Switch checked={useDefaultContact} onCheckedChange={setUseDefaultContact} />

@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
@@ -62,44 +63,64 @@ function Page() {
   const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
   const STATUS_CLASS: Record<string,string> = { confirmed: "bg-green-600 hover:bg-green-600 text-white border-transparent" };
 
+  const groups = useMemo(() => ({
+    pending: apps.filter(a => a.status === "pending"),
+    approved: apps.filter(a => a.status === "approved" || a.status === "confirmed"),
+    no_show: apps.filter(a => a.status === "no_show"),
+  }), [apps]);
+
+  const renderCard = (a: any) => (
+    <Card key={a.id}><CardContent className="p-3 space-y-2">
+      <div className="flex justify-between items-start">
+        <div className="min-w-0">
+          <p className="text-xs text-muted-foreground">{a.jobs?.title} · {a.jobs?.place_name}</p>
+          <p className="font-semibold mt-1">{a.profiles?.full_name ?? "(이름미입력)"}</p>
+          <div className="flex gap-1 flex-wrap mt-1">
+            {a.seeker_profiles?.nationality && <Badge variant="secondary" className="text-[10px]">{a.seeker_profiles.nationality === "foreigner" ? "외국인" : "내국인"}</Badge>}
+            {a.seeker_profiles?.experience && <Badge variant="outline" className="text-[10px]">{a.seeker_profiles.experience === "lt5" ? "경력 5회 미만" : "경력 5회 이상"}</Badge>}
+            {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
+          </div>
+          {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
+        </div>
+        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 font-semibold ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
+      </div>
+      {a.status === "pending" && (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => reject(a.id)}>거절</Button>
+          <Button size="sm" className="flex-1" onClick={() => approve(a.id)}>승인 (1크레딧)</Button>
+        </div>
+      )}
+      {(a.status === "approved" || a.status === "confirmed") && (
+        <div className="flex gap-2">
+          {a.profiles?.phone && (
+            <a href={`tel:${a.profiles.phone}`} className="flex-1">
+              <Button size="sm" className="w-full">연락하기</Button>
+            </a>
+          )}
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
+        </div>
+      )}
+    </CardContent></Card>
+  );
+
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-2">
         <h2 className="font-bold">받은 요청</h2>
-        {apps.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">요청이 없습니다</p>}
-        {apps.map(a => (
-          <Card key={a.id}><CardContent className="p-3 space-y-2">
-            <div className="flex justify-between items-start">
-              <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">{a.jobs?.title} · {a.jobs?.place_name}</p>
-                <p className="font-semibold mt-1">{a.profiles?.full_name ?? "(이름미입력)"}</p>
-                <div className="flex gap-1 flex-wrap mt-1">
-                  {a.seeker_profiles?.nationality && <Badge variant="secondary" className="text-[10px]">{a.seeker_profiles.nationality === "foreigner" ? "외국인" : "내국인"}</Badge>}
-                  {a.seeker_profiles?.experience && <Badge variant="outline" className="text-[10px]">{a.seeker_profiles.experience === "lt5" ? "경력 5회 미만" : "경력 5회 이상"}</Badge>}
-                  {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
-                </div>
-                {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
-              </div>
-              <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 font-semibold ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
-            </div>
-            {a.status === "pending" && (
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => reject(a.id)}>거절</Button>
-                <Button size="sm" className="flex-1" onClick={() => approve(a.id)}>승인 (1크레딧)</Button>
-              </div>
-            )}
-            {(a.status === "approved" || a.status === "confirmed") && (
-              <div className="flex gap-2">
-                {a.profiles?.phone && (
-                  <a href={`tel:${a.profiles.phone}`} className="flex-1">
-                    <Button size="sm" className="w-full">연락하기</Button>
-                  </a>
-                )}
-                <Button size="sm" variant="outline" className="flex-1" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
-              </div>
-            )}
-          </CardContent></Card>
-        ))}
+        <Tabs defaultValue="pending">
+          <TabsList className="grid grid-cols-3 w-full">
+            <TabsTrigger value="pending">대기 ({groups.pending.length})</TabsTrigger>
+            <TabsTrigger value="approved">승인 ({groups.approved.length})</TabsTrigger>
+            <TabsTrigger value="no_show">노쇼 ({groups.no_show.length})</TabsTrigger>
+          </TabsList>
+          {(["pending", "approved", "no_show"] as const).map(key => (
+            <TabsContent key={key} value={key} className="space-y-2 mt-2">
+              {groups[key].length === 0
+                ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
+                : groups[key].map(renderCard)}
+            </TabsContent>
+          ))}
+        </Tabs>
       </div>
     </MobileLayout>
   );
