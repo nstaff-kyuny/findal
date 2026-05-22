@@ -129,10 +129,19 @@ function Page() {
                       {a.status === "approved" && (
                         <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirmApp(a.id)}>✋ 갈께요 (최종확정)</Button>
                       )}
-                      {a.status === "confirmed" && a.jobs?.contact_phone && (
-                        <a href={`tel:${a.jobs.contact_phone}`} className="block">
-                          <Button size="lg" className="w-full text-base font-semibold">연락하기</Button>
-                        </a>
+                      {a.status === "confirmed" && (
+                        <div className="grid grid-cols-2 gap-2">
+                          {a.jobs?.contact_phone ? (
+                            <a href={`tel:${a.jobs.contact_phone}`} className="block">
+                              <Button size="lg" className="w-full text-base font-semibold">연락하기</Button>
+                            </a>
+                          ) : (
+                            <Button size="lg" className="w-full text-base font-semibold" disabled>연락하기</Button>
+                          )}
+                          <a href={`/seeker/jobs/${a.job_id}`} className="block">
+                            <Button size="lg" variant="outline" className="w-full text-base font-semibold border-orange-500 text-orange-600 hover:bg-orange-50">일자리 확인</Button>
+                          </a>
+                        </div>
                       )}
                       {a.status === "no_show" && (
                         <p className="text-sm text-destructive text-center font-semibold">⚠️ 노쇼 처리됨</p>
