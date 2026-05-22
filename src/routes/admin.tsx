@@ -1354,9 +1354,12 @@ function FaqsTab() {
 }
 
 function InquiriesTab() {
+  const analyzeText = useServerFn(analyzeInquiryText);
   const [list, setList] = useState<any[]>([]);
   const [answering, setAnswering] = useState<string | null>(null);
   const [answerText, setAnswerText] = useState("");
+  const [analysis, setAnalysis] = useState<Record<string, any>>({});
+  const [aiBusyId, setAiBusyId] = useState<string | null>(null);
   const load = async () => {
     const { data } = await supabase.from("inquiries").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
     setList(data ?? []);
@@ -1369,6 +1372,16 @@ function InquiriesTab() {
     } as any).eq("id", id);
     if (error) return toast.error(error.message);
     setAnswering(null); setAnswerText(""); toast.success("답변 등록됨"); load();
+  };
+  const runAi = async (q: any) => {
+    setAiBusyId(q.id);
+    try {
+      const res = await analyzeText({ data: { subject: q.subject, body: q.body } });
+      setAnalysis(prev => ({ ...prev, [q.id]: res }));
+      setAnswering(q.id);
+      setAnswerText(res.suggestedAnswer ?? "");
+    } catch (e: any) { toast.error(e?.message ?? "AI 분석 실패"); }
+    finally { setAiBusyId(null); }
   };
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-3">
@@ -1384,6 +1397,11 @@ function InquiriesTab() {
             <Badge variant={q.status === "answered" ? "default" : "secondary"}>{q.status === "answered" ? "답변완료" : "대기"}</Badge>
           </div>
           <p className="text-sm whitespace-pre-wrap p-2 bg-muted/40 rounded">{q.body}</p>
+          {analysis[q.id] && (
+            <div className="p-2 bg-muted/40 border rounded text-xs space-y-1">
+              <p className="font-semibold">AI 분류: {analysis[q.id].category} · 스팸/욕설 위험 {analysis[q.id].spamRisk} · {analysis[q.id].needsHuman ? "관리자 확인 권장" : "AI 답변 가능"}</p>
+            </div>
+          )}
           {q.answer ? (
             <div className="p-2 bg-primary/5 border-l-2 border-primary rounded">
               <p className="text-[10px] text-primary font-semibold">답변</p>
@@ -1398,7 +1416,10 @@ function InquiriesTab() {
               </div>
             </div>
           ) : (
-            <Button size="sm" variant="outline" onClick={() => setAnswering(q.id)}>답변하기</Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => runAi(q)} disabled={aiBusyId === q.id}>{aiBusyId === q.id ? "분석 중..." : "AI 답변 초안"}</Button>
+              <Button size="sm" variant="outline" onClick={() => setAnswering(q.id)}>답변하기</Button>
+            </div>
           )}
         </CardContent></Card>
       ))}
