@@ -73,8 +73,9 @@ export const generateJobImage = createServerFn({ method: "POST" })
     if (!url) throw new Error("이미지를 생성하지 못했습니다");
     const base64 = String(url).includes(",") ? String(url).split(",").pop()! : String(url);
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const fileBody = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
     const path = `${data.placeName || "ai"}/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
-    const { error } = await supabaseAdmin.storage.from("job-photos").upload(path, bytes, { contentType: "image/png", upsert: false });
+    const { error } = await supabaseAdmin.storage.from("job-photos").upload(path, fileBody, { contentType: "image/png", upsert: false });
     if (error) throw new Error(error.message);
     const { data: publicUrl } = supabaseAdmin.storage.from("job-photos").getPublicUrl(path);
     return { imageUrl: publicUrl.publicUrl };
