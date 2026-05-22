@@ -14,6 +14,8 @@ import { INDUSTRY_LABEL, ROLE_LABEL, REGIONS } from "@/lib/constants";
 import { formatWorkDatesWithWeekday } from "@/lib/job-visuals";
 import { MapPin, Search, Navigation, CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import { parseRegions } from "@/components/RegionPicker";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
@@ -25,6 +27,7 @@ const CATEGORIES: { key: string; label: string; industries: string[] }[] = [
 ];
 
 function Page() {
+  const { user } = useAuth();
   const [region, setRegion] = useState("all");
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<string>("all");
@@ -32,20 +35,30 @@ function Page() {
   const [nearby, setNearby] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [searchVisible, setSearchVisible] = useState(true);
+  const [prefRegions, setPrefRegions] = useState<string[]>([]);
+  const [prefOnly, setPrefOnly] = useState(true);
   const nav = useNavigate();
 
   const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
   useEffect(() => { (async () => {
+    if (!user) return;
+    const { data: sp } = await supabase.from("seeker_profiles")
+      .select("preferred_region").eq("user_id", user.id).maybeSingle();
+    setPrefRegions(parseRegions(sp?.preferred_region));
+  })(); }, [user]);
+
+  useEffect(() => { (async () => {
     let qb = supabase.from("jobs").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(100);
     if (region !== "all") qb = qb.eq("region", region);
+    else if (prefOnly && prefRegions.length > 0) qb = qb.in("region", prefRegions);
     if (q) qb = qb.ilike("title", `%${q}%`);
     const cat = CATEGORIES.find(c => c.key === category);
     if (cat && cat.industries.length) qb = qb.in("industry", cat.industries as any);
     if (selectedDate) qb = qb.contains("work_dates", [toYMD(selectedDate)]);
     const { data } = await qb;
     setJobs(data ?? []);
-  })(); }, [region, q, category, selectedDate]);
+  })(); }, [region, q, category, selectedDate, prefOnly, prefRegions]);
 
   useEffect(() => {
     let lastY = window.scrollY;
@@ -73,6 +86,24 @@ function Page() {
         "p-3 space-y-3 sticky top-[57px] bg-background z-30 pt-3 border-b shadow-sm transition-transform duration-300 will-change-transform",
         searchVisible ? "translate-y-0" : "-translate-y-[calc(100%+57px)]"
       )}>
+        {prefRegions.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              size="sm"
+              variant={prefOnly && region === "all" ? "default" : "outline"}
+              className="text-xs h-8"
+              onClick={() => { setPrefOnly(v => !v); setRegion("all"); }}
+            >
+              <MapPin size={12} className="mr-1" />
+              선호지역만 보기
+            </Button>
+            <div className="flex gap-1 flex-wrap">
+              {prefRegions.map(r => (
+                <Badge key={r} variant="secondary" className="text-[10px]">📍 {r}</Badge>
+              ))}
+            </div>
+          </div>
+        )}
         <div className="flex gap-2">
           <Select value={region} onValueChange={setRegion}>
             <SelectTrigger className="w-32"><SelectValue placeholder="지역" /></SelectTrigger>
