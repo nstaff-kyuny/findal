@@ -10,6 +10,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { NATIONALITY_LABEL, VISA_LABEL, REGIONS } from "@/lib/constants";
+import { RegionPicker, serializeRegions } from "@/components/RegionPicker";
 
 export const Route = createFileRoute("/onboarding")({ component: Onboarding });
 
