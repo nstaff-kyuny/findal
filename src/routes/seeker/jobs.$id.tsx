@@ -63,13 +63,26 @@ function Page() {
   const apply = async () => {
     if (!job || !user) return;
     setBusy(true);
-    const { error } = await supabase.from("job_applications").insert({
-      job_id: job.id, seeker_id: user.id, employer_id: job.employer_id, message: msg || null,
-    } as any);
-    setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("요청 보냄! 구인자 승인 후 연락처가 공개됩니다.");
-    load();
+    try {
+      if (msg && msg.trim().length > 0) {
+        const m = await moderate({ data: { text: msg, context: "application" } });
+        if (!m.allow) {
+          toast.error(`부적절한 표현이 감지되어 신청을 보낼 수 없습니다: ${m.reason}`);
+          return;
+        }
+        if (m.risk === "보통") {
+          toast.warning(`주의 표현이 감지되었습니다: ${m.reason}`);
+        }
+      }
+      const { error } = await supabase.from("job_applications").insert({
+        job_id: job.id, seeker_id: user.id, employer_id: job.employer_id, message: msg || null,
+      } as any);
+      if (error) return toast.error(error.message);
+      toast.success("요청 보냄! 구인자 승인 후 연락처가 공개됩니다.");
+      load();
+    } finally {
+      setBusy(false);
+    }
   };
 
   if (!job) return <MobileLayout role="seeker"><div className="p-6 text-center text-sm text-muted-foreground">불러오는 중…</div></MobileLayout>;
