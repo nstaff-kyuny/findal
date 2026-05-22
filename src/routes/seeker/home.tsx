@@ -16,7 +16,6 @@ import { MapPin, Search, Navigation, CalendarIcon, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { parseRegions } from "@/components/RegionPicker";
-import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
