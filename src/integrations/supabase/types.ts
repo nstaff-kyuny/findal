@@ -546,6 +546,30 @@ export type Database = {
         }
         Relationships: []
       }
+      seeker_favorites: {
+        Row: {
+          created_at: string
+          employer_id: string
+          id: string
+          place_name: string
+          seeker_id: string
+        }
+        Insert: {
+          created_at?: string
+          employer_id: string
+          id?: string
+          place_name: string
+          seeker_id: string
+        }
+        Update: {
+          created_at?: string
+          employer_id?: string
+          id?: string
+          place_name?: string
+          seeker_id?: string
+        }
+        Relationships: []
+      }
       seeker_profiles: {
         Row: {
           created_at: string
