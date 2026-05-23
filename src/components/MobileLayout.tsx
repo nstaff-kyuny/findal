@@ -10,7 +10,7 @@ const seekerTabs: Tab[] = [
   { to: "/seeker/featured", label: "추천", icon: Star },
   { to: "/seeker/favorites", label: "즐겨찾기", icon: Heart },
   { to: "/seeker/applications", label: "신청내역", icon: FileText },
-  { to: "/seeker/me", label: "설정", icon: Settings },
+  { to: "/seeker/me", label: "MY/설정", icon: Settings },
 ];
 
 const employerTabs: Tab[] = [
@@ -18,7 +18,7 @@ const employerTabs: Tab[] = [
   { to: "/employer/jobs", label: "공고", icon: Briefcase },
   { to: "/employer/applications", label: "신청/승인 내역", icon: Inbox },
   { to: "/employer/credits", label: "크레딧", icon: CreditCard },
-  { to: "/employer/me", label: "설정", icon: Settings },
+  { to: "/employer/me", label: "MY/설정", icon: Settings },
 ];
 
 export function MobileLayout({ children, role }: { children: ReactNode; role: "seeker" | "employer" }) {
