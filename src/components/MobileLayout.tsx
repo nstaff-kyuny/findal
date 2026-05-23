@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
-import { Home, Star, FileText, Settings, Briefcase, Inbox, CreditCard, LayoutDashboard } from "lucide-react";
+import { Home, Star, FileText, Settings, Briefcase, Inbox, CreditCard, LayoutDashboard, Heart } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
 type Tab = { to: string; label: string; icon: any };
@@ -8,7 +8,8 @@ type Tab = { to: string; label: string; icon: any };
 const seekerTabs: Tab[] = [
   { to: "/seeker/home", label: "홈", icon: Home },
   { to: "/seeker/featured", label: "추천", icon: Star },
-  { to: "/seeker/applications", label: "신청/승인 내역", icon: FileText },
+  { to: "/seeker/favorites", label: "즐겨찾기", icon: Heart },
+  { to: "/seeker/applications", label: "신청내역", icon: FileText },
   { to: "/seeker/me", label: "설정", icon: Settings },
 ];
 
