@@ -665,38 +665,7 @@ export type Database = {
       }
     }
     Views: {
-      promoted_jobs_public: {
-        Row: {
-          created_at: string | null
-          ends_at: string | null
-          id: string | null
-          job_id: string | null
-          starts_at: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          ends_at?: string | null
-          id?: string | null
-          job_id?: string | null
-          starts_at?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          ends_at?: string | null
-          id?: string | null
-          job_id?: string | null
-          starts_at?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "promoted_jobs_job_id_fkey"
-            columns: ["job_id"]
-            isOneToOne: false
-            referencedRelation: "jobs"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       admin_grant_credits: {
@@ -704,6 +673,15 @@ export type Database = {
         Returns: Json
       }
       approve_application: { Args: { _app_id: string }; Returns: Json }
+      get_active_promoted_jobs: {
+        Args: never
+        Returns: {
+          created_at: string
+          ends_at: string
+          job_id: string
+          starts_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
