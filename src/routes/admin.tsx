@@ -235,8 +235,8 @@ function AllUsersTab() {
       const [{ data: profs }, { data: roles }, { data: seekers }, { data: emps }] = await Promise.all([
         supabase.from("profiles").select("id, full_name, phone").in("id", ids),
         supabase.from("user_roles").select("user_id, role").in("user_id", ids),
-        supabase.from("seeker_profiles").select("user_id, referrer_code").in("user_id", ids),
-        supabase.from("employer_profiles").select("user_id, company_name, referrer_code").in("user_id", ids),
+        supabase.from("seeker_profiles").select("user_id, referrer_code, nationality, visa, korean_ok, experience, preferred_region, notify_push, notify_marketing, created_at").in("user_id", ids),
+        supabase.from("employer_profiles").select("user_id, company_name, referrer_code, location, manager_name, contact_phone, credits, notify_push, notify_marketing, created_at").in("user_id", ids),
       ]);
       const pmap: Record<string, any> = {}; (profs ?? []).forEach((p: any) => pmap[p.id] = p);
       const rmap: Record<string, string[]> = {}; (roles ?? []).forEach((r: any) => { (rmap[r.user_id] ??= []).push(r.role); });
@@ -249,6 +249,8 @@ function AllUsersTab() {
         roles: (rmap[u.id] ?? []).join(", "),
         referrer_code: smap[u.id]?.referrer_code ?? emap[u.id]?.referrer_code ?? "",
         company_name: emap[u.id]?.company_name ?? "",
+        seeker: smap[u.id] ?? null,
+        employer: emap[u.id] ?? null,
       })));
     } catch (e: any) {
       toast.error(e?.message ?? "로드 실패");
@@ -298,18 +300,33 @@ function AllUsersTab() {
 
 
   const exportAll = () => {
-    const data = filtered.map(r => ({
-      이메일: r.email,
-      이름: r.full_name,
-      회사명: r.company_name,
-      전화: r.phone,
-      권한: r.roles,
-      추천인코드: r.referrer_code,
-      가입일: new Date(r.created_at).toLocaleString("ko-KR"),
-      최근로그인: r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleString("ko-KR") : "-",
-      상태: r.banned_until && new Date(r.banned_until) > new Date() ? "삭제됨" : "활성",
-      사용자ID: r.id,
-    }));
+    const data = filtered.map(r => {
+      const s = r.seeker;
+      const e = r.employer;
+      return {
+        이메일: r.email,
+        이름: r.full_name,
+        전화: r.phone,
+        권한: r.roles,
+        회사명: e?.company_name ?? "",
+        담당자명: e?.manager_name ?? "",
+        회사연락처: e?.contact_phone ?? "",
+        회사주소: e?.location ?? "",
+        보유크레딧: e?.credits ?? "",
+        국적: s ? (NATIONALITY_LABEL[s.nationality] ?? s.nationality ?? "") : "",
+        비자: s ? (s.nationality === "korean" ? "해당없음" : (VISA_LABEL[s.visa] ?? s.visa ?? "")) : "",
+        한국어가능: s ? (s.korean_ok ? "가능" : "불가") : "",
+        경력: s ? (s.experience === "lt5" ? "5회 미만" : s.experience === "gte5" ? "5회 이상" : (s.experience ?? "")) : "",
+        선호지역: s?.preferred_region ?? "",
+        추천인코드: r.referrer_code,
+        푸시알림: (s?.notify_push ?? e?.notify_push) === undefined ? "" : ((s?.notify_push ?? e?.notify_push) ? "ON" : "OFF"),
+        마케팅알림: (s?.notify_marketing ?? e?.notify_marketing) === undefined ? "" : ((s?.notify_marketing ?? e?.notify_marketing) ? "ON" : "OFF"),
+        가입일: new Date(r.created_at).toLocaleString("ko-KR"),
+        최근로그인: r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleString("ko-KR") : "-",
+        상태: r.banned_until && new Date(r.banned_until) > new Date() ? "삭제됨" : "활성",
+        사용자ID: r.id,
+      };
+    });
     downloadXlsx(data, "전체사용자", `전체사용자_${new Date().toISOString().slice(0,10)}.xlsx`);
   };
 
