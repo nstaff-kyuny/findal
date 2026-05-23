@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Star, FileText, Settings, Briefcase, Inbox, CreditCard, LayoutDashboard, Heart } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 
 type Tab = { to: string; label: string; icon: any };
@@ -29,6 +30,7 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
     <div className="min-h-screen bg-muted/30 flex flex-col max-w-md mx-auto shadow-xl">
       <header className="sticky top-0 z-40 bg-background border-b px-4 py-3 flex items-center justify-between">
         <h1 className="font-bold text-lg">{role === "seeker" ? "Find AR" : "구인자 콘솔"}</h1>
+        <NotificationBell />
       </header>
       <main className="flex-1 pb-20">{children}</main>
       <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-background border-t grid ${cols}`}>
