@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -18,7 +18,6 @@ import { toast } from "sonner";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const { user, signOut } = useAuth();
-  const nav = useNavigate();
   const deleteAccount = useServerFn(deleteOwnAccount);
   const [deleting, setDeleting] = useState(false);
   const [profile, setProfile] = useState<any>(null);
