@@ -192,23 +192,6 @@ function ManagerPage() {
   );
 }
 
-function IframePanel({ src, title }: { src: string; title: string }) {
-  const [k, setK] = useState(0);
-  return (
-    <div className="h-[calc(100vh-110px)] flex flex-col">
-      <div className="px-4 py-2 border-b bg-muted/30 flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">{title} — 모바일 화면을 활용한 입력 폼</p>
-        <div className="flex gap-1">
-          <Button size="sm" variant="ghost" onClick={() => setK((k) => k + 1)}><RefreshCw size={14} /></Button>
-          <a href={src} target="_blank" rel="noreferrer">
-            <Button size="sm" variant="ghost"><ExternalLink size={14} /></Button>
-          </a>
-        </div>
-      </div>
-      <iframe key={k} src={src} title={title} className="flex-1 w-full border-0 bg-background" />
-    </div>
-  );
-}
 
 /* ----------------- 공고 관리 ----------------- */
 function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => void }) {
