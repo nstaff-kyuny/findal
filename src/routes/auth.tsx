@@ -227,7 +227,21 @@ function AuthPage() {
               <Input className="h-14 text-base mt-1" value={referrer} onChange={e => setReferrer(normalizeReferrerCode(e.target.value))} placeholder="영문 대문자/숫자만 (예: REF1234)" />
               <p className="text-xs text-muted-foreground mt-1">영문 대문자(A-Z)와 숫자(0-9)만 입력 가능합니다.</p>
             </div>
-            <Button className="w-full h-14 text-lg" onClick={signUp} disabled={loading}>회원가입 (Sign up)</Button>
+            <div className="rounded-xl border p-4 space-y-3 bg-muted/30">
+              <p className="text-sm font-semibold">Find AR 서비스 이용을 위해 약관에 동의해주세요.</p>
+              <label className="flex items-center gap-2 cursor-pointer border-b pb-3">
+                <Checkbox checked={allChecked} onCheckedChange={(v) => setAll(!!v)} />
+                <span className="font-bold underline">전체 동의하기</span>
+              </label>
+              <div className="space-y-2 text-sm">
+                <AgreeRow checked={agreeAge} onCheckedChange={setAgreeAge} required label="본인은 만 14세 이상입니다." onView={() => setDocOpen("age")} />
+                <AgreeRow checked={agreeIntegrated} onCheckedChange={setAgreeIntegrated} required label="통합 회원 이용약관" onView={() => setDocOpen("integrated")} />
+                <AgreeRow checked={agreeService} onCheckedChange={setAgreeService} required label="Find AR 이용약관" onView={() => setDocOpen("service")} />
+                <AgreeRow checked={agreePrivacy} onCheckedChange={setAgreePrivacy} required label="Find AR 개인정보처리방침" onView={() => setDocOpen("privacy")} />
+                <AgreeRow checked={agreeMarketing} onCheckedChange={setAgreeMarketing} label="마케팅 목적 개인정보 수집 및 이용" optional onView={() => setDocOpen("marketing")} />
+              </div>
+            </div>
+            <Button className="w-full h-14 text-lg" onClick={signUp} disabled={loading || !allRequired}>회원가입 (Sign up)</Button>
           </TabsContent>
         </Tabs>
       </div>
@@ -246,6 +260,28 @@ function AuthPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <Dialog open={docOpen !== null} onOpenChange={(o) => !o && setDocOpen(null)}>
+        <DialogContent className="max-h-[80vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>{docOpen && TERMS_DOCS[docOpen].title}</DialogTitle></DialogHeader>
+          <pre className="text-sm whitespace-pre-wrap font-sans leading-6">{docOpen && TERMS_DOCS[docOpen].body}</pre>
+          <DialogFooter><DialogClose asChild><Button>확인</Button></DialogClose></DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function AgreeRow({ checked, onCheckedChange, label, onView, required, optional }: { checked: boolean; onCheckedChange: (v: boolean) => void; label: string; onView: () => void; required?: boolean; optional?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <label className="flex items-center gap-2 cursor-pointer flex-1">
+        <Checkbox checked={checked} onCheckedChange={(v) => onCheckedChange(!!v)} />
+        <span>
+          <span className={required ? "text-primary font-semibold" : "text-muted-foreground"}>{required ? "(필수) " : optional ? "(선택) " : ""}</span>
+          {label}
+        </span>
+      </label>
+      <button type="button" onClick={onView} className="text-xs underline text-muted-foreground shrink-0">보기</button>
     </div>
   );
 }
