@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 
-const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 승인 받음", no_show:"노쇼" };
+const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 승인 받음", no_show:"노쇼", cancelled:"취소됨" };
 const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
 const STATUS_CLASS: Record<string,string> = { confirmed: "bg-orange-500 hover:bg-orange-500 text-white border-transparent" };
 
@@ -50,6 +50,15 @@ function Page() {
     const { error } = await supabase.rpc("seeker_confirm_application", { _app_id: id } as any);
     if (error) return toast.error(error.message);
     toast.success("확정 완료! 구인자에게 알림이 전달됩니다.");
+    load();
+  };
+
+  const cancelApp = async (id: string) => {
+    if (!confirm("신청을 취소하시겠습니까?")) return;
+    const { error } = await supabase.from("job_applications")
+      .update({ status: "cancelled" } as any).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("신청이 취소되었습니다");
     load();
   };
 
@@ -126,8 +135,14 @@ function Page() {
                         </div>
                         <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
                       </div>
+                      {a.status === "pending" && (
+                        <Button size="lg" variant="outline" className="w-full" onClick={() => cancelApp(a.id)}>신청 취소</Button>
+                      )}
                       {a.status === "approved" && (
-                        <Button size="lg" className="w-full text-base font-bold py-6" onClick={() => confirmApp(a.id)}>✋ 갈께요 (최종확정)</Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button size="lg" className="text-base font-bold py-6" onClick={() => confirmApp(a.id)}>✋ 갈께요 (최종확정)</Button>
+                          <Button size="lg" variant="outline" className="text-base" onClick={() => cancelApp(a.id)}>신청 취소</Button>
+                        </div>
                       )}
                       {a.status === "confirmed" && (
                         <div className="grid grid-cols-2 gap-2">
