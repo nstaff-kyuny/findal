@@ -1,20 +1,25 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { deleteOwnAccount } from "@/lib/account.functions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog, UserX } from "lucide-react";
 import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const { user, signOut } = useAuth();
+  const deleteAccount = useServerFn(deleteOwnAccount);
+  const [deleting, setDeleting] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [roleData, setRoleData] = useState<any>(null);
   const [notifyPush, setNotifyPush] = useState(true);
@@ -135,6 +140,45 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
       <Card><CardContent className="p-0 divide-y">
         <SectionHeader>서비스</SectionHeader>
         <LinkRow to="/terms" icon={<FileText size={16} />} label="약관 및 정책" />
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button className="w-full flex justify-between items-center px-4 py-3 text-sm hover:bg-muted/30 text-left">
+              <div className="flex items-center gap-2 text-destructive"><UserX size={16} /> <span>회원 탈퇴</span></div>
+              <ChevronRight size={16} className="text-muted-foreground" />
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>정말 회원 탈퇴하시겠어요?</AlertDialogTitle>
+              <AlertDialogDescription>
+                회원 탈퇴 시 계정 정보, 프로필, 신청 내역, 알림 등 <b>모든 정보가 영구적으로 삭제</b>되며 복구할 수 없습니다.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>취소</AlertDialogCancel>
+              <AlertDialogAction
+                disabled={deleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={async (e) => {
+                  e.preventDefault();
+                  if (deleting) return;
+                  setDeleting(true);
+                  try {
+                    await deleteAccount();
+                    await supabase.auth.signOut();
+                    toast.success("회원 탈퇴가 완료되었습니다");
+                    window.location.href = "/auth";
+                  } catch (err: any) {
+                    toast.error(err?.message ?? "탈퇴 처리 실패");
+                    setDeleting(false);
+                  }
+                }}
+              >
+                {deleting ? "탈퇴 처리 중..." : "회원 탈퇴"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Row>
           <span>앱 버전</span>
           <div className="flex items-center gap-2">

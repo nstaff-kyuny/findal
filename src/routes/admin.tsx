@@ -143,7 +143,7 @@ function AdminPanel() {
         <TabsTrigger value="notices">공지사항</TabsTrigger>
         <TabsTrigger value="events">이벤트</TabsTrigger>
         <TabsTrigger value="faqs">FAQ</TabsTrigger>
-        <TabsTrigger value="inquiries">1:1 문의</TabsTrigger>
+        
         <TabsTrigger value="ai-insights">AI 인사이트</TabsTrigger>
         <TabsTrigger value="company">사업자정보</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
@@ -159,7 +159,7 @@ function AdminPanel() {
       <TabsContent value="notices"><NoticesTab /></TabsContent>
       <TabsContent value="events"><EventsTab /></TabsContent>
       <TabsContent value="faqs"><FaqsTab /></TabsContent>
-      <TabsContent value="inquiries"><InquiriesTab /></TabsContent>
+      
       <TabsContent value="ai-insights"><AiInsightsTab /></TabsContent>
       <TabsContent value="company"><CompanyInfoTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
