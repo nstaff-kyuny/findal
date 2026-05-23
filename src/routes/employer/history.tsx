@@ -237,7 +237,7 @@ function Page() {
               <PdfDoc
                 ref={pdfRef}
                 month={calMonth}
-                data={confirmedByDay}
+                data={confirmedByDayForPdf}
                 employerName={employer?.full_name ?? user?.email ?? ""}
               />
             </div>
