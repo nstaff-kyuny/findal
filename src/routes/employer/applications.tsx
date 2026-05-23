@@ -37,12 +37,41 @@ function Page() {
     const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
     const profilesMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
     const spMap = new Map((seekerProfilesRes.data ?? []).map((s: any) => [s.user_id, s]));
-    setApps(list.map((a: any) => ({
-      ...a,
-      jobs: jobsMap.get(a.job_id),
-      profiles: profilesMap.get(a.seeker_id),
-      seeker_profiles: spMap.get(a.seeker_id),
-    })));
+
+    // Same-place visit history: confirmed apps by these seekers to this employer's jobs
+    const visitsMap = new Map<string, number>();
+    if (seekerIds.length) {
+      const { data: priorApps } = await supabase
+        .from("job_applications")
+        .select("seeker_id, job_id, status")
+        .eq("employer_id", user.id)
+        .in("seeker_id", seekerIds)
+        .in("status", ["confirmed", "approved"] as any);
+      const jobToPlace = jobsMap;
+      // Need place_name for ALL prior job_ids too
+      const priorJobIds = Array.from(new Set((priorApps ?? []).map((p: any) => p.job_id)));
+      const missing = priorJobIds.filter((jid) => !jobToPlace.has(jid));
+      if (missing.length) {
+        const { data: extra } = await supabase.from("jobs").select("id, title, place_name").in("id", missing);
+        (extra ?? []).forEach((j: any) => jobToPlace.set(j.id, j));
+      }
+      (priorApps ?? []).forEach((p: any) => {
+        const place = jobToPlace.get(p.job_id)?.place_name ?? "";
+        const key = `${p.seeker_id}__${place}`;
+        visitsMap.set(key, (visitsMap.get(key) ?? 0) + 1);
+      });
+    }
+
+    setApps(list.map((a: any) => {
+      const place = jobsMap.get(a.job_id)?.place_name ?? "";
+      return {
+        ...a,
+        jobs: jobsMap.get(a.job_id),
+        profiles: profilesMap.get(a.seeker_id),
+        seeker_profiles: spMap.get(a.seeker_id),
+        visits: visitsMap.get(`${a.seeker_id}__${place}`) ?? 0,
+      };
+    }));
   };
   useEffect(() => { load(); }, [user]);
 
@@ -95,10 +124,15 @@ function Page() {
           <p className="text-xs text-muted-foreground">{a.jobs?.title} · {a.jobs?.place_name}</p>
           <p className="font-semibold mt-1">{a.profiles?.full_name ?? "(이름미입력)"}</p>
           <div className="flex gap-1 flex-wrap mt-1">
+            <Badge className="text-[10px] border-transparent text-white" style={{ backgroundColor: a.visits > 0 ? "#0047AB" : "#94a3b8" }}>
+              같은 장소 방문 {a.visits}회
+            </Badge>
             {a.seeker_profiles?.nationality && <Badge variant="secondary" className="text-[10px]">{a.seeker_profiles.nationality === "foreigner" ? "외국인" : "내국인"}</Badge>}
             {a.seeker_profiles?.experience && <Badge variant="outline" className="text-[10px]">{a.seeker_profiles.experience === "lt5" ? "경력 5회 미만" : "경력 5회 이상"}</Badge>}
             {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
+            {a.seeker_profiles?.visa && <Badge variant="outline" className="text-[10px]">비자: {a.seeker_profiles.visa}</Badge>}
           </div>
+          <p className="text-[10px] text-muted-foreground mt-1">※ 연락처는 승인 후에만 표시됩니다</p>
           {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
           {aiNotes[a.id] && (() => {
             const r = aiNotes[a.id].noShowRisk;
@@ -135,7 +169,7 @@ function Page() {
     <MobileLayout role="employer">
       <div className="p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="font-bold">받은 요청</h2>
+          <h2 className="font-bold">받은 신청</h2>
           <Button size="sm" variant="default" onClick={runAiAnalyze} disabled={aiBusy || apps.filter(a => a.status === "pending").length === 0}>
             {aiBusy ? "분석 중..." : "🤖 AI 지원자 요약·노쇼 위험"}
           </Button>

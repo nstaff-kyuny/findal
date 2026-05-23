@@ -92,12 +92,16 @@ function Page() {
       ) : (
         <div className={`relative w-full h-28 rounded mb-2 overflow-hidden bg-gradient-to-br ${INDUSTRY_GRADIENT[j.industry] ?? "from-slate-400 to-slate-600"} flex flex-col items-center justify-center text-white`}>
           <div className="text-3xl drop-shadow">{INDUSTRY_EMOJI[j.industry] ?? "🏢"}</div>
-          <div className="text-[10px] font-bold tracking-wide mt-1 px-2 py-0.5 rounded-full bg-white/25 backdrop-blur">{INDUSTRY_LABEL[j.industry]}</div>
+          <div className="text-xs font-bold tracking-wide mt-1 px-2 py-0.5 rounded-full bg-white/25 backdrop-blur">{INDUSTRY_LABEL[j.industry]}</div>
           <div className="absolute -right-3 -bottom-3 text-7xl opacity-15 select-none">{INDUSTRY_EMOJI[j.industry] ?? "🏢"}</div>
         </div>
       )}
-      <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
-      {matches[j.id] && <Badge variant="default" className="text-[10px] ml-1">AI {matches[j.id].score}점</Badge>}
+      <Badge variant="secondary" className="text-sm">{INDUSTRY_LABEL[j.industry]}</Badge>
+      {matches[j.id] && (
+        <Badge className="text-xs ml-1 border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
+          AI {matches[j.id].score}점
+        </Badge>
+      )}
       <h3 className="text-base font-bold mt-1 truncate">{j.title}</h3>
       {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
       <p className="text-sm text-muted-foreground truncate">🏨 {j.place_name}</p>
@@ -114,8 +118,12 @@ function Page() {
     <Card key={j.id} className="relative p-3 cursor-pointer overflow-hidden" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
       <div className="absolute right-1 bottom-1 text-6xl opacity-10 pointer-events-none select-none">{industryIcon(j.industry)}</div>
       <div className="relative">
-        <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
-        {matches[j.id] && <Badge variant="default" className="text-[10px] ml-1">AI {matches[j.id].score}점</Badge>}
+        <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
+        {matches[j.id] && (
+          <Badge className="text-xs ml-1 border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
+            AI {matches[j.id].score}점
+          </Badge>
+        )}
         <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
         {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
         <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>

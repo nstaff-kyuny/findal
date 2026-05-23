@@ -12,7 +12,7 @@ import { INDUSTRY_LABEL, ROLE_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, formatWorkDates } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck } from "lucide-react";
+import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck, Heart } from "lucide-react";
 import { generateScreeningQuestions, translateJobDetails, moderateText } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/jobs/$id")({
@@ -30,6 +30,7 @@ function Page() {
   const moderate = useServerFn(moderateText);
   const [job, setJob] = useState<any>(null);
   const [app, setApp] = useState<any>(null);
+  const [favId, setFavId] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [translation, setTranslation] = useState<any>(null);
   const [questions, setQuestions] = useState<string[]>([]);
@@ -42,9 +43,41 @@ function Page() {
     if (user) {
       const { data: a } = await supabase.from("job_applications").select("*").eq("job_id", id).eq("seeker_id", user.id).maybeSingle();
       setApp(a);
+      if (data) {
+        const { data: fav } = await supabase.from("seeker_favorites").select("id")
+          .eq("seeker_id", user.id).eq("employer_id", data.employer_id).eq("place_name", data.place_name).maybeSingle();
+        setFavId(fav?.id ?? null);
+      }
     }
   };
   useEffect(() => { load(); }, [id, user]);
+
+  const toggleFavorite = async () => {
+    if (!user || !job) return;
+    if (favId) {
+      const { error } = await supabase.from("seeker_favorites").delete().eq("id", favId);
+      if (error) return toast.error(error.message);
+      setFavId(null);
+      toast.success("즐겨찾기 해제됨");
+    } else {
+      const { data, error } = await supabase.from("seeker_favorites")
+        .insert({ seeker_id: user.id, employer_id: job.employer_id, place_name: job.place_name } as any)
+        .select("id").single();
+      if (error) return toast.error(error.message);
+      setFavId(data.id);
+      toast.success("즐겨찾기에 추가됨");
+    }
+  };
+
+  const cancelApplication = async () => {
+    if (!app) return;
+    if (!confirm("신청을 취소하시겠습니까?")) return;
+    const { error } = await supabase.from("job_applications")
+      .update({ status: "cancelled" } as any).eq("id", app.id);
+    if (error) return toast.error(error.message);
+    toast.success("신청이 취소되었습니다");
+    load();
+  };
 
   const runTranslate = async (language: "en" | "mn" | "ru" | "zh") => {
     setAiBusy(true);
@@ -78,7 +111,7 @@ function Page() {
         job_id: job.id, seeker_id: user.id, employer_id: job.employer_id, message: msg || null,
       } as any);
       if (error) return toast.error(error.message);
-      toast.success("요청 보냄! 구인자 승인 후 연락처가 공개됩니다.");
+      toast.success("신청 보냄! 구인자 승인 후 연락처가 공개됩니다.");
       load();
     } finally {
       setBusy(false);
@@ -97,7 +130,13 @@ function Page() {
             <Badge>{INDUSTRY_LABEL[job.industry]}</Badge>
             <Badge variant="outline">{ROLE_LABEL[job.job_role]}</Badge>
           </div>
-          <h1 className="text-xl font-bold">{job.title}</h1>
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="text-xl font-bold flex-1">{job.title}</h1>
+            <Button size="sm" variant="outline" onClick={toggleFavorite} className="shrink-0">
+              <Heart size={18} className={favId ? "text-rose-500 fill-rose-500" : "text-muted-foreground"} />
+              <span className="ml-1 text-xs">{favId ? "즐겨찾기됨" : "즐겨찾기"}</span>
+            </Button>
+          </div>
           <Card><CardContent className="p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold"><Languages size={16} className="text-primary" />AI 다국어 보기</div>
             <div className="grid grid-cols-4 gap-1.5">
@@ -137,15 +176,27 @@ function Page() {
               <p className="text-sm">담당자 연락처: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>
             </CardContent></Card>
           ) : app?.status === "pending" ? (
-            <Button className="w-full" disabled>요청 대기중…</Button>
+            <div className="space-y-2">
+              <Button className="w-full" disabled>신청 대기중…</Button>
+              <Button variant="outline" className="w-full" onClick={cancelApplication}>신청 취소</Button>
+            </div>
           ) : app?.status === "rejected" ? (
             <Button className="w-full" disabled variant="outline">거절됨</Button>
+          ) : app?.status === "cancelled" ? (
+            <Button className="w-full" disabled variant="outline">신청 취소됨</Button>
           ) : (
             <div className="space-y-2">
               <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />AI 신청 전 확인 질문</Button>
               {questions.length > 0 && <Card className="p-3 bg-muted/40"><ul className="text-sm space-y-1 list-disc list-inside">{questions.map((q, i) => <li key={i}>{q}</li>)}</ul></Card>}
               <Textarea placeholder="구인자에게 보낼 메시지 (선택)" value={msg} onChange={e => setMsg(e.target.value)} />
-              <Button className="w-full" onClick={apply} disabled={busy}>일하고 싶어요 (요청 보내기)</Button>
+              <Button
+                className="w-full text-lg font-bold py-6 text-white hover:opacity-90"
+                style={{ backgroundColor: "#1E90FF" }}
+                onClick={apply}
+                disabled={busy}
+              >
+                일하고 싶어요 (신청 보내기)
+              </Button>
             </div>
           )}
           {from === "apps" ? (

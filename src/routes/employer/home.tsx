@@ -49,7 +49,7 @@ function Page() {
           <Link to="/employer/applications">
             <Card className="hover:bg-accent transition-colors"><CardContent className="p-4">
               <Inbox className="text-primary mb-1" size={20} />
-              <p className="text-xs text-muted-foreground">받은 요청 관리</p>
+              <p className="text-xs text-muted-foreground">받은 신청 관리</p>
               <p className="text-2xl font-bold">{pending}</p>
             </CardContent></Card>
           </Link>
