@@ -37,12 +37,41 @@ function Page() {
     const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
     const profilesMap = new Map((profilesRes.data ?? []).map((p: any) => [p.id, p]));
     const spMap = new Map((seekerProfilesRes.data ?? []).map((s: any) => [s.user_id, s]));
-    setApps(list.map((a: any) => ({
-      ...a,
-      jobs: jobsMap.get(a.job_id),
-      profiles: profilesMap.get(a.seeker_id),
-      seeker_profiles: spMap.get(a.seeker_id),
-    })));
+
+    // Same-place visit history: confirmed apps by these seekers to this employer's jobs
+    const visitsMap = new Map<string, number>();
+    if (seekerIds.length) {
+      const { data: priorApps } = await supabase
+        .from("job_applications")
+        .select("seeker_id, job_id, status")
+        .eq("employer_id", user.id)
+        .in("seeker_id", seekerIds)
+        .in("status", ["confirmed", "approved"] as any);
+      const jobToPlace = jobsMap;
+      // Need place_name for ALL prior job_ids too
+      const priorJobIds = Array.from(new Set((priorApps ?? []).map((p: any) => p.job_id)));
+      const missing = priorJobIds.filter((jid) => !jobToPlace.has(jid));
+      if (missing.length) {
+        const { data: extra } = await supabase.from("jobs").select("id, title, place_name").in("id", missing);
+        (extra ?? []).forEach((j: any) => jobToPlace.set(j.id, j));
+      }
+      (priorApps ?? []).forEach((p: any) => {
+        const place = jobToPlace.get(p.job_id)?.place_name ?? "";
+        const key = `${p.seeker_id}__${place}`;
+        visitsMap.set(key, (visitsMap.get(key) ?? 0) + 1);
+      });
+    }
+
+    setApps(list.map((a: any) => {
+      const place = jobsMap.get(a.job_id)?.place_name ?? "";
+      return {
+        ...a,
+        jobs: jobsMap.get(a.job_id),
+        profiles: profilesMap.get(a.seeker_id),
+        seeker_profiles: spMap.get(a.seeker_id),
+        visits: visitsMap.get(`${a.seeker_id}__${place}`) ?? 0,
+      };
+    }));
   };
   useEffect(() => { load(); }, [user]);
 
