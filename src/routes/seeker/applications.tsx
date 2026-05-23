@@ -185,7 +185,7 @@ function Page() {
             <CalendarView month={calMonth} data={confirmedByDay} />
 
             <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
-              <PdfDoc ref={pdfRef} month={calMonth} data={confirmedByDay} userName={profile?.full_name ?? user?.email ?? ""} />
+              <PdfDoc ref={pdfRef} month={calMonth} data={confirmedByDayForPdf} userName={profile?.full_name ?? user?.email ?? ""} />
             </div>
           </TabsContent>
         </Tabs>
