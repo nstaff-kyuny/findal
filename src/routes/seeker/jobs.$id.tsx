@@ -12,7 +12,7 @@ import { INDUSTRY_LABEL, ROLE_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, formatWorkDates } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck } from "lucide-react";
+import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck, Heart } from "lucide-react";
 import { generateScreeningQuestions, translateJobDetails, moderateText } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/jobs/$id")({
@@ -30,6 +30,7 @@ function Page() {
   const moderate = useServerFn(moderateText);
   const [job, setJob] = useState<any>(null);
   const [app, setApp] = useState<any>(null);
+  const [favId, setFavId] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
   const [translation, setTranslation] = useState<any>(null);
   const [questions, setQuestions] = useState<string[]>([]);
@@ -42,9 +43,41 @@ function Page() {
     if (user) {
       const { data: a } = await supabase.from("job_applications").select("*").eq("job_id", id).eq("seeker_id", user.id).maybeSingle();
       setApp(a);
+      if (data) {
+        const { data: fav } = await supabase.from("seeker_favorites").select("id")
+          .eq("seeker_id", user.id).eq("employer_id", data.employer_id).eq("place_name", data.place_name).maybeSingle();
+        setFavId(fav?.id ?? null);
+      }
     }
   };
   useEffect(() => { load(); }, [id, user]);
+
+  const toggleFavorite = async () => {
+    if (!user || !job) return;
+    if (favId) {
+      const { error } = await supabase.from("seeker_favorites").delete().eq("id", favId);
+      if (error) return toast.error(error.message);
+      setFavId(null);
+      toast.success("즐겨찾기 해제됨");
+    } else {
+      const { data, error } = await supabase.from("seeker_favorites")
+        .insert({ seeker_id: user.id, employer_id: job.employer_id, place_name: job.place_name } as any)
+        .select("id").single();
+      if (error) return toast.error(error.message);
+      setFavId(data.id);
+      toast.success("즐겨찾기에 추가됨");
+    }
+  };
+
+  const cancelApplication = async () => {
+    if (!app) return;
+    if (!confirm("신청을 취소하시겠습니까?")) return;
+    const { error } = await supabase.from("job_applications")
+      .update({ status: "cancelled" } as any).eq("id", app.id);
+    if (error) return toast.error(error.message);
+    toast.success("신청이 취소되었습니다");
+    load();
+  };
 
   const runTranslate = async (language: "en" | "mn" | "ru" | "zh") => {
     setAiBusy(true);
@@ -78,7 +111,7 @@ function Page() {
         job_id: job.id, seeker_id: user.id, employer_id: job.employer_id, message: msg || null,
       } as any);
       if (error) return toast.error(error.message);
-      toast.success("요청 보냄! 구인자 승인 후 연락처가 공개됩니다.");
+      toast.success("신청 보냄! 구인자 승인 후 연락처가 공개됩니다.");
       load();
     } finally {
       setBusy(false);
