@@ -36,19 +36,18 @@ function Page() {
     const inRegion = (j: any) => myRegions.length === 0 || (j.region && myRegions.includes(j.region));
 
     const now = new Date().toISOString();
-    const { data: p } = await supabase.from("promoted_jobs")
-      .select("job_id, created_at, jobs(*)").gte("ends_at", now)
-      .order("created_at", { ascending: false }).limit(50);
-    const seen = new Set<string>();
-    const promotedJobs: any[] = [];
-    (p ?? []).forEach((r: any) => {
-      if (!r.jobs) return;
-      if (seen.has(r.jobs.id)) return;
-      if (!inRegion(r.jobs)) return;
-      seen.add(r.jobs.id);
-      promotedJobs.push(r.jobs);
-    });
+    const { data: p } = await supabase.rpc("get_active_promoted_jobs");
+    const promotedIds = Array.from(new Set((p ?? []).map((r: any) => r.job_id)));
+    let promotedJobs: any[] = [];
+    if (promotedIds.length > 0) {
+      const { data: pj } = await supabase.from("jobs").select("*").in("id", promotedIds).eq("is_active", true);
+      const byId = new Map((pj ?? []).map((j: any) => [j.id, j]));
+      promotedJobs = promotedIds
+        .map((id) => byId.get(id))
+        .filter((j: any) => j && inRegion(j));
+    }
     setPromoted(promotedJobs.slice(0, 8));
+
 
     let rq = supabase.from("jobs").select("*").eq("is_active", true);
     if (myRegions.length > 0) rq = rq.in("region", myRegions);

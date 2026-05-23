@@ -673,6 +673,15 @@ export type Database = {
         Returns: Json
       }
       approve_application: { Args: { _app_id: string }; Returns: Json }
+      get_active_promoted_jobs: {
+        Args: never
+        Returns: {
+          created_at: string
+          ends_at: string
+          job_id: string
+          starts_at: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
