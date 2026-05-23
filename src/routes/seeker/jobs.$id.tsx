@@ -130,7 +130,13 @@ function Page() {
             <Badge>{INDUSTRY_LABEL[job.industry]}</Badge>
             <Badge variant="outline">{ROLE_LABEL[job.job_role]}</Badge>
           </div>
-          <h1 className="text-xl font-bold">{job.title}</h1>
+          <div className="flex items-start justify-between gap-2">
+            <h1 className="text-xl font-bold flex-1">{job.title}</h1>
+            <Button size="sm" variant="outline" onClick={toggleFavorite} className="shrink-0">
+              <Heart size={18} className={favId ? "text-rose-500 fill-rose-500" : "text-muted-foreground"} />
+              <span className="ml-1 text-xs">{favId ? "즐겨찾기됨" : "즐겨찾기"}</span>
+            </Button>
+          </div>
           <Card><CardContent className="p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold"><Languages size={16} className="text-primary" />AI 다국어 보기</div>
             <div className="grid grid-cols-4 gap-1.5">
@@ -170,15 +176,27 @@ function Page() {
               <p className="text-sm">담당자 연락처: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>
             </CardContent></Card>
           ) : app?.status === "pending" ? (
-            <Button className="w-full" disabled>요청 대기중…</Button>
+            <div className="space-y-2">
+              <Button className="w-full" disabled>신청 대기중…</Button>
+              <Button variant="outline" className="w-full" onClick={cancelApplication}>신청 취소</Button>
+            </div>
           ) : app?.status === "rejected" ? (
             <Button className="w-full" disabled variant="outline">거절됨</Button>
+          ) : app?.status === "cancelled" ? (
+            <Button className="w-full" disabled variant="outline">신청 취소됨</Button>
           ) : (
             <div className="space-y-2">
               <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />AI 신청 전 확인 질문</Button>
               {questions.length > 0 && <Card className="p-3 bg-muted/40"><ul className="text-sm space-y-1 list-disc list-inside">{questions.map((q, i) => <li key={i}>{q}</li>)}</ul></Card>}
               <Textarea placeholder="구인자에게 보낼 메시지 (선택)" value={msg} onChange={e => setMsg(e.target.value)} />
-              <Button className="w-full" onClick={apply} disabled={busy}>일하고 싶어요 (요청 보내기)</Button>
+              <Button
+                className="w-full text-lg font-bold py-6 text-white hover:opacity-90"
+                style={{ backgroundColor: "#1E90FF" }}
+                onClick={apply}
+                disabled={busy}
+              >
+                일하고 싶어요 (신청 보내기)
+              </Button>
             </div>
           )}
           {from === "apps" ? (
