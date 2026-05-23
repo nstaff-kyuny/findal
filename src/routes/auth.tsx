@@ -113,12 +113,13 @@ function AuthPage() {
       return toast.error("비밀번호는 영문, 숫자, 특수기호를 모두 포함해야 합니다");
     if (password !== passwordConfirm) return toast.error("비밀번호 확인이 일치하지 않습니다");
     if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
+    if (!allRequired) return toast.error("필수 약관에 모두 동의해 주세요");
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email, password,
       options: {
         emailRedirectTo: window.location.origin,
-        data: { full_name: name, phone, intended_role: role, referrer_code: referrer || null },
+        data: { full_name: name, phone, intended_role: role, referrer_code: referrer || null, marketing_consent: agreeMarketing },
       },
     });
     if (error) { setLoading(false); return toast.error(error.message); }
