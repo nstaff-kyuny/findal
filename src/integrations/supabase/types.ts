@@ -665,7 +665,38 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      promoted_jobs_public: {
+        Row: {
+          created_at: string | null
+          ends_at: string | null
+          id: string | null
+          job_id: string | null
+          starts_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string | null
+          job_id?: string | null
+          starts_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          ends_at?: string | null
+          id?: string | null
+          job_id?: string | null
+          starts_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promoted_jobs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       admin_grant_credits: {
