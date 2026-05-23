@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  LogOut, Smartphone, Monitor, RefreshCw, Megaphone, Plus, ExternalLink,
+  LogOut, Smartphone, Monitor, RefreshCw, Megaphone, Plus,
 } from "lucide-react";
 import {
   INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS, CREDIT_PACKS,
 } from "@/lib/constants";
+import { NewJobPanel, HistoryPanel, ProfilePanel } from "@/components/manager/DesktopPanels";
 
 export const Route = createFileRoute("/manager")({
   component: ManagerPage,
