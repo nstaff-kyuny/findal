@@ -235,8 +235,8 @@ function AllUsersTab() {
       const [{ data: profs }, { data: roles }, { data: seekers }, { data: emps }] = await Promise.all([
         supabase.from("profiles").select("id, full_name, phone").in("id", ids),
         supabase.from("user_roles").select("user_id, role").in("user_id", ids),
-        supabase.from("seeker_profiles").select("user_id, referrer_code").in("user_id", ids),
-        supabase.from("employer_profiles").select("user_id, company_name, referrer_code").in("user_id", ids),
+        supabase.from("seeker_profiles").select("user_id, referrer_code, nationality, visa, korean_ok, experience, preferred_region, notify_push, notify_marketing, created_at").in("user_id", ids),
+        supabase.from("employer_profiles").select("user_id, company_name, referrer_code, location, manager_name, contact_phone, credits, notify_push, notify_marketing, created_at").in("user_id", ids),
       ]);
       const pmap: Record<string, any> = {}; (profs ?? []).forEach((p: any) => pmap[p.id] = p);
       const rmap: Record<string, string[]> = {}; (roles ?? []).forEach((r: any) => { (rmap[r.user_id] ??= []).push(r.role); });
@@ -249,6 +249,8 @@ function AllUsersTab() {
         roles: (rmap[u.id] ?? []).join(", "),
         referrer_code: smap[u.id]?.referrer_code ?? emap[u.id]?.referrer_code ?? "",
         company_name: emap[u.id]?.company_name ?? "",
+        seeker: smap[u.id] ?? null,
+        employer: emap[u.id] ?? null,
       })));
     } catch (e: any) {
       toast.error(e?.message ?? "로드 실패");
