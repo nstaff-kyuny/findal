@@ -39,7 +39,7 @@ function Page() {
   const { role } = useParams({ from: "/guide/$role" });
   const isSeeker = role === "seeker";
   const baseSteps = isSeeker ? SEEKER_STEPS : EMPLOYER_STEPS;
-  const backTo = isSeeker ? "/seeker/me" : "/employer/me";
+  const backTo = isSeeker ? "/seeker/home" : "/employer/home";
   const title = isSeeker ? "구직자 사용 설명서" : "구인자 사용 설명서";
 
   const translate = useServerFn(translateTexts);

@@ -232,7 +232,7 @@ function Page() {
             <Label>일일 청소 객실수 <span className="text-red-500">*</span></Label>
             <Input type="number" inputMode="numeric" value={rooms} onChange={e => setRooms(e.target.value)} placeholder="예: 30" />
           </div>}
-          <div><Label>준비물 / 출근시 필요사항</Label><Textarea value={prep} onChange={e => setPrep(e.target.value)} /></div>
+          <div><Label>준비물 / 출근시 필요사항</Label><Textarea rows={5} value={prep} onChange={e => setPrep(e.target.value)} /></div>
           <div>
             <Label>근무 일자 <span className="text-xs text-muted-foreground font-normal">(최대 {MAX_WORK_DATES}일)</span></Label>
             <div className="flex gap-2 mt-1">
