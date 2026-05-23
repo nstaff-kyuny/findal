@@ -72,10 +72,10 @@ function Page() {
 
   const approved = filtered.filter(a => a.status === "approved");
 
-  const confirmedByDay = useMemo(() => {
+  const buildByDay = (statuses: string[]) => {
     const [y, m] = calMonth.split("-").map(Number);
     const map = new Map<string, any[]>();
-    apps.filter(a => a.status === "confirmed" || a.status === "no_show").forEach(a => {
+    apps.filter(a => statuses.includes(a.status)).forEach(a => {
       const dates: string[] = a.jobs?.work_dates ?? [];
       dates.forEach((d: string) => {
         const dt = new Date(d);
@@ -86,7 +86,10 @@ function Page() {
       });
     });
     return map;
-  }, [apps, calMonth]);
+  };
+  const confirmedByDay = useMemo(() => buildByDay(["confirmed", "no_show"]), [apps, calMonth]);
+  const confirmedByDayForPdf = useMemo(() => buildByDay(["confirmed"]), [apps, calMonth]);
+
 
   const downloadPdf = async () => {
     if (!pdfRef.current) return;
@@ -182,7 +185,7 @@ function Page() {
             <CalendarView month={calMonth} data={confirmedByDay} />
 
             <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
-              <PdfDoc ref={pdfRef} month={calMonth} data={confirmedByDay} userName={profile?.full_name ?? user?.email ?? ""} />
+              <PdfDoc ref={pdfRef} month={calMonth} data={confirmedByDayForPdf} userName={profile?.full_name ?? user?.email ?? ""} />
             </div>
           </TabsContent>
         </Tabs>
