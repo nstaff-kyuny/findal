@@ -176,9 +176,9 @@ function Page() {
           <PdfDoc
             ref={pdfRef}
             date={date}
-            entries={entries}
+            entries={entries.filter((e) => e.status === "confirmed")}
             employerName={employer?.full_name ?? user?.email ?? ""}
-            total={total}
+            total={confirmedCount}
             confirmedCount={confirmedCount}
           />
         </div>
