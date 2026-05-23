@@ -24,13 +24,11 @@ const employerTabs: Tab[] = [
 export function MobileLayout({ children, role }: { children: ReactNode; role: "seeker" | "employer" }) {
   const tabs = role === "seeker" ? seekerTabs : employerTabs;
   const loc = useLocation();
-  const { signOut } = useAuth();
   const cols = tabs.length === 5 ? "grid-cols-5" : "grid-cols-4";
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col max-w-md mx-auto shadow-xl">
       <header className="sticky top-0 z-40 bg-background border-b px-4 py-3 flex items-center justify-between">
         <h1 className="font-bold text-lg">{role === "seeker" ? "Find AR" : "구인자 콘솔"}</h1>
-        <button onClick={signOut} className="text-xs text-muted-foreground">로그아웃</button>
       </header>
       <main className="flex-1 pb-20">{children}</main>
       <nav className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-background border-t grid ${cols}`}>
