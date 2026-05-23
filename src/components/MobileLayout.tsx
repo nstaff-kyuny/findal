@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Star, FileText, Settings, Briefcase, Inbox, CreditCard, LayoutDashboard, Heart } from "lucide-react";
-import { useAuth } from "@/lib/auth";
+
 
 type Tab = { to: string; label: string; icon: any };
 
