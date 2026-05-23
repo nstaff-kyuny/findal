@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Search, Building2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeReferrerCode } from "@/lib/utils";
@@ -25,6 +27,29 @@ function normalizeLogin(id: string, pw: string) {
   return { email: id.trim(), password: pw };
 }
 
+const TERMS_DOCS: Record<string, { title: string; body: string }> = {
+  age: {
+    title: "만 14세 이상 확인",
+    body: "본 서비스는 만 14세 이상부터 이용할 수 있습니다.\n만 14세 미만의 아동은 회원가입이 제한됩니다.\n허위로 가입한 사실이 확인될 경우 계정이 즉시 정지될 수 있습니다.",
+  },
+  integrated: {
+    title: "통합 회원 이용약관",
+    body: "1. 본 약관은 Find AR(파인달) 통합 회원 서비스 이용에 관한 기본 사항을 규정합니다.\n2. 회원은 이메일/비밀번호로 가입하며, 하나의 계정으로 구직자 또는 구인자 서비스를 이용할 수 있습니다.\n3. 회원은 본인의 계정 정보를 안전하게 관리할 책임이 있으며, 타인에게 양도할 수 없습니다.\n4. 회사는 관련 법령을 준수하며 회원의 권익을 보호하기 위해 노력합니다.",
+  },
+  service: {
+    title: "Find AR 이용약관",
+    body: "1. Find AR은 일용직 일자리 매칭 플랫폼을 제공합니다.\n2. 구직자는 무료로 공고를 열람·신청할 수 있고, 구인자는 크레딧으로 매칭 승인 등 유료 서비스를 이용합니다.\n3. 회사는 회원 간의 실제 근로계약 및 임금 지급의 직접 당사자가 아니며, 매칭 플랫폼만을 제공합니다.\n4. 부정한 이용(허위 정보·노쇼·도용 등)이 확인되면 서비스 이용이 제한될 수 있습니다.",
+  },
+  privacy: {
+    title: "개인정보처리방침",
+    body: "1. 수집 항목: 이메일, 이름, 휴대전화번호, 비밀번호(암호화), 구직/구인 프로필 정보.\n2. 이용 목적: 회원 식별, 일자리 매칭, 알림 발송, 고객 문의 응대.\n3. 보유 기간: 회원 탈퇴 시까지 보관하며, 관련 법령에 따라 보관이 필요한 경우 해당 기간 동안 보관합니다.\n4. 제3자 제공: 매칭이 승인된 경우에 한해 상대방에게 연락처가 공개되며, 그 외에는 동의 없이 제공하지 않습니다.\n5. 이용자는 언제든지 개인정보 열람·수정·삭제·처리정지를 요청할 수 있습니다.",
+  },
+  marketing: {
+    title: "마케팅 목적 개인정보 수집 및 이용 (선택)",
+    body: "1. 수집 항목: 이메일, 휴대전화번호, 알림 수신 동의 여부.\n2. 이용 목적: 이벤트·프로모션·신규 서비스 안내 및 마케팅 정보 발송.\n3. 보유 기간: 동의 철회 시 또는 회원 탈퇴 시까지.\n4. 본 항목은 선택 동의 사항으로, 동의하지 않아도 서비스의 기본 이용에는 제한이 없습니다.\n5. 설정 > 알림에서 언제든지 마케팅 알림 수신을 해제할 수 있습니다.",
+  },
+};
+
 function AuthPage() {
   const nav = useNavigate();
   const [loginId, setLoginId] = useState("");
@@ -39,6 +64,17 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [emailSentDialog, setEmailSentDialog] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
+  const [agreeAge, setAgreeAge] = useState(false);
+  const [agreeIntegrated, setAgreeIntegrated] = useState(false);
+  const [agreeService, setAgreeService] = useState(false);
+  const [agreePrivacy, setAgreePrivacy] = useState(false);
+  const [agreeMarketing, setAgreeMarketing] = useState(false);
+  const [docOpen, setDocOpen] = useState<keyof typeof TERMS_DOCS | null>(null);
+  const allRequired = agreeAge && agreeIntegrated && agreeService && agreePrivacy;
+  const allChecked = allRequired && agreeMarketing;
+  const setAll = (v: boolean) => {
+    setAgreeAge(v); setAgreeIntegrated(v); setAgreeService(v); setAgreePrivacy(v); setAgreeMarketing(v);
+  };
 
   const signIn = async () => {
     if (!loginId || !loginPw) return toast.error("이메일/비밀번호를 입력하세요");
