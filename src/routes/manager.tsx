@@ -144,8 +144,8 @@ function ManagerPage() {
               </TabsList>
             </div>
             <div className="flex-1 overflow-auto">
-              <TabsContent value="new" className="m-0 p-0 h-full">
-                <IframePanel src="/employer/jobs/new" title="공고 등록" />
+              <TabsContent value="new" className="m-0">
+                <NewJobPanel userId={user.id} onCreated={() => setPhoneKey((k) => k + 1)} />
               </TabsContent>
               <TabsContent value="jobs" className="m-0">
                 <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
@@ -156,11 +156,11 @@ function ManagerPage() {
               <TabsContent value="credits" className="m-0">
                 <CreditsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
               </TabsContent>
-              <TabsContent value="history" className="m-0 p-0 h-full">
-                <IframePanel src="/employer/history" title="히스토리" />
+              <TabsContent value="history" className="m-0">
+                <HistoryPanel userId={user.id} />
               </TabsContent>
-              <TabsContent value="profile" className="m-0 p-0 h-full">
-                <IframePanel src="/employer/me" title="프로필/설정" />
+              <TabsContent value="profile" className="m-0">
+                <ProfilePanel userId={user.id} userEmail={user.email ?? ""} onSignOut={signOut} />
               </TabsContent>
             </div>
           </Tabs>
