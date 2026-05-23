@@ -14,6 +14,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
 import { Route as NoticesRouteImport } from './routes/notices'
+import { Route as ManagerRouteImport } from './routes/manager'
 import { Route as InquiryRouteImport } from './routes/inquiry'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as EventsRouteImport } from './routes/events'
@@ -61,6 +62,11 @@ const NotificationsRoute = NotificationsRouteImport.update({
 const NoticesRoute = NoticesRouteImport.update({
   id: '/notices',
   path: '/notices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagerRoute = ManagerRouteImport.update({
+  id: '/manager',
+  path: '/manager',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InquiryRoute = InquiryRouteImport.update({
@@ -186,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
+  '/manager': typeof ManagerRoute
   '/notices': typeof NoticesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
@@ -216,6 +223,7 @@ export interface FileRoutesByTo {
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
+  '/manager': typeof ManagerRoute
   '/notices': typeof NoticesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
@@ -247,6 +255,7 @@ export interface FileRoutesById {
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
+  '/manager': typeof ManagerRoute
   '/notices': typeof NoticesRoute
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
@@ -279,6 +288,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/faq'
     | '/inquiry'
+    | '/manager'
     | '/notices'
     | '/notifications'
     | '/onboarding'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/faq'
     | '/inquiry'
+    | '/manager'
     | '/notices'
     | '/notifications'
     | '/onboarding'
@@ -339,6 +350,7 @@ export interface FileRouteTypes {
     | '/events'
     | '/faq'
     | '/inquiry'
+    | '/manager'
     | '/notices'
     | '/notifications'
     | '/onboarding'
@@ -370,6 +382,7 @@ export interface RootRouteChildren {
   EventsRoute: typeof EventsRoute
   FaqRoute: typeof FaqRoute
   InquiryRoute: typeof InquiryRoute
+  ManagerRoute: typeof ManagerRoute
   NoticesRoute: typeof NoticesRoute
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
@@ -428,6 +441,13 @@ declare module '@tanstack/react-router' {
       path: '/notices'
       fullPath: '/notices'
       preLoaderRoute: typeof NoticesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/manager': {
+      id: '/manager'
+      path: '/manager'
+      fullPath: '/manager'
+      preLoaderRoute: typeof ManagerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/inquiry': {
@@ -613,6 +633,7 @@ const rootRouteChildren: RootRouteChildren = {
   EventsRoute: EventsRoute,
   FaqRoute: FaqRoute,
   InquiryRoute: InquiryRoute,
+  ManagerRoute: ManagerRoute,
   NoticesRoute: NoticesRoute,
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
