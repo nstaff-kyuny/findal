@@ -16,11 +16,12 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  LogOut, Smartphone, Monitor, RefreshCw, Megaphone, Plus, ExternalLink,
+  LogOut, Smartphone, Monitor, RefreshCw, Megaphone, Plus,
 } from "lucide-react";
 import {
   INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS, CREDIT_PACKS,
 } from "@/lib/constants";
+import { NewJobPanel, HistoryPanel, ProfilePanel } from "@/components/manager/DesktopPanels";
 
 export const Route = createFileRoute("/manager")({
   component: ManagerPage,
@@ -143,8 +144,8 @@ function ManagerPage() {
               </TabsList>
             </div>
             <div className="flex-1 overflow-auto">
-              <TabsContent value="new" className="m-0 p-0 h-full">
-                <IframePanel src="/employer/jobs/new" title="공고 등록" />
+              <TabsContent value="new" className="m-0">
+                <NewJobPanel userId={user.id} onCreated={() => setPhoneKey((k) => k + 1)} />
               </TabsContent>
               <TabsContent value="jobs" className="m-0">
                 <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
@@ -155,11 +156,11 @@ function ManagerPage() {
               <TabsContent value="credits" className="m-0">
                 <CreditsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
               </TabsContent>
-              <TabsContent value="history" className="m-0 p-0 h-full">
-                <IframePanel src="/employer/history" title="히스토리" />
+              <TabsContent value="history" className="m-0">
+                <HistoryPanel userId={user.id} />
               </TabsContent>
-              <TabsContent value="profile" className="m-0 p-0 h-full">
-                <IframePanel src="/employer/me" title="프로필/설정" />
+              <TabsContent value="profile" className="m-0">
+                <ProfilePanel userId={user.id} userEmail={user.email ?? ""} onSignOut={signOut} />
               </TabsContent>
             </div>
           </Tabs>
@@ -191,23 +192,6 @@ function ManagerPage() {
   );
 }
 
-function IframePanel({ src, title }: { src: string; title: string }) {
-  const [k, setK] = useState(0);
-  return (
-    <div className="h-[calc(100vh-110px)] flex flex-col">
-      <div className="px-4 py-2 border-b bg-muted/30 flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">{title} — 모바일 화면을 활용한 입력 폼</p>
-        <div className="flex gap-1">
-          <Button size="sm" variant="ghost" onClick={() => setK((k) => k + 1)}><RefreshCw size={14} /></Button>
-          <a href={src} target="_blank" rel="noreferrer">
-            <Button size="sm" variant="ghost"><ExternalLink size={14} /></Button>
-          </a>
-        </div>
-      </div>
-      <iframe key={k} src={src} title={title} className="flex-1 w-full border-0 bg-background" />
-    </div>
-  );
-}
 
 /* ----------------- 공고 관리 ----------------- */
 function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => void }) {
