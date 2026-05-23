@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -8,11 +8,9 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
 import { INDUSTRY_LABEL, ROLE_LABEL, REGIONS } from "@/lib/constants";
 import { formatWorkDatesWithWeekday } from "@/lib/job-visuals";
-import { MapPin, Search, Navigation, CalendarIcon, X, BookOpen } from "lucide-react";
+import { MapPin, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth";
 import { parseRegions } from "@/components/RegionPicker";
@@ -32,14 +30,11 @@ function Page() {
   const [q, setQ] = useState("");
   const [category, setCategory] = useState<string>("all");
   const [jobs, setJobs] = useState<any[]>([]);
-  const [nearby, setNearby] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [searchVisible, setSearchVisible] = useState(true);
+  const [showSearch, setShowSearch] = useState(false);
   const [prefRegions, setPrefRegions] = useState<string[]>([]);
   const [prefOnly, setPrefOnly] = useState(true);
+  const touchStartY = useRef<number | null>(null);
   const nav = useNavigate();
-
-  const toYMD = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 
   useEffect(() => { (async () => {
     if (!user) return;
@@ -55,98 +50,85 @@ function Page() {
     if (q) qb = qb.ilike("title", `%${q}%`);
     const cat = CATEGORIES.find(c => c.key === category);
     if (cat && cat.industries.length) qb = qb.in("industry", cat.industries as any);
-    if (selectedDate) qb = qb.contains("work_dates", [toYMD(selectedDate)]);
     const { data } = await qb;
     setJobs(data ?? []);
-  })(); }, [region, q, category, selectedDate, prefOnly, prefRegions]);
+  })(); }, [region, q, category, prefOnly, prefRegions]);
 
+  // Swipe down to reveal, swipe up to hide
   useEffect(() => {
-    let lastY = window.scrollY;
-    let ticking = false;
-    const onScroll = () => {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(() => {
-        const y = window.scrollY;
-        const dy = y - lastY;
-        if (y < 10) setSearchVisible(true);
-        else if (dy > 6) setSearchVisible(false);
-        else if (dy < -6) setSearchVisible(true);
-        lastY = y;
-        ticking = false;
-      });
+    const onTouchStart = (e: TouchEvent) => { touchStartY.current = e.touches[0].clientY; };
+    const onTouchMove = (e: TouchEvent) => {
+      if (touchStartY.current == null) return;
+      const dy = e.touches[0].clientY - touchStartY.current;
+      if (window.scrollY < 10 && dy > 40) { setShowSearch(true); touchStartY.current = null; }
+      if (dy < -40) { setShowSearch(false); touchStartY.current = null; }
     };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    const onTouchEnd = () => { touchStartY.current = null; };
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchmove", onTouchMove, { passive: true });
+    window.addEventListener("touchend", onTouchEnd);
+    return () => {
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchmove", onTouchMove);
+      window.removeEventListener("touchend", onTouchEnd);
+    };
   }, []);
 
   return (
     <MobileLayout role="seeker">
-      <div className={cn(
-        "p-3 space-y-3 sticky top-[57px] bg-background z-30 pt-3 border-b shadow-sm transition-transform duration-300 will-change-transform",
-        searchVisible ? "translate-y-0" : "-translate-y-[calc(100%+57px)]"
-      )}>
-        {prefRegions.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap">
+      {/* Pull tab */}
+      <button
+        onClick={() => setShowSearch(v => !v)}
+        className="sticky top-[57px] z-30 w-full bg-background border-b flex items-center justify-center gap-1 py-1.5 text-xs text-muted-foreground"
+        aria-label="검색 열기"
+      >
+        {showSearch ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+        <Search size={12} />
+        <span>{showSearch ? "검색 닫기" : "쓸어내려 검색하기"}</span>
+      </button>
+
+      {showSearch && (
+        <div className="p-3 space-y-2 bg-background border-b">
+          <div className="flex gap-2">
+            <Select value={region} onValueChange={setRegion}>
+              <SelectTrigger className="w-28 h-9 text-xs"><SelectValue placeholder="지역" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">전체 지역</SelectItem>
+                {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <div className="relative flex-1">
+              <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+              <Input value={q} onChange={e => setQ(e.target.value)} placeholder="공고 검색" className="pl-7 h-9 text-sm" />
+            </div>
+          </div>
+          <div className="flex gap-1.5 flex-wrap">
+            {CATEGORIES.map(c => (
+              <Button key={c.key} size="sm" variant={category === c.key ? "default" : "outline"} onClick={() => setCategory(c.key)} className="text-xs h-7">
+                {c.label}
+              </Button>
+            ))}
+          </div>
+          {prefRegions.length > 0 && (
             <Button
               size="sm"
               variant={prefOnly && region === "all" ? "default" : "outline"}
-              className="text-xs h-8"
+              className="text-xs h-7"
               onClick={() => { setPrefOnly(v => !v); setRegion("all"); }}
             >
               <MapPin size={12} className="mr-1" />
               선호지역만 보기
             </Button>
-            <div className="flex gap-1 flex-wrap">
-              {prefRegions.map(r => (
-                <Badge key={r} variant="secondary" className="text-sm">{r}</Badge>
-              ))}
-            </div>
-          </div>
-        )}
-        <div className="flex gap-2">
-          <Select value={region} onValueChange={setRegion}>
-            <SelectTrigger className="w-32"><SelectValue placeholder="지역" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">전체 지역</SelectItem>
-              {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-            </SelectContent>
-          </Select>
-          <div className="relative flex-1">
-            <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input value={q} onChange={e => setQ(e.target.value)} placeholder="공고 검색" className="pl-7" />
-          </div>
-        </div>
-        <div className="flex gap-1.5 flex-wrap">
-          {CATEGORIES.map(c => (
-            <Button key={c.key} size="sm" variant={category === c.key ? "default" : "outline"} onClick={() => setCategory(c.key)} className="text-xs">
-              {c.label}
-            </Button>
-          ))}
-        </div>
-        <div className="flex gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant={selectedDate ? "default" : "outline"} size="sm" className={cn("flex-1 justify-start text-xs", !selectedDate && "text-muted-foreground")}>
-                <CalendarIcon size={14} className="mr-1" />
-                {selectedDate ? `${selectedDate.getMonth()+1}/${selectedDate.getDate()} 근무일 공고` : "날짜로 공고 찾기"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} className="p-3 pointer-events-auto" />
-            </PopoverContent>
-          </Popover>
-          {selectedDate && (
-            <Button variant="ghost" size="sm" onClick={() => setSelectedDate(undefined)}><X size={14} /></Button>
           )}
         </div>
-        <Button variant={nearby ? "default" : "outline"} size="sm" className="w-full" onClick={() => setNearby(!nearby)}>
-          <Navigation size={14} className="mr-1" /> 위치기반으로 찾기
-        </Button>
-      </div>
+      )}
+
       <div className="p-3 space-y-2">
         <Link to="/guide/$role" params={{ role: "seeker" }}>
-          <Card className="p-3 bg-primary text-primary-foreground flex items-center gap-2">
+          <Card
+            className="p-3 text-white flex items-center gap-2 border-transparent"
+            style={{ backgroundColor: "#0047AB" }}
+          >
             <BookOpen size={18} />
             <span className="text-sm font-semibold flex-1">앱 사용법 확인 (신청·승인·확정·노쇼 안내)</span>
             <span>→</span>
@@ -163,8 +145,8 @@ function Page() {
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex gap-1 flex-wrap mb-1">
-                  <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
-                  <Badge variant="outline" className="text-[10px]">{ROLE_LABEL[j.job_role]}</Badge>
+                  <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
+                  <Badge variant="outline" className="text-xs">{ROLE_LABEL[j.job_role]}</Badge>
                 </div>
                 <h3 className="font-semibold text-sm truncate">{j.title}</h3>
                 <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MapPin size={10} />{j.place_name}</p>
