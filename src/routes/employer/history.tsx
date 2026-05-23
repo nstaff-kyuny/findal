@@ -112,11 +112,11 @@ function Page() {
     });
   }, [apps, filter, search]);
 
-  const confirmedByDay = useMemo(() => {
+  const buildByDay = (statuses: string[]) => {
     const [y, m] = calMonth.split("-").map(Number);
     const map = new Map<string, any[]>();
     apps
-      .filter((a) => a.status === "confirmed" || a.status === "no_show")
+      .filter((a) => statuses.includes(a.status))
       .forEach((a) => {
         const savedDates: string[] = a.jobs?.work_dates ?? [];
         const fallbackDate = (
@@ -138,7 +138,10 @@ function Page() {
         });
       });
     return map;
-  }, [apps, calMonth, search]);
+  };
+  const confirmedByDay = useMemo(() => buildByDay(["confirmed", "no_show"]), [apps, calMonth, search]);
+  const confirmedByDayForPdf = useMemo(() => buildByDay(["confirmed"]), [apps, calMonth, search]);
+
 
   const downloadPdf = async () => {
     if (!pdfRef.current) return;
