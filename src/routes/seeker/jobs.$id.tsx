@@ -25,15 +25,14 @@ function Page() {
   const { id } = useParams({ from: "/seeker/jobs/$id" });
   const { from } = useSearch({ from: "/seeker/jobs/$id" });
   const { user } = useAuth();
+  const { t, tIndustry, tRole } = useI18n();
   const nav = useNavigate();
-  const translateJob = useServerFn(translateJobDetails);
   const makeQuestions = useServerFn(generateScreeningQuestions);
   const moderate = useServerFn(moderateText);
   const [job, setJob] = useState<any>(null);
   const [app, setApp] = useState<any>(null);
   const [favId, setFavId] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
-  const [translation, setTranslation] = useState<any>(null);
   const [questions, setQuestions] = useState<string[]>([]);
   const [aiBusy, setAiBusy] = useState(false);
   const [busy, setBusy] = useState(false);
