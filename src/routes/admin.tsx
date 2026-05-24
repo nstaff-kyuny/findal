@@ -648,6 +648,7 @@ function UsersTab() {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newRole, setNewRole] = useState<"seeker" | "employer">("seeker");
+  const [newGender, setNewGender] = useState<"M" | "F">("M");
   const [newReferrer, setNewReferrer] = useState("");
   const [newRegions, setNewRegions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
@@ -680,8 +681,8 @@ function UsersTab() {
     if (!newEmail || !newPwd || !newName) return toast.error("이메일, 비밀번호, 이름 필수");
     setBusy(true);
     try {
-      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer, preferredRegions: newRole === "seeker" ? serializeRegions(newRegions) : "" } });
-      toast.success("사용자가 추가되었습니다");
+      const res: any = await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, gender: newGender, referrerCode: newReferrer, preferredRegions: newRole === "seeker" ? serializeRegions(newRegions) : "" } });
+      toast.success(`사용자가 추가되었습니다 (사번: ${res?.staffNo ?? "-"})`);
       setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer(""); setNewRegions([]);
       load();
     } catch (e: any) {
@@ -743,12 +744,19 @@ function UsersTab() {
       <Card><CardContent className="p-4 space-y-3">
         <h3 className="font-bold flex items-center gap-2"><UserPlus size={16} />사용자 추가</h3>
         <p className="text-xs text-muted-foreground">⚠️ 보안상 기존 비밀번호는 볼 수 없습니다(암호화 저장). 변경이 필요하면 각 사용자의 🔑 버튼으로 새 비밀번호를 설정하세요.</p>
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
+        <div className="grid grid-cols-2 md:grid-cols-8 gap-2">
           <Input placeholder="이메일" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
           <Input placeholder="비밀번호 (6자리)" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
           <Input placeholder="이름" value={newName} onChange={e => setNewName(e.target.value)} />
           <Input placeholder="연락처" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
           <Input placeholder="추천인코드 (영문 대문자/숫자, 선택)" value={newReferrer} onChange={e => setNewReferrer(normalizeReferrerCode(e.target.value))} />
+          <Select value={newGender} onValueChange={(v: any) => setNewGender(v)}>
+            <SelectTrigger><SelectValue placeholder="성별" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="M">남자</SelectItem>
+              <SelectItem value="F">여자</SelectItem>
+            </SelectContent>
+          </Select>
           <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -758,6 +766,7 @@ function UsersTab() {
           </Select>
           <Button onClick={handleCreate} disabled={busy}>추가</Button>
         </div>
+        <p className="text-xs text-muted-foreground">사번은 추가 시 자동 발급됩니다 (형식: 성별1자리 + 년2자리 + 월2자리 + 순번3자리, 예: 12605001)</p>
         {newRole === "seeker" && (
           <div>
             <Label className="text-xs">선호 지역 (구직자, 최대 3개 · 선택)</Label>

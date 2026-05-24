@@ -488,22 +488,28 @@ export type Database = {
         Row: {
           created_at: string
           full_name: string | null
+          gender: string | null
           id: string
           phone: string | null
+          staff_no: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
           full_name?: string | null
+          gender?: string | null
           id: string
           phone?: string | null
+          staff_no?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
           full_name?: string | null
+          gender?: string | null
           id?: string
           phone?: string | null
+          staff_no?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -673,6 +679,7 @@ export type Database = {
         Returns: Json
       }
       approve_application: { Args: { _app_id: string }; Returns: Json }
+      generate_staff_no: { Args: { _gender: string }; Returns: string }
       get_active_promoted_jobs: {
         Args: never
         Returns: {

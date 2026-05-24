@@ -23,6 +23,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
       fullName: z.string().min(1),
       phone: z.string().optional().default(""),
       role: z.enum(["seeker", "employer"]),
+      gender: z.enum(["M", "F"]),
       referrerCode: z.string().optional().default(""),
       preferredRegions: z.string().optional().default(""),
     }).parse(input),
@@ -37,6 +38,36 @@ export const adminCreateUser = createServerFn({ method: "POST" })
     });
     if (error) throw new Error(error.message);
     const newId = created.user!.id;
+
+    // Generate 8-digit staff_no: gender(1=M,2=F) + YY + MM + 3-digit sequence per month
+    const g = data.gender === "M" ? "1" : "2";
+    const seoul = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }));
+    const yy = String(seoul.getFullYear()).slice(-2);
+    const mm = String(seoul.getMonth() + 1).padStart(2, "0");
+    const prefix = `${g}${yy}${mm}`;
+    let staffNo: string | null = null;
+    for (let attempt = 0; attempt < 5 && !staffNo; attempt++) {
+      const { data: rows, error: qErr } = await supabaseAdmin
+        .from("profiles")
+        .select("staff_no")
+        .like("staff_no", `${prefix}%`);
+      if (qErr) throw new Error(qErr.message);
+      const used = new Set((rows ?? []).map((r: any) => r.staff_no).filter(Boolean));
+      let next = 1;
+      while (used.has(`${prefix}${String(next).padStart(3, "0")}`)) next++;
+      if (next > 999) throw new Error("해당 월 사번이 모두 소진되었습니다");
+      const candidate = `${prefix}${String(next).padStart(3, "0")}`;
+      const { error: upErr } = await supabaseAdmin
+        .from("profiles")
+        .upsert(
+          { id: newId, full_name: data.fullName, phone: data.phone, gender: data.gender, staff_no: candidate },
+          { onConflict: "id" },
+        );
+      if (!upErr) { staffNo = candidate; break; }
+      if (!/duplicate key|unique/i.test(upErr.message)) throw new Error(upErr.message);
+    }
+    if (!staffNo) throw new Error("사번 발급 실패 - 다시 시도해주세요");
+
     await supabaseAdmin.from("user_roles").insert({ user_id: newId, role: data.role });
     const refCode = (data.referrerCode || "").trim() || null;
     if (data.role === "employer") {
@@ -57,7 +88,7 @@ export const adminCreateUser = createServerFn({ method: "POST" })
         preferred_region: (data.preferredRegions || "").trim() || null,
       });
     }
-    return { ok: true, id: newId };
+    return { ok: true, id: newId, staffNo };
   });
 
 
