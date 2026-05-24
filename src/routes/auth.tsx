@@ -275,3 +275,26 @@ function AgreeRow({ checked, onCheckedChange, label, onView, required, optional 
     </div>
   );
 }
+
+function PasswordInput({ value, onChange, show, setShow, placeholder, minLength }: { value: string; onChange: (v: string) => void; show: boolean; setShow: (v: boolean) => void; placeholder?: string; minLength?: number }) {
+  return (
+    <div className="relative mt-1">
+      <Input
+        className="h-14 text-base pr-12"
+        type={show ? "text" : "password"}
+        minLength={minLength}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        aria-label={show ? "비밀번호 숨기기" : "비밀번호 보기"}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+      >
+        {show ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
+    </div>
+  );
+}
