@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 
-const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 승인 받음", no_show:"노쇼", cancelled:"취소됨" };
+const STATUS_KEY: Record<string,string> = { pending:"st_pending", approved:"st_approved", rejected:"st_rejected", confirmed:"st_confirmed", no_show:"st_no_show", cancelled:"st_cancelled" };
 const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
 const STATUS_CLASS: Record<string,string> = { confirmed: "bg-orange-500 hover:bg-orange-500 text-white border-transparent" };
 
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/seeker/applications")({ component: () => 
 
 function Page() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [apps, setApps] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [filter, setFilter] = useState<"day"|"week"|"month">("month");
@@ -115,62 +117,70 @@ function Page() {
     }
   };
 
+  // Dynamic translation for job titles + place names
+  const allTexts = useMemo(() => {
+    const arr: string[] = [];
+    apps.forEach(a => { if (a.jobs?.title) arr.push(a.jobs.title); if (a.jobs?.place_name) arr.push(a.jobs.place_name); });
+    return arr.slice(0, 80);
+  }, [apps]);
+  const tx = useDynamicTranslate(allTexts);
+
   return (
     <MobileLayout role="seeker">
       <div className="p-3 space-y-3">
-        <h2 className="font-bold">나의 신청 내역</h2>
+        <h2 className="font-bold">{t("apps_title")}</h2>
         <Tabs value={topTab} onValueChange={(v: any) => setTopTab(v)}>
           <TabsList className="grid grid-cols-2 w-full h-12">
-            <TabsTrigger value="list" className="text-base font-semibold h-10">전체 내역</TabsTrigger>
-            <TabsTrigger value="calendar" className="text-base font-semibold h-10">일한 기록 보기</TabsTrigger>
+            <TabsTrigger value="list" className="text-base font-semibold h-10">{t("apps_all")}</TabsTrigger>
+            <TabsTrigger value="calendar" className="text-base font-semibold h-10">{t("apps_calendar")}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="list" className="mt-3">
             <Tabs value={filter} onValueChange={(v: any) => setFilter(v)}>
               <TabsList className="grid grid-cols-3 w-full">
-                <TabsTrigger value="day">일</TabsTrigger>
-                <TabsTrigger value="week">주</TabsTrigger>
-                <TabsTrigger value="month">월</TabsTrigger>
+                <TabsTrigger value="day">{t("apps_day")}</TabsTrigger>
+                <TabsTrigger value="week">{t("apps_week")}</TabsTrigger>
+                <TabsTrigger value="month">{t("apps_month")}</TabsTrigger>
               </TabsList>
               <TabsContent value={filter} className="mt-3">
-                <div className="text-xs text-muted-foreground mb-2">총 {filtered.length}건 · 승인 {approved.length}건</div>
+                <div className="text-xs text-muted-foreground mb-2">{t("total_count")} {filtered.length}{t("count_suffix")} · {t("st_approved")} {approved.length}{t("count_suffix")}</div>
                 <div className="space-y-2">
-                  {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">기록이 없습니다</p>}
+                  {filtered.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">{t("no_records")}</p>}
                   {filtered.map(a => (
                     <Card key={a.id} className="p-4 space-y-3">
                       <div className="flex justify-between items-start gap-2">
                         <div className="min-w-0">
-                          <h4 className="font-semibold text-base">{a.jobs?.title}</h4>
-                          <p className="text-sm text-muted-foreground">{a.jobs?.place_name} · {Number(a.jobs?.daily_wage ?? 0).toLocaleString()}원</p>
-                          <p className="text-sm text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString("ko-KR")}</p>
+                          <h4 className="font-semibold text-base">{tx[a.jobs?.title] ?? a.jobs?.title}</h4>
+                          <p className="text-sm text-muted-foreground">{tx[a.jobs?.place_name] ?? a.jobs?.place_name} · {Number(a.jobs?.daily_wage ?? 0).toLocaleString()}{t("won")}</p>
+                          <p className="text-sm text-muted-foreground mt-1">{new Date(a.created_at).toLocaleString()}</p>
                         </div>
-                        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
+                        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 ${STATUS_CLASS[a.status] ?? ""}`}>{t(STATUS_KEY[a.status] ?? a.status)}</Badge>
                       </div>
                       {a.status === "pending" && (
-                        <Button size="lg" variant="outline" className="w-full" onClick={() => cancelApp(a.id)}>신청 취소</Button>
+                        <Button size="lg" variant="outline" className="w-full" onClick={() => cancelApp(a.id)}>{t("apply_cancel")}</Button>
                       )}
                       {a.status === "approved" && (
                         <div className="grid grid-cols-2 gap-2">
-                          <Button size="lg" className="text-base font-bold py-6" onClick={() => confirmApp(a.id)}>✋ 갈께요 (최종확정)</Button>
-                          <Button size="lg" variant="outline" className="text-base" onClick={() => cancelApp(a.id)}>신청 취소</Button>
+                          <Button size="lg" className="text-base font-bold py-6" onClick={() => confirmApp(a.id)}>{t("apply_confirm_btn")}</Button>
+                          <Button size="lg" variant="outline" className="text-base" onClick={() => cancelApp(a.id)}>{t("apply_cancel")}</Button>
                         </div>
                       )}
                       {a.status === "confirmed" && (
                         <div className="grid grid-cols-2 gap-2">
                           {a.jobs?.contact_phone ? (
                             <a href={`tel:${a.jobs.contact_phone}`} className="block">
-                              <Button size="lg" className="w-full text-base font-semibold">연락하기</Button>
+                              <Button size="lg" className="w-full text-base font-semibold">{t("contact_btn")}</Button>
                             </a>
                           ) : (
-                            <Button size="lg" className="w-full text-base font-semibold" disabled>연락하기</Button>
+                            <Button size="lg" className="w-full text-base font-semibold" disabled>{t("contact_btn")}</Button>
                           )}
                           <a href={`/seeker/jobs/${a.job_id}?from=apps`} className="block">
-                            <Button size="lg" variant="outline" className="w-full text-base font-semibold border-orange-500 text-orange-600 hover:bg-orange-50">일자리(승인) 확인</Button>
+                            <Button size="lg" variant="outline" className="w-full text-base font-semibold border-orange-500 text-orange-600 hover:bg-orange-50">{t("see_approved_job")}</Button>
                           </a>
                         </div>
                       )}
                       {a.status === "no_show" && (
-                        <p className="text-sm text-destructive text-center font-semibold">⚠️ 노쇼 처리됨</p>
+                        <p className="text-sm text-destructive text-center font-semibold">{t("noshow_marked")}</p>
                       )}
                     </Card>
                   ))}
@@ -187,9 +197,9 @@ function Page() {
                 onChange={(e) => setCalMonth(e.target.value)}
                 className="flex-1 h-10 px-3 rounded-md border bg-background text-sm"
               />
-              <Button onClick={downloadPdf}>PDF 다운로드</Button>
+              <Button onClick={downloadPdf}>{t("pdf_download")}</Button>
             </div>
-            <p className="text-xs text-muted-foreground">확정 된 기록만 표시됩니다.</p>
+            <p className="text-xs text-muted-foreground">{t("confirmed_only_note")}</p>
             <CalendarView month={calMonth} data={confirmedByDay} />
 
             <div style={{ position: "fixed", left: "-10000px", top: 0 }}>

@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { NATIONALITY_LABEL, VISA_LABEL, REGIONS } from "@/lib/constants";
 import { RegionPicker, serializeRegions } from "@/components/RegionPicker";
 import { normalizeReferrerCode } from "@/lib/utils";
+import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
 
 export const Route = createFileRoute("/onboarding")({ component: Onboarding });
 
@@ -77,6 +78,7 @@ function Onboarding() {
 }
 
 function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) {
+  const { lang, setLang } = useI18n();
   const [nationality, setNationality] = useState<string>("foreigner");
   const [experience, setExperience] = useState<string>("lt5");
   const [koreanOk, setKoreanOk] = useState(true);
@@ -101,6 +103,7 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
       user_id: userId, nationality, experience, korean_ok: koreanOk,
       visa: nationality === "korean" ? null : visa,
       referrer_code: referrer || null, preferred_region: serializeRegions(regions),
+      preferred_language: lang,
     } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
@@ -109,7 +112,24 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
   };
   return (
     <Card><CardContent className="p-4 space-y-4">
-      <h2 className="font-bold text-lg">구직자 정보</h2>
+      <h2 className="font-bold text-lg">구직자 정보 / Profile</h2>
+      <div>
+        <Label className="text-base">🌐 사용 언어 / Language</Label>
+        <div className="grid grid-cols-5 gap-1.5 mt-2">
+          {(["ko","en","mn","ru","zh"] as Lang[]).map((l) => (
+            <Button
+              key={l}
+              type="button"
+              variant={lang === l ? "default" : "outline"}
+              className="h-11 text-xs px-1"
+              onClick={() => setLang(l)}
+            >
+              <span className="mr-0.5">{LANG_FLAG[l]}</span>{LANG_LABEL[l]}
+            </Button>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-1">메뉴와 공고가 선택한 언어로 표시됩니다.</p>
+      </div>
       <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">추천인 코드를 제외한 모든 항목은 필수입니다. 모두 입력해야 "저장하고 시작하기"가 활성화됩니다.</p>
       <div><Label className="text-base">신분</Label>
         <Select value={nationality} onValueChange={(v) => { setNationality(v); if (v === "korean") setVisa(""); }}>

@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
@@ -8,12 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { INDUSTRY_LABEL, ROLE_LABEL } from "@/lib/constants";
+import { INDUSTRY_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, formatWorkDates } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
+import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { toast } from "sonner";
-import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck, Heart } from "lucide-react";
-import { generateScreeningQuestions, translateJobDetails, moderateText } from "@/lib/ai.functions";
+import { MapPin, Calendar, Wallet, Wrench, ClipboardCheck, Heart } from "lucide-react";
+import { generateScreeningQuestions, moderateText } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/jobs/$id")({
   component: () => <RoleGate role="seeker"><Page /></RoleGate>,
@@ -24,15 +25,14 @@ function Page() {
   const { id } = useParams({ from: "/seeker/jobs/$id" });
   const { from } = useSearch({ from: "/seeker/jobs/$id" });
   const { user } = useAuth();
+  const { t, tIndustry, tRole } = useI18n();
   const nav = useNavigate();
-  const translateJob = useServerFn(translateJobDetails);
   const makeQuestions = useServerFn(generateScreeningQuestions);
   const moderate = useServerFn(moderateText);
   const [job, setJob] = useState<any>(null);
   const [app, setApp] = useState<any>(null);
   const [favId, setFavId] = useState<string | null>(null);
   const [msg, setMsg] = useState("");
-  const [translation, setTranslation] = useState<any>(null);
   const [questions, setQuestions] = useState<string[]>([]);
   const [aiBusy, setAiBusy] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -84,17 +84,10 @@ function Page() {
     load();
   };
 
-  const runTranslate = async (language: "en" | "mn" | "ru" | "zh") => {
-    setAiBusy(true);
-    try { setTranslation(await translateJob({ data: { jobId: id, language } })); }
-    catch (e: any) { toast.error(e?.message ?? "번역 실패"); }
-    finally { setAiBusy(false); }
-  };
-
   const runScreening = async () => {
     setAiBusy(true);
     try { const res = await makeQuestions({ data: { jobId: id } }); setQuestions(res.questions ?? []); }
-    catch (e: any) { toast.error(e?.message ?? "AI 질문 생성 실패"); }
+    catch (e: any) { toast.error(e?.message ?? "AI"); }
     finally { setAiBusy(false); }
   };
 
@@ -104,26 +97,26 @@ function Page() {
     try {
       if (msg && msg.trim().length > 0) {
         const m = await moderate({ data: { text: msg, context: "application" } });
-        if (!m.allow) {
-          toast.error(`부적절한 표현이 감지되어 신청을 보낼 수 없습니다: ${m.reason}`);
-          return;
-        }
-        if (m.risk === "보통") {
-          toast.warning(`주의 표현이 감지되었습니다: ${m.reason}`);
-        }
+        if (!m.allow) { toast.error(m.reason); return; }
+        if (m.risk === "보통") { toast.warning(m.reason); }
       }
       const { error } = await supabase.from("job_applications").insert({
         job_id: job.id, seeker_id: user.id, employer_id: job.employer_id, message: msg || null,
       } as any);
       if (error) return toast.error(error.message);
-      toast.success("신청 보냄! 구인자 승인 후 연락처가 공개됩니다.");
+      toast.success("OK");
       load();
-    } finally {
-      setBusy(false);
-    }
+    } finally { setBusy(false); }
   };
 
-  if (!job) return <MobileLayout role="seeker"><div className="p-6 text-center text-sm text-muted-foreground">불러오는 중…</div></MobileLayout>;
+  // dynamic translate of job-specific Korean strings
+  const dynTexts = useMemo(() => {
+    if (!job) return [];
+    return [job.title, job.place_name, job.location, job.preparations].filter((s) => typeof s === "string" && s.trim().length > 0);
+  }, [job]);
+  const tx = useDynamicTranslate(dynTexts);
+
+  if (!job) return <MobileLayout role="seeker"><div className="p-6 text-center text-sm text-muted-foreground">{t("loading")}</div></MobileLayout>;
 
   return (
     <MobileLayout role="seeker">
@@ -132,82 +125,63 @@ function Page() {
           <img src={INDUSTRY_FALLBACK_IMAGE[job.industry] ?? INDUSTRY_FALLBACK_IMAGE.hotel} className="w-full h-56 object-cover" alt={INDUSTRY_LABEL[job.industry]} />}
         <div className="px-4 space-y-3">
           <div className="flex gap-1 flex-wrap">
-            <Badge>{INDUSTRY_LABEL[job.industry]}</Badge>
-            <Badge variant="outline">{ROLE_LABEL[job.job_role]}</Badge>
+            <Badge>{tIndustry(job.industry)}</Badge>
+            <Badge variant="outline">{tRole(job.job_role)}</Badge>
           </div>
           <div className="flex items-start justify-between gap-2">
-            <h1 className="text-xl font-bold flex-1">{job.title}</h1>
+            <h1 className="text-xl font-bold flex-1">{tx[job.title] ?? job.title}</h1>
             <Button size="sm" variant="outline" onClick={toggleFavorite} className="shrink-0">
               <Heart size={18} className={favId ? "text-rose-500 fill-rose-500" : "text-muted-foreground"} />
-              <span className="ml-1 text-xs">{favId ? "즐겨찾기됨" : "즐겨찾기"}</span>
+              <span className="ml-1 text-xs">{favId ? t("fav_title") : t("fav_title")}</span>
             </Button>
           </div>
-          <Card><CardContent className="p-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-semibold"><Languages size={16} className="text-primary" />AI 다국어 보기</div>
-            <div className="grid grid-cols-4 gap-1.5">
-              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("en")}>English</Button>
-              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("mn")}>Монгол</Button>
-              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("ru")}>Русский</Button>
-              <Button size="sm" variant="outline" disabled={aiBusy} onClick={() => runTranslate("zh")}>中文</Button>
-            </div>
-            {translation && <div className="rounded bg-muted/50 p-2 text-sm space-y-1.5">
-              <p className="font-bold text-base">{translation.title}</p>
-              {translation.summary && <p>{translation.summary}</p>}
-              <p>📍 {translation.place} · {translation.location}</p>
-              <p>🏷️ {translation.industry} · {translation.jobRole}</p>
-              <p className="text-primary font-semibold">💰 {translation.wage}</p>
-              {translation.schedule && <p>📅 {translation.schedule}</p>}
-              {translation.preparation && <p>🧰 {translation.preparation}</p>}
-              <p className="text-xs text-muted-foreground">{translation.caution}</p>
-            </div>}
-          </CardContent></Card>
           <Card><CardContent className="p-4 space-y-2 text-sm">
-            <div className="flex items-center gap-2"><MapPin size={14} className="text-muted-foreground" /><span>{job.place_name} · {job.location}</span></div>
-            <div className="flex items-center gap-2"><Wallet size={14} className="text-muted-foreground" /><span>일당 <b>{Number(job.daily_wage).toLocaleString()}원</b> (지급일: {job.pay_day})</span></div>
-            <div className="flex items-center gap-2"><Calendar size={14} className="text-muted-foreground" /><span>근무일: {formatWorkDates(job.work_dates)}</span></div>
-            {job.rooms_per_day && <div className="flex items-center gap-2">🛏️ 일일 정비 객실수: {job.rooms_per_day}개</div>}
-            {job.preparations && <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded p-2"><Wrench size={14} className="text-amber-700 mt-0.5" /><span className="font-semibold text-amber-900">준비물: <span className="font-bold">{job.preparations}</span></span></div>}
-            <div className="text-xs text-muted-foreground pt-2">📞 담당자 연락처는 승인 후 공개됩니다.</div>
+            <div className="flex items-center gap-2"><MapPin size={14} className="text-muted-foreground" /><span>{tx[job.place_name] ?? job.place_name} · {tx[job.location] ?? job.location}</span></div>
+            <div className="flex items-center gap-2"><Wallet size={14} className="text-muted-foreground" /><span>{t("daily_wage")} <b>{Number(job.daily_wage).toLocaleString()}{t("won")}</b> ({t("pay_day_label")}: {job.pay_day})</span></div>
+            <div className="flex items-center gap-2"><Calendar size={14} className="text-muted-foreground" /><span>{t("work_dates")}: {formatWorkDates(job.work_dates)}</span></div>
+            {job.rooms_per_day && <div className="flex items-center gap-2">🛏️ {t("rooms_per_day")}: {job.rooms_per_day}</div>}
+            {job.preparations && <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded p-2"><Wrench size={14} className="text-amber-700 mt-0.5" /><span className="font-semibold text-amber-900">{t("prep_label")}: <span className="font-bold">{tx[job.preparations] ?? job.preparations}</span></span></div>}
+            <div className="text-xs text-muted-foreground pt-2">{t("contact_after_approval")}</div>
           </CardContent></Card>
 
           {from === "apps" || app?.status === "confirmed" ? (
             <Card className="border-orange-500"><CardContent className="p-4">
-              <p className="font-bold text-orange-600 mb-1">✅ 승인 확정된 공고입니다</p>
-              {job.contact_phone && <p className="text-sm">담당자 연락처: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>}
+              <p className="font-bold text-orange-600 mb-1">{t("approved_confirmed_job")}</p>
+              {job.contact_phone && <p className="text-sm">{t("contact_label")}: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>}
             </CardContent></Card>
           ) : app?.status === "approved" ? (
             <Card className="border-green-500"><CardContent className="p-4">
-              <p className="font-bold text-green-700 mb-1">✅ 승인되었습니다</p>
-              <p className="text-sm">담당자 연락처: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>
+              <p className="font-bold text-green-700 mb-1">{t("approved_msg")}</p>
+              <p className="text-sm">{t("contact_label")}: <a href={`tel:${job.contact_phone}`} className="text-primary font-bold">{job.contact_phone}</a></p>
             </CardContent></Card>
           ) : app?.status === "pending" ? (
             <div className="space-y-2">
-              <Button className="w-full" disabled>신청 대기중…</Button>
-              <Button variant="outline" className="w-full" onClick={cancelApplication}>신청 취소</Button>
+              <Button className="w-full" disabled>{t("pending_btn")}</Button>
+              <Button variant="outline" className="w-full" onClick={cancelApplication}>{t("apply_cancel")}</Button>
             </div>
           ) : app?.status === "rejected" ? (
-            <Button className="w-full" disabled variant="outline">거절됨</Button>
+            <Button className="w-full" disabled variant="outline">{t("rejected_btn")}</Button>
           ) : app?.status === "cancelled" ? (
-            <Button className="w-full" disabled variant="outline">신청 취소됨</Button>
+            <Button className="w-full" disabled variant="outline">{t("cancelled_btn")}</Button>
           ) : (
             <div className="space-y-2">
-              <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />AI 신청 전 확인 질문</Button>
+              <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />{t("ai_pre_questions")}</Button>
               {questions.length > 0 && <Card className="p-3 bg-muted/40"><ul className="text-sm space-y-1 list-disc list-inside">{questions.map((q, i) => <li key={i}>{q}</li>)}</ul></Card>}
-              <Textarea placeholder="구인자에게 보낼 메시지 (선택)" value={msg} onChange={e => setMsg(e.target.value)} />
+              <Textarea placeholder={t("msg_to_employer_ph")} value={msg} onChange={e => setMsg(e.target.value)} />
               <Button
                 className="w-full text-lg font-bold py-6 text-white hover:opacity-90"
                 style={{ backgroundColor: "#1E90FF" }}
                 onClick={apply}
                 disabled={busy}
               >
-                일하고 싶어요 (신청 보내기)
+                {t("want_to_work")}
               </Button>
             </div>
           )}
           {from === "apps" ? (
-            <Button variant="ghost" className="w-full" onClick={() => nav({ to: "/seeker/applications" })}>← 신청/승인 내역으로</Button>
+            <Button variant="ghost" className="w-full" onClick={() => nav({ to: "/seeker/applications" })}>{t("back_to_apps")}</Button>
           ) : (
-            <Button variant="ghost" className="w-full" onClick={() => nav({ to: "/seeker/home" })}>← 뒤로</Button>
+            <Button variant="ghost" className="w-full" onClick={() => nav({ to: "/seeker/home" })}>{t("back")}</Button>
           )}
         </div>
       </div>

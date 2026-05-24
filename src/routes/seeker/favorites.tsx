@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
@@ -7,9 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { toast } from "sonner";
 import { Heart, MapPin } from "lucide-react";
-import { INDUSTRY_LABEL, ROLE_LABEL } from "@/lib/constants";
 import { formatWorkDatesWithWeekday } from "@/lib/job-visuals";
 
 export const Route = createFileRoute("/seeker/favorites")({
@@ -18,6 +18,7 @@ export const Route = createFileRoute("/seeker/favorites")({
 
 function Page() {
   const { user } = useAuth();
+  const { t, tIndustry, tRole } = useI18n();
   const nav = useNavigate();
   const [favs, setFavs] = useState<any[]>([]);
   const [jobsByKey, setJobsByKey] = useState<Record<string, any[]>>({});
@@ -50,20 +51,28 @@ function Page() {
   useEffect(() => { load(); }, [user]);
 
   const removeFav = async (id: string) => {
-    if (!confirm("즐겨찾기에서 삭제하시겠습니까?")) return;
+    if (!confirm(t("fav_remove_confirm"))) return;
     const { error } = await supabase.from("seeker_favorites").delete().eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success("삭제되었습니다");
+    toast.success(t("delete_done"));
     load();
   };
+
+  const dynTexts = useMemo(() => {
+    const arr: string[] = [];
+    favs.forEach(f => { if (f.place_name) arr.push(f.place_name); });
+    Object.values(jobsByKey).flat().forEach((j: any) => { if (j?.title) arr.push(j.title); if (j?.place_name) arr.push(j.place_name); });
+    return arr.slice(0, 80);
+  }, [favs, jobsByKey]);
+  const tx = useDynamicTranslate(dynTexts);
 
   return (
     <MobileLayout role="seeker">
       <div className="p-3 space-y-3">
-        <h2 className="font-bold flex items-center gap-1"><Heart size={18} className="text-rose-500 fill-rose-500" /> 즐겨찾는 일터</h2>
+        <h2 className="font-bold flex items-center gap-1"><Heart size={18} className="text-rose-500 fill-rose-500" /> {t("fav_title")}</h2>
         {favs.length === 0 && (
           <p className="text-center text-sm text-muted-foreground py-12">
-            즐겨찾는 일터가 없습니다.<br />공고 상세에서 ♥ 버튼을 눌러 등록하세요.
+            {t("fav_empty")}<br />{t("fav_hint")}
           </p>
         )}
         {favs.map((f) => {
@@ -72,15 +81,15 @@ function Page() {
             <Card key={f.id} className="p-3 space-y-2">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="font-semibold flex items-center gap-1"><MapPin size={14} className="text-muted-foreground" />{f.place_name}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">진행중 공고 {list.length}건</p>
+                  <p className="font-semibold flex items-center gap-1"><MapPin size={14} className="text-muted-foreground" />{tx[f.place_name] ?? f.place_name}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t("fav_active")} {list.length}{t("count_suffix")}</p>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => removeFav(f.id)}>
                   <Heart size={16} className="text-rose-500 fill-rose-500" />
                 </Button>
               </div>
               {list.length === 0 ? (
-                <p className="text-xs text-muted-foreground">현재 진행중인 공고가 없습니다</p>
+                <p className="text-xs text-muted-foreground">{t("fav_no_active")}</p>
               ) : (
                 <div className="space-y-1.5">
                   {list.map((j) => (
@@ -90,12 +99,12 @@ function Page() {
                       className="w-full text-left p-2 rounded border hover:bg-muted/40"
                     >
                       <div className="flex gap-1 flex-wrap mb-0.5">
-                        <Badge variant="secondary" className="text-[10px]">{INDUSTRY_LABEL[j.industry]}</Badge>
-                        <Badge variant="outline" className="text-[10px]">{ROLE_LABEL[j.job_role]}</Badge>
+                        <Badge variant="secondary" className="text-[10px]">{tIndustry(j.industry)}</Badge>
+                        <Badge variant="outline" className="text-[10px]">{tRole(j.job_role)}</Badge>
                       </div>
-                      <p className="text-sm font-semibold truncate">{j.title}</p>
+                      <p className="text-sm font-semibold truncate">{tx[j.title] ?? j.title}</p>
                       <p className="text-xs text-primary font-bold">
-                        일당 {Number(j.daily_wage).toLocaleString()}원 · {formatWorkDatesWithWeekday(j.work_dates) || "협의"}
+                        {t("daily_wage")} {Number(j.daily_wage).toLocaleString()}{t("won")} · {formatWorkDatesWithWeekday(j.work_dates) || t("to_be_arranged")}
                       </p>
                     </button>
                   ))}
