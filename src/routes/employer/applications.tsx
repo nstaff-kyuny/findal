@@ -168,6 +168,11 @@ function Page() {
           <Button size="sm" variant="outline" className="flex-1" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
         </div>
       )}
+      {a.status === "no_show" && (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => unmarkNoShow(a.id)}>노쇼 취소(복구)</Button>
+        </div>
+      )}
     </CardContent></Card>
   );
 
