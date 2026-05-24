@@ -158,7 +158,10 @@ function AuthPage() {
           </TabsList>
           <TabsContent value="login" className="space-y-4 mt-5">
             <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
-            <div><Label className="text-base">비밀번호 (Password)</Label><Input className="h-14 text-base mt-1" type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
+            <div>
+              <Label className="text-base">비밀번호 (Password)</Label>
+              <PasswordInput value={loginPw} onChange={setLoginPw} show={showLoginPw} setShow={setShowLoginPw} />
+            </div>
             <Button className="w-full h-14 text-lg" onClick={signIn} disabled={loading}>로그인 (Sign in)</Button>
             <button type="button" onClick={forgotPassword} className="w-full text-sm text-primary hover:underline mt-1">
               비밀번호를 잊으셨나요? 비밀번호 재설정
