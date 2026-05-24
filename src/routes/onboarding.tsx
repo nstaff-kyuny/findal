@@ -112,7 +112,24 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
   };
   return (
     <Card><CardContent className="p-4 space-y-4">
-      <h2 className="font-bold text-lg">구직자 정보</h2>
+      <h2 className="font-bold text-lg">구직자 정보 / Profile</h2>
+      <div>
+        <Label className="text-base">🌐 사용 언어 / Language</Label>
+        <div className="grid grid-cols-5 gap-1.5 mt-2">
+          {(["ko","en","mn","ru","zh"] as Lang[]).map((l) => (
+            <Button
+              key={l}
+              type="button"
+              variant={lang === l ? "default" : "outline"}
+              className="h-11 text-xs px-1"
+              onClick={() => setLang(l)}
+            >
+              <span className="mr-0.5">{LANG_FLAG[l]}</span>{LANG_LABEL[l]}
+            </Button>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground mt-1">메뉴와 공고가 선택한 언어로 표시됩니다.</p>
+      </div>
       <p className="text-xs text-muted-foreground bg-muted/40 p-2 rounded">추천인 코드를 제외한 모든 항목은 필수입니다. 모두 입력해야 "저장하고 시작하기"가 활성화됩니다.</p>
       <div><Label className="text-base">신분</Label>
         <Select value={nationality} onValueChange={(v) => { setNationality(v); if (v === "korean") setVisa(""); }}>
