@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  LogOut, Smartphone, Monitor, RefreshCw, Megaphone, Plus,
+  LogOut, Monitor, Megaphone, Plus,
 } from "lucide-react";
 import {
   INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS, CREDIT_PACKS,
@@ -117,7 +117,7 @@ function ManagerPage() {
     return <LoginForm />;
   }
 
-  const previewSrc = TAB_META[tab].previewSrc;
+  
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
@@ -132,9 +132,8 @@ function ManagerPage() {
         </Button>
       </header>
 
-      <div className="flex-1 flex min-h-0">
-        {/* Left 2/3 - Desktop management UI */}
-        <div className="flex-[2] min-w-0 border-r bg-background flex flex-col">
+      <div className="flex-1 flex justify-center min-h-0">
+        <div className="w-full max-w-5xl bg-background border-x flex flex-col min-h-0">
           <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} className="flex-1 flex flex-col min-h-0">
             <div className="px-4 pt-3 border-b">
               <TabsList className="flex-wrap h-auto">
@@ -164,28 +163,6 @@ function ManagerPage() {
               </TabsContent>
             </div>
           </Tabs>
-        </div>
-
-        {/* Right 1/3 - Mobile app preview */}
-        <div className="flex-[1] min-w-[360px] bg-muted/30 flex flex-col">
-          <div className="px-4 py-2 border-b bg-background flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-semibold">
-              <Smartphone size={16} />앱 미리보기
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => setPhoneKey((k) => k + 1)} title="새로고침">
-              <RefreshCw size={14} />
-            </Button>
-          </div>
-          <div className="flex-1 overflow-auto flex items-start justify-center p-4">
-            <div className="w-full max-w-[420px] h-[800px] bg-background rounded-2xl shadow-xl border overflow-hidden">
-              <iframe
-                key={phoneKey}
-                src={previewSrc}
-                title="앱 미리보기"
-                className="w-full h-full border-0"
-              />
-            </div>
-          </div>
         </div>
       </div>
     </div>
