@@ -125,16 +125,17 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           <SectionHeader>{LANG_FLAG[lang]} 언어 / Language</SectionHeader>
           <div className="px-4 py-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold"><Languages size={16} /> <span>{(["ko","en","mn","ru","zh"] as Lang[]).map(() => null) && "사용 언어 선택"}</span></div>
-            <div className="grid grid-cols-5 gap-1.5">
+            <div className="grid gap-2 [grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr))]">
               {(["ko","en","mn","ru","zh"] as Lang[]).map((l) => (
                 <Button
                   key={l}
                   size="sm"
                   variant={lang === l ? "default" : "outline"}
-                  className="text-xs h-9 px-1"
+                  className="min-w-0 h-auto min-h-11 px-2 py-2 text-[13px] leading-tight"
                   onClick={() => setLang(l).then(() => toast.success(`${LANG_FLAG[l]} ${LANG_LABEL[l]}`))}
                 >
-                  <span className="mr-0.5">{LANG_FLAG[l]}</span>{LANG_LABEL[l]}
+                  <span className="mr-1 shrink-0">{LANG_FLAG[l]}</span>
+                  <span className="min-w-0 truncate">{LANG_LABEL[l]}</span>
                 </Button>
               ))}
             </div>
