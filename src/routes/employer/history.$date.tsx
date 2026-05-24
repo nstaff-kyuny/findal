@@ -22,7 +22,7 @@ export const Route = createFileRoute("/employer/history/$date")({
 
 const STATUS_LABEL: Record<string, string> = {
   approved: "승인",
-  confirmed: "✅ 확정(온데요)",
+  confirmed: "✅ 출근 확정",
   no_show: "노쇼",
 };
 const STATUS_CLASS: Record<string, string> = {

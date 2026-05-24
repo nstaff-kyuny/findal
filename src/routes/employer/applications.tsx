@@ -107,7 +107,13 @@ function Page() {
     if (error) return toast.error(error.message);
     toast.success("노쇼 처리됨"); load();
   };
-  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 확정(온데요)", no_show:"노쇼" };
+  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 출근 확정", no_show:"노쇼" };
+  const unmarkNoShow = async (id: string) => {
+    if (!confirm("노쇼 표시를 취소하고 이전 상태로 복구하시겠습니까?")) return;
+    const { error } = await supabase.rpc("unmark_no_show", { _app_id: id } as any);
+    if (error) return toast.error(error.message);
+    toast.success("노쇼 표시가 취소되었습니다"); load();
+  };
   const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
   const STATUS_CLASS: Record<string,string> = { confirmed: "bg-green-600 hover:bg-green-600 text-white border-transparent" };
 
@@ -160,6 +166,11 @@ function Page() {
             </a>
           )}
           <Button size="sm" variant="outline" className="flex-1" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
+        </div>
+      )}
+      {a.status === "no_show" && (
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" className="flex-1" onClick={() => unmarkNoShow(a.id)}>노쇼 취소(복구)</Button>
         </div>
       )}
     </CardContent></Card>
