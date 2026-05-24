@@ -95,6 +95,35 @@ export const UI: Dict = {
   pick_language: { ko: "사용 언어 선택", en: "Choose your language", mn: "Хэлээ сонгоно уу", ru: "Выберите язык", zh: "选择您的语言" },
   pick_language_help: { ko: "메뉴와 공고가 선택한 언어로 표시됩니다.", en: "Menus and job posts will be shown in this language.", mn: "Цэс ба зарууд сонгосон хэлээр харагдана.", ru: "Меню и вакансии будут на этом языке.", zh: "菜单与职位将以所选语言显示。" },
   save: { ko: "저장", en: "Save", mn: "Хадгалах", ru: "Сохранить", zh: "保存" },
+  cancel: { ko: "취소", en: "Cancel", mn: "Цуцлах", ru: "Отмена", zh: "取消" },
+
+  // job detail
+  ai_multilang_view: { ko: "AI 다국어 보기", en: "AI multilingual view", mn: "AI олон хэлээр", ru: "AI перевод", zh: "AI 多语言" },
+  pay_day_label: { ko: "지급일", en: "Pay day", mn: "Цалин олгох өдөр", ru: "День выплаты", zh: "发薪日" },
+  rooms_per_day: { ko: "일일 정비 객실수", en: "Rooms per day", mn: "Өдөрт цэвэрлэх өрөө", ru: "Комнат в день", zh: "每日客房数" },
+  prep_label: { ko: "준비물", en: "Items to bring", mn: "Авч ирэх зүйл", ru: "Что взять с собой", zh: "需携带物品" },
+  contact_after_approval: { ko: "📞 담당자 연락처는 승인 후 공개됩니다.", en: "📞 Contact info is revealed after approval.", mn: "📞 Холбоо барих мэдээллийг зөвшөөрсний дараа харуулна.", ru: "📞 Контакты будут видны после одобрения.", zh: "📞 联系方式将在批准后公开。" },
+  approved_confirmed_job: { ko: "✅ 승인 확정된 공고입니다", en: "✅ Confirmed job", mn: "✅ Баталгаажсан зар", ru: "✅ Подтверждённая вакансия", zh: "✅ 已确认的职位" },
+  approved_msg: { ko: "✅ 승인되었습니다", en: "✅ Approved", mn: "✅ Зөвшөөрсөн", ru: "✅ Одобрено", zh: "✅ 已批准" },
+  contact_label: { ko: "담당자 연락처", en: "Contact", mn: "Холбоо барих", ru: "Контакт", zh: "联系人" },
+  pending_btn: { ko: "신청 대기중…", en: "Pending…", mn: "Хүлээгдэж буй…", ru: "Ожидание…", zh: "等待中…" },
+  rejected_btn: { ko: "거절됨", en: "Rejected", mn: "Татгалзсан", ru: "Отклонено", zh: "已拒绝" },
+  cancelled_btn: { ko: "신청 취소됨", en: "Cancelled", mn: "Цуцалсан", ru: "Отменено", zh: "已取消" },
+  ai_pre_questions: { ko: "AI 신청 전 확인 질문", en: "AI pre-apply questions", mn: "AI урьдчилсан асуулт", ru: "AI вопросы перед заявкой", zh: "AI 申请前问题" },
+  msg_to_employer_ph: { ko: "구인자에게 보낼 메시지 (선택)", en: "Message to employer (optional)", mn: "Ажил олгогчид илгээх мессеж (заавал биш)", ru: "Сообщение работодателю (необязательно)", zh: "给雇主的留言（可选）" },
+  want_to_work: { ko: "일하고 싶어요 (신청 보내기)", en: "I want to work (Apply)", mn: "Ажиллахыг хүсэж байна (Хүсэлт)", ru: "Хочу работать (Подать заявку)", zh: "我想工作（提交申请）" },
+  back_to_apps: { ko: "← 신청/승인 내역으로", en: "← Back to applications", mn: "← Хүсэлт рүү буцах", ru: "← К моим заявкам", zh: "← 返回申请记录" },
+  back: { ko: "← 뒤로", en: "← Back", mn: "← Буцах", ru: "← Назад", zh: "← 返回" },
+  noshow_marked: { ko: "⚠️ 노쇼 처리됨", en: "⚠️ Marked as no-show", mn: "⚠️ Ирээгүй гэж тэмдэглэв", ru: "⚠️ Отмечено как не пришёл", zh: "⚠️ 已标记缺席" },
+  see_approved_job: { ko: "일자리(승인) 확인", en: "View approved job", mn: "Зөвшөөрсөн зар үзэх", ru: "Открыть одобренную вакансию", zh: "查看已批准的职位" },
+  delete_done: { ko: "삭제되었습니다", en: "Deleted", mn: "Устгасан", ru: "Удалено", zh: "已删除" },
+  total_count: { ko: "총", en: "Total", mn: "Нийт", ru: "Всего", zh: "共" },
+  no_records: { ko: "기록이 없습니다", en: "No records", mn: "Бичлэг алга", ru: "Нет записей", zh: "暂无记录" },
+  pdf_download: { ko: "PDF 다운로드", en: "Download PDF", mn: "PDF татах", ru: "Скачать PDF", zh: "下载PDF" },
+  confirmed_only_note: { ko: "확정 된 기록만 표시됩니다.", en: "Only confirmed records are shown.", mn: "Зөвхөн баталгаажсан бичлэг.", ru: "Показаны только подтверждённые.", zh: "仅显示已确认的记录。" },
+
+  // onboarding
+  onb_choose_lang: { ko: "사용 언어를 먼저 선택해 주세요", en: "Please choose your language first", mn: "Эхлээд хэлээ сонгоно уу", ru: "Сначала выберите язык", zh: "请先选择您的语言" },
 };
 
 export function t(key: string, lang: Lang): string {
