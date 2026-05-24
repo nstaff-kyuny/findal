@@ -43,6 +43,11 @@ function Page() {
     if (user) {
       const { data: a } = await supabase.from("job_applications").select("*").eq("job_id", id).eq("seeker_id", user.id).maybeSingle();
       setApp(a);
+      // contact_phone is only readable from job_contacts when approved/confirmed
+      if (a && (a.status === "approved" || a.status === "confirmed")) {
+        const { data: jc } = await supabase.from("job_contacts").select("contact_phone").eq("job_id", id).maybeSingle();
+        if (jc?.contact_phone) setJob((prev: any) => prev ? { ...prev, contact_phone: jc.contact_phone } : prev);
+      }
       if (data) {
         const { data: fav } = await supabase.from("seeker_favorites").select("id")
           .eq("seeker_id", user.id).eq("employer_id", data.employer_id).eq("place_name", data.place_name).maybeSingle();

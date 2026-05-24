@@ -30,6 +30,10 @@ function Page() {
 
   useEffect(() => { (async () => {
     const { data } = await supabase.from("jobs").select("*").eq("id", id).single();
+    if (data) {
+      const { data: jc } = await supabase.from("job_contacts").select("contact_phone").eq("job_id", id).maybeSingle();
+      (data as any).contact_phone = jc?.contact_phone ?? "";
+    }
     setJob(data);
     setLoading(false);
   })(); }, [id]);

@@ -37,9 +37,17 @@ function Page() {
     const list = appsData ?? [];
     const jobIds = Array.from(new Set(list.map((a: any) => a.job_id)));
     const jobsRes = jobIds.length
-      ? await supabase.from("jobs").select("id, title, place_name, daily_wage, contact_phone, work_dates").in("id", jobIds)
+      ? await supabase.from("jobs").select("id, title, place_name, daily_wage, work_dates").in("id", jobIds)
       : { data: [] as any[] };
-    const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
+    // Fetch contact_phone only for approved/confirmed applications (RLS enforces this)
+    const approvedJobIds = list
+      .filter((a: any) => a.status === "approved" || a.status === "confirmed")
+      .map((a: any) => a.job_id);
+    const contactsRes = approvedJobIds.length
+      ? await supabase.from("job_contacts").select("job_id, contact_phone").in("job_id", approvedJobIds)
+      : { data: [] as any[] };
+    const contactsMap = new Map((contactsRes.data ?? []).map((c: any) => [c.job_id, c.contact_phone]));
+    const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, { ...j, contact_phone: contactsMap.get(j.id) ?? null }]));
     setApps(list.map((a: any) => ({ ...a, jobs: jobsMap.get(a.job_id) })));
     const { data: p } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
     setProfile(p);
