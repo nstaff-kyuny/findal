@@ -14,6 +14,38 @@ async function assertAdmin(userId: string) {
   if (!data) throw new Error("관리자 권한이 필요합니다");
 }
 
+async function assertAdminOrManager(userId: string) {
+  const { data, error } = await supabaseAdmin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "manager"]);
+  if (error) throw new Error(error.message);
+  if (!data || data.length === 0) throw new Error("관리자/보조관리자 권한이 필요합니다");
+}
+
+export const staffListUserEmails = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({ userIds: z.array(z.string().uuid()).max(2000) }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdminOrManager(context.userId);
+    const map: Record<string, string> = {};
+    let page = 1;
+    const perPage = 1000;
+    const wanted = new Set(data.userIds);
+    while (wanted.size > 0) {
+      const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage });
+      if (error) throw new Error(error.message);
+      for (const u of list.users) {
+        if (wanted.has(u.id)) { map[u.id] = u.email ?? ""; wanted.delete(u.id); }
+      }
+      if (list.users.length < perPage) break;
+      page++;
+      if (page > 20) break;
+    }
+    return { emails: map };
+  });
+
 export const adminCreateUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
