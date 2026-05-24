@@ -19,6 +19,7 @@ import { Route as InquiryRouteImport } from './routes/inquiry'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as Admin2RouteImport } from './routes/admin2'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeekerMeRouteImport } from './routes/seeker/me'
@@ -87,6 +88,11 @@ const EventsRoute = EventsRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Admin2Route = Admin2RouteImport.update({
+  id: '/admin2',
+  path: '/admin2',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -188,6 +194,7 @@ const EmployerJobsEditIdRoute = EmployerJobsEditIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
+  '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
@@ -284,6 +293,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/admin2'
     | '/auth'
     | '/events'
     | '/faq'
@@ -315,6 +325,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/admin'
+    | '/admin2'
     | '/auth'
     | '/events'
     | '/faq'
@@ -346,6 +357,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin2'
     | '/auth'
     | '/events'
     | '/faq'
@@ -378,6 +390,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
+  Admin2Route: typeof Admin2Route
   AuthRoute: typeof AuthRoute
   EventsRoute: typeof EventsRoute
   FaqRoute: typeof FaqRoute
@@ -476,6 +489,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin2': {
+      id: '/admin2'
+      path: '/admin2'
+      fullPath: '/admin2'
+      preLoaderRoute: typeof Admin2RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -629,6 +649,7 @@ const EmployerHistoryRouteWithChildren = EmployerHistoryRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
+  Admin2Route: Admin2Route,
   AuthRoute: AuthRoute,
   EventsRoute: EventsRoute,
   FaqRoute: FaqRoute,
