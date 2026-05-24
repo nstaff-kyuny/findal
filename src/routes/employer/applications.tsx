@@ -107,7 +107,7 @@ function Page() {
     if (error) return toast.error(error.message);
     toast.success("노쇼 처리됨"); load();
   };
-  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 출근 확정", no_show:"노쇼" };
+  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"출근 확정", no_show:"노쇼" };
   const unmarkNoShow = async (id: string) => {
     if (!confirm("노쇼 표시를 취소하고 이전 상태로 복구하시겠습니까?")) return;
     const { error } = await supabase.rpc("unmark_no_show", { _app_id: id } as any);
