@@ -355,6 +355,30 @@ export type Database = {
           },
         ]
       }
+      job_contacts: {
+        Row: {
+          contact_phone: string
+          created_at: string
+          employer_id: string
+          job_id: string
+          updated_at: string
+        }
+        Insert: {
+          contact_phone: string
+          created_at?: string
+          employer_id: string
+          job_id: string
+          updated_at?: string
+        }
+        Update: {
+          contact_phone?: string
+          created_at?: string
+          employer_id?: string
+          job_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       jobs: {
         Row: {
           contact_phone: string
