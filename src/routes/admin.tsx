@@ -648,6 +648,7 @@ function UsersTab() {
   const [newName, setNewName] = useState("");
   const [newPhone, setNewPhone] = useState("");
   const [newRole, setNewRole] = useState<"seeker" | "employer">("seeker");
+  const [newGender, setNewGender] = useState<"M" | "F">("M");
   const [newReferrer, setNewReferrer] = useState("");
   const [newRegions, setNewRegions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
