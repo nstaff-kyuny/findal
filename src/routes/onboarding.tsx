@@ -115,16 +115,17 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
       <h2 className="font-bold text-lg">구직자 정보 / Profile</h2>
       <div>
         <Label className="text-base">🌐 사용 언어 / Language</Label>
-        <div className="grid grid-cols-5 gap-1.5 mt-2">
+        <div className="grid grid-cols-5 gap-1 mt-2">
           {(["ko","en","mn","ru","zh"] as Lang[]).map((l) => (
             <Button
               key={l}
               type="button"
               variant={lang === l ? "default" : "outline"}
-              className="h-11 text-xs px-1"
+              className="h-auto min-h-14 py-1.5 px-0.5 flex flex-col items-center justify-center gap-0.5 leading-tight"
               onClick={() => setLang(l)}
             >
-              <span className="mr-0.5">{LANG_FLAG[l]}</span>{LANG_LABEL[l]}
+              <span className="text-base">{LANG_FLAG[l]}</span>
+              <span className="text-[10px] truncate max-w-full">{LANG_LABEL[l]}</span>
             </Button>
           ))}
         </div>
