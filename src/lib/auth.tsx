@@ -42,8 +42,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const finishWithSession = async (s: Session | null) => {
       if (cancelled) return;
+      // 세션이 새로 들어오면 roles 로드가 끝날 때까지 loading=true 로 잠금
+      // (그렇지 않으면 Index가 user는 있고 roles=[] 인 상태를 보고 /onboarding 으로 보내버림)
+      if (s?.user) setLoading(true);
       setSession(s);
-      // 역할까지 로드한 뒤에 loading 해제 (라우팅 race 방지)
       try {
         await loadRoles(s?.user?.id);
       } finally {
