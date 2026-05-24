@@ -11,6 +11,7 @@ function Index() {
     if (loading) return;
     if (!user) { nav({ to: "/auth" }); return; }
     if (roles.includes("admin")) { nav({ to: "/admin" }); return; }
+    if (roles.includes("manager")) { nav({ to: "/admin2" }); return; }
     if (roles.includes("employer")) { nav({ to: "/employer/home" }); return; }
     if (roles.includes("seeker")) { nav({ to: "/seeker/featured" }); return; }
     nav({ to: "/onboarding" });
