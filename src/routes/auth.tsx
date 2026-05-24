@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Search, Building2, CheckCircle2 } from "lucide-react";
+import { Search, Building2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeReferrerCode } from "@/lib/utils";
 
