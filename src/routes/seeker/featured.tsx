@@ -153,27 +153,27 @@ function Page() {
     <MobileLayout role="seeker">
       <div className="p-3 space-y-5">
         <Card className="p-3 bg-primary/5 border-primary/30">
-          <p className="text-xs text-muted-foreground">내 선호 지역</p>
+          <p className="text-xs text-muted-foreground">{t("my_pref_regions")}</p>
           <div className="flex flex-wrap gap-1 mt-1">
             {prefRegions.length === 0
-              ? <span className="text-sm text-muted-foreground">설정된 선호 지역이 없습니다 · 전체 공고 표시</span>
-              : prefRegions.map(r => <Badge key={r} variant="default" className="text-xs">{r}</Badge>)}
+              ? <span className="text-sm text-muted-foreground">{t("no_pref_region")}</span>
+              : prefRegions.map(r => <Badge key={r} variant="default" className="text-xs">{tRegion(r)}</Badge>)}
           </div>
         </Card>
         <section>
-          <h2 className="font-bold mb-2 flex items-center gap-1">⭐ 프리미엄 추천</h2>
-          {promoted.length === 0 ? <p className="text-xs text-muted-foreground">진행중인 추천 공고가 없습니다</p>
+          <h2 className="font-bold mb-2 flex items-center gap-1">{t("premium_section")}</h2>
+          {promoted.length === 0 ? <p className="text-xs text-muted-foreground">{t("empty_promoted")}</p>
             : <div className="grid grid-cols-2 gap-2">{promoted.map(premiumCard)}</div>}
         </section>
         <section>
-          <h2 className="font-bold mb-2">🎲 오늘의 추천</h2>
-          {random.length === 0 ? <p className="text-xs text-muted-foreground">공고가 없습니다</p>
+          <h2 className="font-bold mb-2">{t("today_section")}</h2>
+          {random.length === 0 ? <p className="text-xs text-muted-foreground">{t("empty_jobs")}</p>
             : <div className="grid grid-cols-2 gap-2">{random.map(todayCard)}</div>}
         </section>
         <section>
-          <h2 className="font-bold mb-2">📢 광고</h2>
+          <h2 className="font-bold mb-2">{t("ad_section")}</h2>
           <div className="space-y-2">
-            {ads.length === 0 && <p className="text-xs text-muted-foreground">현재 광고가 없습니다</p>}
+            {ads.length === 0 && <p className="text-xs text-muted-foreground">{t("empty_ads")}</p>}
             {ads.map(a => (
               <a key={a.id} href={a.link_url ?? "#"} target="_blank" rel="noopener" className="block">
                 <Card className="p-3 flex items-center gap-3">
