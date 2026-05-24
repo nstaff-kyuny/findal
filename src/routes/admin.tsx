@@ -833,6 +833,7 @@ function UsersTab() {
 
 function CreditsTab() {
   const [employers, setEmployers] = useState<any[]>([]);
+  const [q, setQ] = useState("");
   const load = async () => {
     const { data } = await supabase.from("employer_profiles").select("*").order("credits");
     const ids = (data ?? []).map((r: any) => r.user_id);
@@ -851,13 +852,22 @@ function CreditsTab() {
     if (error) return toast.error(error.message);
     toast.success("처리 완료"); load();
   };
+  const filtered = employers.filter(e => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (e.company_name ?? "").toLowerCase().includes(s)
+        || (e.profiles?.full_name ?? "").toLowerCase().includes(s);
+  });
   return (
     <Card className="mt-4"><CardContent className="p-4">
-      <h3 className="font-bold mb-3">크레딧 관리</h3>
+      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+        <h3 className="font-bold">크레딧 관리 ({filtered.length}/{employers.length})</h3>
+        <Input placeholder="업체명/담당자 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+      </div>
       <table className="w-full text-sm">
         <thead><tr className="text-left border-b"><th className="py-2">회사</th><th>담당자</th><th>크레딧</th><th></th></tr></thead>
         <tbody>
-          {employers.map(e => (
+          {filtered.map(e => (
             <tr key={e.user_id} className="border-b">
               <td className="py-2">{e.company_name}</td>
               <td>{e.profiles?.full_name}</td>
@@ -870,6 +880,7 @@ function CreditsTab() {
     </CardContent></Card>
   );
 }
+
 
 function ReferrersTab() {
   const updateReferrer = useServerFn(adminUpdateReferrer);
@@ -965,11 +976,22 @@ function ReferrersTab() {
     a.href = url; a.download = `추천인_리스트_${new Date().toISOString().slice(0,10)}.xlsx`;
     a.click(); URL.revokeObjectURL(url);
   };
+  const [q, setQ] = useState("");
+  const filteredList = list.filter(r => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (r.code ?? "").toLowerCase().includes(s)
+        || (r.name ?? "").toLowerCase().includes(s)
+        || (r.phone ?? "").toLowerCase().includes(s);
+  });
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-bold">추천인 관리</h3>
-        <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+      <div className="flex justify-between items-center gap-2 flex-wrap">
+        <h3 className="font-bold">추천인 관리 ({filteredList.length}/{list.length})</h3>
+        <div className="flex gap-2">
+          <Input placeholder="코드/이름/연락처 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+          <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+        </div>
       </div>
       <div className="grid grid-cols-4 gap-2">
         <Input placeholder="코드 (영문 대문자/숫자, 예: REF1234)" value={code} onChange={e => setCode(normalizeReferrerCode(e.target.value))} />
@@ -980,7 +1002,7 @@ function ReferrersTab() {
       <table className="w-full text-sm">
         <thead><tr className="text-left border-b"><th className="py-2">코드</th><th>이름</th><th>연락처</th><th>가입자</th><th></th></tr></thead>
         <tbody>
-          {list.map(r => {
+          {filteredList.map(r => {
             const users = signups[r.code] ?? [];
             const isOpen = expanded[r.id];
             const toggle = () => setExpanded(s => ({ ...s, [r.id]: !s[r.id] }));

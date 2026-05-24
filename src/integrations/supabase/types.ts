@@ -508,6 +508,45 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_programs: {
+        Row: {
+          active: boolean
+          auto_recharge_amount: number
+          auto_recharge_threshold: number
+          created_at: string
+          employer_id: string
+          id: string
+          last_monthly_grant_at: string | null
+          monthly_credits: number
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          auto_recharge_amount?: number
+          auto_recharge_threshold?: number
+          created_at?: string
+          employer_id: string
+          id?: string
+          last_monthly_grant_at?: string | null
+          monthly_credits?: number
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          auto_recharge_amount?: number
+          auto_recharge_threshold?: number
+          created_at?: string
+          employer_id?: string
+          id?: string
+          last_monthly_grant_at?: string | null
+          monthly_credits?: number
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -721,11 +760,12 @@ export type Database = {
         }
         Returns: Json
       }
+      run_partner_monthly_grants: { Args: never; Returns: Json }
       seeker_confirm_application: { Args: { _app_id: string }; Returns: Json }
       unmark_no_show: { Args: { _app_id: string }; Returns: Json }
     }
     Enums: {
-      app_role: "seeker" | "employer" | "admin"
+      app_role: "seeker" | "employer" | "admin" | "manager"
       application_status:
         | "pending"
         | "approved"
@@ -739,6 +779,8 @@ export type Database = {
         | "promotion_use"
         | "admin_grant"
         | "signup_bonus"
+        | "partner_monthly"
+        | "partner_recharge"
       experience_level: "lt5" | "gte5"
       industry:
         | "hotel"
@@ -878,7 +920,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["seeker", "employer", "admin"],
+      app_role: ["seeker", "employer", "admin", "manager"],
       application_status: [
         "pending",
         "approved",
@@ -893,6 +935,8 @@ export const Constants = {
         "promotion_use",
         "admin_grant",
         "signup_bonus",
+        "partner_monthly",
+        "partner_recharge",
       ],
       experience_level: ["lt5", "gte5"],
       industry: [
