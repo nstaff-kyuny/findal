@@ -96,16 +96,20 @@ function AllUsersView() {
     (async () => {
       const { data: profs } = await supabase.from("profiles").select("id, full_name, phone, created_at");
       const { data: ur } = await supabase.from("user_roles").select("user_id, role");
-      const { data: emps } = await supabase.from("employer_profiles").select("user_id, company_name, manager_name, credits");
+      const { data: emps } = await supabase.from("employer_profiles").select("user_id, company_name, manager_name, credits, referrer_code");
+      const { data: seekers } = await supabase.from("seeker_profiles").select("user_id, referrer_code");
       const rmap: Record<string, string[]> = {};
       (ur ?? []).forEach((r: any) => { (rmap[r.user_id] ||= []).push(r.role); });
       const emap: Record<string, any> = {};
       (emps ?? []).forEach((e: any) => { emap[e.user_id] = e; });
+      const smap: Record<string, any> = {};
+      (seekers ?? []).forEach((s: any) => { smap[s.user_id] = s; });
       setRows((profs ?? []).map((p: any) => ({
         id: p.id, full_name: p.full_name, phone: p.phone,
         roles: (rmap[p.id] ?? []).join(","),
         company_name: emap[p.id]?.company_name ?? "",
         credits: emap[p.id]?.credits ?? "",
+        referrer_code: smap[p.id]?.referrer_code ?? emap[p.id]?.referrer_code ?? "",
         created_at: p.created_at,
       })));
     })();
@@ -115,19 +119,20 @@ function AllUsersView() {
     const s = q.toLowerCase();
     return (r.full_name ?? "").toLowerCase().includes(s)
         || (r.phone ?? "").toLowerCase().includes(s)
-        || (r.company_name ?? "").toLowerCase().includes(s);
+        || (r.company_name ?? "").toLowerCase().includes(s)
+        || (r.referrer_code ?? "").toLowerCase().includes(s);
   });
   return (
     <Card className="mt-4"><CardContent className="p-4">
       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <h3 className="font-bold">전체 사용자 ({filtered.length}/{rows.length})</h3>
         <div className="flex gap-2">
-          <Input placeholder="이름/연락처/업체명 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+          <Input placeholder="이름/연락처/업체명/추천인코드 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
           <Button size="sm" variant="outline" onClick={() => downloadXlsx(filtered, "전체사용자", `전체사용자_${new Date().toISOString().slice(0,10)}.xlsx`)}><Download size={14} className="mr-1" />엑셀</Button>
         </div>
       </div>
       <table className="w-full text-sm">
-        <thead><tr className="text-left border-b"><th className="py-2">이름</th><th>연락처</th><th>역할</th><th>업체명</th><th>크레딧</th><th>가입일</th></tr></thead>
+        <thead><tr className="text-left border-b"><th className="py-2">이름</th><th>연락처</th><th>역할</th><th>업체명</th><th>크레딧</th><th>추천인</th><th>가입일</th></tr></thead>
         <tbody>
           {filtered.map(r => (
             <tr key={r.id} className="border-b">
@@ -136,6 +141,7 @@ function AllUsersView() {
               <td><div className="flex gap-1 flex-wrap">{(r.roles ?? "").split(",").filter(Boolean).map((x: string) => <Badge key={x} variant="outline">{x}</Badge>)}</div></td>
               <td>{r.company_name}</td>
               <td>{r.credits}</td>
+              <td className="font-mono text-xs">{r.referrer_code || "-"}</td>
               <td className="text-xs">{r.created_at ? new Date(r.created_at).toLocaleDateString("ko-KR") : "-"}</td>
             </tr>
           ))}
@@ -198,31 +204,76 @@ function CreditsView() {
 
 function ReferrersView() {
   const [rows, setRows] = useState<any[]>([]);
-  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [signups, setSignups] = useState<Record<string, any[]>>({});
   const [q, setQ] = useState("");
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("referrers").select("*").order("created_at", { ascending: false });
       setRows(data ?? []);
-      const { data: seekers } = await supabase.from("seeker_profiles").select("referrer_code");
-      const c: Record<string, number> = {};
-      (seekers ?? []).forEach((s: any) => { if (s.referrer_code) c[s.referrer_code] = (c[s.referrer_code] ?? 0) + 1; });
-      setCounts(c);
+      const { data: seekers } = await supabase.from("seeker_profiles").select("user_id, referrer_code, created_at");
+      const uids = (seekers ?? []).filter((s: any) => s.referrer_code).map((s: any) => s.user_id);
+      const pmap: Record<string, any> = {};
+      if (uids.length) {
+        const { data: profs } = await supabase.from("profiles").select("id, full_name, phone").in("id", uids);
+        (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
+      }
+      const map: Record<string, any[]> = {};
+      (seekers ?? []).forEach((s: any) => {
+        if (!s.referrer_code) return;
+        const p = pmap[s.user_id] ?? {};
+        (map[s.referrer_code] ||= []).push({ user_id: s.user_id, full_name: p.full_name ?? "-", phone: p.phone ?? "-", signed_up_at: s.created_at });
+      });
+      setSignups(map);
     })();
   }, []);
+  const counts: Record<string, number> = {};
+  Object.entries(signups).forEach(([k, v]) => { counts[k] = v.length; });
   const filtered = rows.filter(r => {
     if (!q) return true;
     const s = q.toLowerCase();
     return (r.code ?? "").toLowerCase().includes(s) || (r.name ?? "").toLowerCase().includes(s) || (r.phone ?? "").toLowerCase().includes(s);
   });
-  const exportRows = filtered.map(r => ({ code: r.code, name: r.name, phone: r.phone, signups: counts[r.code] ?? 0, active: r.active ? "Y" : "N", note: r.note }));
+  const exportXlsx = async () => {
+    const { staffListUserEmails } = await import("@/lib/admin-users.functions");
+    const allUids = Array.from(new Set(Object.values(signups).flat().map((u: any) => u.user_id)));
+    let emails: Record<string, string> = {};
+    if (allUids.length) {
+      try { const res = await staffListUserEmails({ data: { userIds: allUids } }); emails = (res as any).emails ?? {}; } catch {}
+    }
+    const wb = new ExcelJS.Workbook();
+    const ws1 = wb.addWorksheet("추천인");
+    ws1.columns = [
+      { header: "코드", key: "code" }, { header: "이름", key: "name" },
+      { header: "연락처", key: "phone" }, { header: "가입자수", key: "count" },
+      { header: "활성", key: "active" }, { header: "비고", key: "note" },
+    ];
+    filtered.forEach(r => ws1.addRow({ code: r.code, name: r.name, phone: r.phone, count: counts[r.code] ?? 0, active: r.active ? "Y" : "N", note: r.note }));
+    const ws2 = wb.addWorksheet("가입자");
+    ws2.columns = [
+      { header: "추천인코드", key: "code" }, { header: "추천인이름", key: "refName" },
+      { header: "가입자이름", key: "userName" }, { header: "가입자아이디(이메일)", key: "userEmail" },
+      { header: "가입자연락처", key: "userPhone" }, { header: "가입일", key: "signedUp" },
+    ];
+    filtered.forEach(r => {
+      (signups[r.code] ?? []).forEach((u: any) => ws2.addRow({
+        code: r.code, refName: r.name, userName: u.full_name, userEmail: emails[u.user_id] ?? "",
+        userPhone: u.phone, signedUp: new Date(u.signed_up_at).toLocaleString("ko-KR"),
+      }));
+    });
+    const buf = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `추천인_${new Date().toISOString().slice(0,10)}.xlsx`; a.click();
+    URL.revokeObjectURL(url);
+  };
   return (
     <Card className="mt-4"><CardContent className="p-4">
       <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
         <h3 className="font-bold">추천인 ({filtered.length}/{rows.length})</h3>
         <div className="flex gap-2">
           <Input placeholder="코드/이름/연락처 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
-          <Button size="sm" variant="outline" onClick={() => downloadXlsx(exportRows, "추천인", `추천인_${new Date().toISOString().slice(0,10)}.xlsx`)}><Download size={14} className="mr-1" />엑셀</Button>
+          <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀</Button>
         </div>
       </div>
       <table className="w-full text-sm">
