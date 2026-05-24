@@ -204,8 +204,6 @@ function AuthPage() {
             <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
               <Label className="text-base">비밀번호 (Password)</Label>
-            <div>
-              <Label className="text-base">비밀번호 (Password)</Label>
               <PasswordInput value={password} onChange={setPassword} show={showPw} setShow={setShowPw} placeholder="6자 이상" minLength={6} />
               <p className="text-xs text-muted-foreground mt-1">6자 이상이면 사용 가능합니다.</p>
             </div>
