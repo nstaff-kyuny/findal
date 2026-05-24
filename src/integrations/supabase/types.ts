@@ -722,6 +722,7 @@ export type Database = {
         Returns: Json
       }
       seeker_confirm_application: { Args: { _app_id: string }; Returns: Json }
+      unmark_no_show: { Args: { _app_id: string }; Returns: Json }
     }
     Enums: {
       app_role: "seeker" | "employer" | "admin"
