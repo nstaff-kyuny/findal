@@ -976,11 +976,22 @@ function ReferrersTab() {
     a.href = url; a.download = `추천인_리스트_${new Date().toISOString().slice(0,10)}.xlsx`;
     a.click(); URL.revokeObjectURL(url);
   };
+  const [q, setQ] = useState("");
+  const filteredList = list.filter(r => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (r.code ?? "").toLowerCase().includes(s)
+        || (r.name ?? "").toLowerCase().includes(s)
+        || (r.phone ?? "").toLowerCase().includes(s);
+  });
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="font-bold">추천인 관리</h3>
-        <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+      <div className="flex justify-between items-center gap-2 flex-wrap">
+        <h3 className="font-bold">추천인 관리 ({filteredList.length}/{list.length})</h3>
+        <div className="flex gap-2">
+          <Input placeholder="코드/이름/연락처 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+          <Button size="sm" variant="outline" onClick={exportXlsx}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
+        </div>
       </div>
       <div className="grid grid-cols-4 gap-2">
         <Input placeholder="코드 (영문 대문자/숫자, 예: REF1234)" value={code} onChange={e => setCode(normalizeReferrerCode(e.target.value))} />
@@ -991,7 +1002,7 @@ function ReferrersTab() {
       <table className="w-full text-sm">
         <thead><tr className="text-left border-b"><th className="py-2">코드</th><th>이름</th><th>연락처</th><th>가입자</th><th></th></tr></thead>
         <tbody>
-          {list.map(r => {
+          {filteredList.map(r => {
             const users = signups[r.code] ?? [];
             const isOpen = expanded[r.id];
             const toggle = () => setExpanded(s => ({ ...s, [r.id]: !s[r.id] }));
