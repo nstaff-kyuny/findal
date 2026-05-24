@@ -95,12 +95,14 @@ function Page() {
           <div className="absolute -right-3 -bottom-3 text-7xl opacity-15 select-none">{INDUSTRY_EMOJI[j.industry] ?? "🏢"}</div>
         </div>
       )}
-      <Badge variant="secondary" className="text-sm">{INDUSTRY_LABEL[j.industry]}</Badge>
-      {matches[j.id] && (
-        <Badge className="text-xs ml-1 border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
-          AI {matches[j.id].score}점
-        </Badge>
-      )}
+      <div className="flex items-center justify-between gap-1">
+        <Badge variant="secondary" className="text-sm">{INDUSTRY_LABEL[j.industry]}</Badge>
+        {matches[j.id] && (
+          <Badge className="text-xs border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
+            AI {matches[j.id].score}점
+          </Badge>
+        )}
+      </div>
       <h3 className="text-base font-bold mt-1 truncate">{j.title}</h3>
       {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
       <p className="text-sm text-muted-foreground truncate">🏨 {j.place_name}</p>
@@ -117,12 +119,14 @@ function Page() {
     <Card key={j.id} className="relative p-3 cursor-pointer overflow-hidden" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
       <div className="absolute right-1 bottom-1 text-6xl opacity-10 pointer-events-none select-none">{industryIcon(j.industry)}</div>
       <div className="relative">
-        <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
-        {matches[j.id] && (
-          <Badge className="text-xs ml-1 border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
-            AI {matches[j.id].score}점
-          </Badge>
-        )}
+        <div className="flex items-center justify-between gap-1">
+          <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
+          {matches[j.id] && (
+            <Badge className="text-xs border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
+              AI {matches[j.id].score}점
+            </Badge>
+          )}
+        </div>
         <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
         {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
         <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>
