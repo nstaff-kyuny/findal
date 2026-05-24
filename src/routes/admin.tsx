@@ -1886,6 +1886,45 @@ function PartnersTab() {
           </tbody>
         </table>
       </div>
+
+      <div className="pt-6 border-t">
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <h3 className="font-bold">보조관리자(manager) 지정</h3>
+          <Input placeholder="사용자 검색 (이름/연락처)" value={mgrQ} onChange={e => setMgrQ(e.target.value)} className="max-w-xs" />
+        </div>
+        <div className="flex gap-2 mb-3 flex-wrap">
+          <Select value={mgrSelectedId} onValueChange={setMgrSelectedId}>
+            <SelectTrigger className="max-w-md"><SelectValue placeholder="보조관리자로 지정할 사용자 선택" /></SelectTrigger>
+            <SelectContent className="max-h-72">
+              {mgrCandidates.map(p => (
+                <SelectItem key={p.id} value={p.id}>{p.full_name ?? "(이름없음)"} · {p.phone ?? "-"}</SelectItem>
+              ))}
+              {mgrCandidates.length === 0 && <div className="p-2 text-xs text-muted-foreground">지정 가능한 사용자가 없습니다</div>}
+            </SelectContent>
+          </Select>
+          <Button onClick={addManager}>보조관리자 지정</Button>
+        </div>
+        <p className="text-xs text-muted-foreground mb-3">보조관리자는 /admin2 페이지에 접근하여 전체 사용자, 크레딧, 추천인, 크레딧 구매현황, FAQ를 조회(엑셀 다운로드 포함)할 수 있습니다. 수정/삭제 권한은 없습니다.</p>
+        <table className="w-full text-sm">
+          <thead><tr className="text-left border-b">
+            <th className="py-2">이름</th><th>연락처</th><th>지정일</th><th></th>
+          </tr></thead>
+          <tbody>
+            {managers.map(m => (
+              <tr key={m.id} className="border-b">
+                <td className="py-2">{m.profile?.full_name ?? "(이름없음)"}</td>
+                <td>{m.profile?.phone ?? "-"}</td>
+                <td className="text-xs">{new Date(m.created_at).toLocaleDateString("ko-KR")}</td>
+                <td><Button size="sm" variant="destructive" onClick={() => removeManager(m.id, m.profile?.full_name ?? "")}><Trash2 size={12} /></Button></td>
+              </tr>
+            ))}
+            {managers.length === 0 && (
+              <tr><td colSpan={4} className="py-6 text-center text-sm text-muted-foreground">지정된 보조관리자가 없습니다</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
     </CardContent></Card>
   );
 }
+
