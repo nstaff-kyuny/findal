@@ -1678,3 +1678,179 @@ function VersionTab() {
     </CardContent></Card>
   );
 }
+
+function PartnersTab() {
+  const [employers, setEmployers] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [q, setQ] = useState("");
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [monthly, setMonthly] = useState<number>(100);
+  const [threshold, setThreshold] = useState<number>(10);
+  const [recharge, setRecharge] = useState<number>(50);
+  const [note, setNote] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<{ monthly_credits: number; auto_recharge_threshold: number; auto_recharge_amount: number; note: string; active: boolean }>({ monthly_credits: 0, auto_recharge_threshold: 0, auto_recharge_amount: 0, note: "", active: true });
+
+  const load = async () => {
+    const { data: emps } = await supabase.from("employer_profiles").select("user_id, company_name, manager_name, credits").order("company_name");
+    const ids = (emps ?? []).map((e: any) => e.user_id);
+    const { data: profs } = ids.length ? await supabase.from("profiles").select("id, full_name").in("id", ids) : { data: [] as any[] };
+    const pmap: Record<string, any> = {};
+    (profs ?? []).forEach((p: any) => { pmap[p.id] = p; });
+    setEmployers((emps ?? []).map((e: any) => ({ ...e, full_name: pmap[e.user_id]?.full_name })));
+    const { data: progs } = await supabase.from("partner_programs").select("*").order("created_at", { ascending: false });
+    setPrograms(progs ?? []);
+  };
+  useEffect(() => { load(); }, []);
+
+  const partnerIds = new Set(programs.map(p => p.employer_id));
+  const empMap: Record<string, any> = {};
+  employers.forEach(e => { empMap[e.user_id] = e; });
+  const candidates = employers.filter(e => !partnerIds.has(e.user_id));
+  const filteredCandidates = candidates.filter(e => {
+    if (!q) return true;
+    const s = q.toLowerCase();
+    return (e.company_name ?? "").toLowerCase().includes(s) || (e.full_name ?? "").toLowerCase().includes(s) || (e.manager_name ?? "").toLowerCase().includes(s);
+  });
+
+  const register = async () => {
+    if (!selectedId) return toast.error("구인자를 선택하세요");
+    const { error } = await supabase.from("partner_programs").insert({
+      employer_id: selectedId,
+      monthly_credits: monthly,
+      auto_recharge_threshold: threshold,
+      auto_recharge_amount: recharge,
+      note,
+      active: true,
+    } as any);
+    if (error) return toast.error(error.message);
+    toast.success("협력업체로 등록되었습니다"); setSelectedId(""); setNote(""); load();
+  };
+  const remove = async (id: string, label: string) => {
+    if (!confirm(`'${label}' 협력업체 등록을 해제할까요?`)) return;
+    const { error } = await supabase.from("partner_programs").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("해제되었습니다"); load();
+  };
+  const toggleActive = async (p: any) => {
+    const { error } = await supabase.from("partner_programs").update({ active: !p.active }).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    load();
+  };
+  const startEdit = (p: any) => {
+    setEditingId(p.id);
+    setEditForm({ monthly_credits: p.monthly_credits, auto_recharge_threshold: p.auto_recharge_threshold, auto_recharge_amount: p.auto_recharge_amount, note: p.note ?? "", active: p.active });
+  };
+  const saveEdit = async (id: string) => {
+    const { error } = await supabase.from("partner_programs").update(editForm as any).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("수정되었습니다"); setEditingId(null); load();
+  };
+  const runMonthly = async () => {
+    if (!confirm("월정액 크레딧 지급을 지금 즉시 실행할까요?\n(이번 달 미지급 협력업체에만 지급됩니다)")) return;
+    const { data, error } = await supabase.rpc("run_partner_monthly_grants" as any);
+    if (error) return toast.error(error.message);
+    toast.success(`지급 완료: ${(data as any)?.granted ?? 0}건`); load();
+  };
+
+  return (
+    <Card className="mt-4"><CardContent className="p-4 space-y-6">
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+          <h3 className="font-bold">협력업체 등록</h3>
+          <Input placeholder="구인자 검색 (업체명/담당자)" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div>
+            <Label className="text-xs">구인자 선택</Label>
+            <Select value={selectedId} onValueChange={setSelectedId}>
+              <SelectTrigger><SelectValue placeholder="협력업체로 등록할 구인자 선택" /></SelectTrigger>
+              <SelectContent className="max-h-72">
+                {filteredCandidates.map(e => (
+                  <SelectItem key={e.user_id} value={e.user_id}>{e.company_name} · {e.full_name ?? e.manager_name ?? "-"} (보유 {e.credits})</SelectItem>
+                ))}
+                {filteredCandidates.length === 0 && <div className="p-2 text-xs text-muted-foreground">등록 가능한 구인자가 없습니다</div>}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">비고</Label>
+            <Input placeholder="비고 (선택)" value={note} onChange={e => setNote(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">월정액 크레딧 (매월 1일 자동지급)</Label>
+            <Input type="number" value={monthly} onChange={e => setMonthly(Number(e.target.value))} />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <Label className="text-xs">자동충전 기준 크레딧 이하</Label>
+              <Input type="number" value={threshold} onChange={e => setThreshold(Number(e.target.value))} />
+            </div>
+            <div>
+              <Label className="text-xs">자동충전 수량</Label>
+              <Input type="number" value={recharge} onChange={e => setRecharge(Number(e.target.value))} />
+            </div>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={register}>협력업체로 등록</Button>
+          <Button variant="outline" onClick={runMonthly}>월정액 즉시 지급 실행</Button>
+        </div>
+        <p className="text-xs text-muted-foreground mt-2">월정액은 매월 1일 자동 지급되며, 보유 크레딧이 기준 이하로 떨어지면 자동충전됩니다. 0으로 두면 해당 기능은 비활성화됩니다.</p>
+      </div>
+
+      <div>
+        <h3 className="font-bold mb-2">등록된 협력업체 ({programs.length})</h3>
+        <table className="w-full text-sm">
+          <thead><tr className="text-left border-b">
+            <th className="py-2">업체</th><th>담당자</th><th>보유</th><th>월정액</th><th>자동충전</th><th>활성</th><th>비고</th><th>최근지급</th><th></th>
+          </tr></thead>
+          <tbody>
+            {programs.map(p => {
+              const e = empMap[p.employer_id];
+              const editing = editingId === p.id;
+              return (
+                <tr key={p.id} className="border-b align-top">
+                  <td className="py-2">{e?.company_name ?? "(삭제됨)"}</td>
+                  <td>{e?.full_name ?? e?.manager_name ?? "-"}</td>
+                  <td className="font-bold">{e?.credits ?? "-"}</td>
+                  <td>{editing ? <Input className="w-20" type="number" value={editForm.monthly_credits} onChange={ev => setEditForm({ ...editForm, monthly_credits: Number(ev.target.value) })} /> : p.monthly_credits}</td>
+                  <td>
+                    {editing ? (
+                      <div className="flex gap-1">
+                        <Input className="w-16" type="number" value={editForm.auto_recharge_threshold} onChange={ev => setEditForm({ ...editForm, auto_recharge_threshold: Number(ev.target.value) })} />
+                        <span className="text-xs self-center">↓</span>
+                        <Input className="w-16" type="number" value={editForm.auto_recharge_amount} onChange={ev => setEditForm({ ...editForm, auto_recharge_amount: Number(ev.target.value) })} />
+                      </div>
+                    ) : (p.auto_recharge_amount > 0 ? `${p.auto_recharge_threshold} 이하 → +${p.auto_recharge_amount}` : "-")}
+                  </td>
+                  <td><Switch checked={p.active} onCheckedChange={() => toggleActive(p)} /></td>
+                  <td className="max-w-[160px]">{editing ? <Input value={editForm.note} onChange={ev => setEditForm({ ...editForm, note: ev.target.value })} /> : (p.note ?? "")}</td>
+                  <td className="text-xs">{p.last_monthly_grant_at ? new Date(p.last_monthly_grant_at).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td>
+                    <div className="flex gap-1">
+                      {editing ? (
+                        <>
+                          <Button size="sm" onClick={() => saveEdit(p.id)}>저장</Button>
+                          <Button size="sm" variant="outline" onClick={() => setEditingId(null)}>취소</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button size="sm" variant="outline" onClick={() => startEdit(p)}><Pencil size={12} /></Button>
+                          <Button size="sm" variant="destructive" onClick={() => remove(p.id, e?.company_name ?? "")}><Trash2 size={12} /></Button>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+            {programs.length === 0 && (
+              <tr><td colSpan={9} className="py-6 text-center text-sm text-muted-foreground">등록된 협력업체가 없습니다</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </CardContent></Card>
+  );
+}
