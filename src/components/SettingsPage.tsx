@@ -120,6 +120,29 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         )}
       </CardContent></Card>
 
+      {role === "seeker" && (
+        <Card><CardContent className="p-0 divide-y">
+          <SectionHeader>{LANG_FLAG[lang]} 언어 / Language</SectionHeader>
+          <div className="px-4 py-3 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-semibold"><Languages size={16} /> <span>{(["ko","en","mn","ru","zh"] as Lang[]).map(() => null) && "사용 언어 선택"}</span></div>
+            <div className="grid grid-cols-5 gap-1.5">
+              {(["ko","en","mn","ru","zh"] as Lang[]).map((l) => (
+                <Button
+                  key={l}
+                  size="sm"
+                  variant={lang === l ? "default" : "outline"}
+                  className="text-xs h-9 px-1"
+                  onClick={() => setLang(l).then(() => toast.success(`${LANG_FLAG[l]} ${LANG_LABEL[l]}`))}
+                >
+                  <span className="mr-0.5">{LANG_FLAG[l]}</span>{LANG_LABEL[l]}
+                </Button>
+              ))}
+            </div>
+            <p className="text-[11px] text-muted-foreground">메뉴와 공고가 선택한 언어로 표시됩니다.</p>
+          </div>
+        </CardContent></Card>
+      )}
+
       <Card><CardContent className="p-0 divide-y">
         <SectionHeader>알림 설정</SectionHeader>
         <Row>
