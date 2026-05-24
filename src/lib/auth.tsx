@@ -34,15 +34,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let cancelled = false;
+    // 안전장치: 어떤 이유로든 3초 내 응답이 없으면 loading 해제
+    const safety = setTimeout(() => {
+      if (!cancelled) setLoading(false);
+    }, 3000);
+
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
       setSession(s);
+      setLoading(false);
+      clearTimeout(safety);
       setTimeout(() => loadRoles(s?.user?.id), 0);
     });
     supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
       setSession(data.session);
+      clearTimeout(safety);
       loadRoles(data.session?.user?.id).finally(() => setLoading(false));
+    }).catch(() => {
+      if (!cancelled) setLoading(false);
     });
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      clearTimeout(safety);
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return (
