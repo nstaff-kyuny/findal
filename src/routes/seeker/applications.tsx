@@ -21,6 +21,7 @@ export const Route = createFileRoute("/seeker/applications")({ component: () => 
 
 function Page() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [apps, setApps] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [filter, setFilter] = useState<"day"|"week"|"month">("month");
