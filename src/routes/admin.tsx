@@ -942,6 +942,15 @@ function ReferrersTab() {
     }
   };
   const exportXlsx = async () => {
+    const allUids = Array.from(new Set(Object.values(signups).flat().map((u: any) => u.user_id)));
+    let emails: Record<string, string> = {};
+    if (allUids.length) {
+      try {
+        const { staffListUserEmails } = await import("@/lib/admin-users.functions");
+        const res = await staffListUserEmails({ data: { userIds: allUids } });
+        emails = (res as any).emails ?? {};
+      } catch {}
+    }
     const wb = new ExcelJS.Workbook();
     const ws1 = wb.addWorksheet("추천인");
     ws1.columns = [
@@ -959,13 +968,14 @@ function ReferrersTab() {
     const ws2 = wb.addWorksheet("가입자");
     ws2.columns = [
       { header: "추천인코드", key: "code" }, { header: "추천인이름", key: "refName" },
-      { header: "가입자이름", key: "userName" }, { header: "가입자연락처", key: "userPhone" },
-      { header: "가입일", key: "signedUp" },
+      { header: "가입자이름", key: "userName" }, { header: "가입자아이디(이메일)", key: "userEmail" },
+      { header: "가입자연락처", key: "userPhone" }, { header: "가입일", key: "signedUp" },
     ];
     list.forEach(r => {
       (signups[r.code] ?? []).forEach((u: any) => ws2.addRow({
         code: r.code, refName: r.name,
-        userName: u.full_name, userPhone: u.phone,
+        userName: u.full_name, userEmail: emails[u.user_id] ?? "",
+        userPhone: u.phone,
         signedUp: new Date(u.signed_up_at).toLocaleString("ko-KR"),
       }));
     });
