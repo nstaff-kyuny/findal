@@ -20,6 +20,7 @@ import { Languages } from "lucide-react";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const { user, signOut } = useAuth();
+  const { lang, setLang } = useI18n();
   const deleteAccount = useServerFn(deleteOwnAccount);
   const [deleting, setDeleting] = useState(false);
   const [profile, setProfile] = useState<any>(null);
