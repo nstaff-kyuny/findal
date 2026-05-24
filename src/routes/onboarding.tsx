@@ -78,6 +78,7 @@ function Onboarding() {
 }
 
 function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) {
+  const { lang, setLang } = useI18n();
   const [nationality, setNationality] = useState<string>("foreigner");
   const [experience, setExperience] = useState<string>("lt5");
   const [koreanOk, setKoreanOk] = useState(true);
@@ -102,6 +103,7 @@ function SeekerForm({ userId, onDone }: { userId: string; onDone: () => void }) 
       user_id: userId, nationality, experience, korean_ok: koreanOk,
       visa: nationality === "korean" ? null : visa,
       referrer_code: referrer || null, preferred_region: serializeRegions(regions),
+      preferred_language: lang,
     } as any, { onConflict: "user_id" });
     setSaving(false);
     if (e2) return toast.error(e2.message);
