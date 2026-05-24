@@ -1691,6 +1691,12 @@ function PartnersTab() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ monthly_credits: number; auto_recharge_threshold: number; auto_recharge_amount: number; note: string; active: boolean }>({ monthly_credits: 0, auto_recharge_threshold: 0, auto_recharge_amount: 0, note: "", active: true });
 
+  // 보조관리자(manager) 관리
+  const [allProfiles, setAllProfiles] = useState<any[]>([]);
+  const [managers, setManagers] = useState<any[]>([]);
+  const [mgrQ, setMgrQ] = useState("");
+  const [mgrSelectedId, setMgrSelectedId] = useState<string>("");
+
   const load = async () => {
     const { data: emps } = await supabase.from("employer_profiles").select("user_id, company_name, manager_name, credits").order("company_name");
     const ids = (emps ?? []).map((e: any) => e.user_id);
@@ -1700,8 +1706,37 @@ function PartnersTab() {
     setEmployers((emps ?? []).map((e: any) => ({ ...e, full_name: pmap[e.user_id]?.full_name })));
     const { data: progs } = await supabase.from("partner_programs").select("*").order("created_at", { ascending: false });
     setPrograms(progs ?? []);
+
+    // 전체 프로필 + 현재 manager 역할 보유자
+    const { data: allP } = await supabase.from("profiles").select("id, full_name, phone").order("full_name");
+    setAllProfiles(allP ?? []);
+    const { data: mgrRoles } = await supabase.from("user_roles").select("id, user_id, created_at").eq("role", "manager");
+    const pMap2: Record<string, any> = {};
+    (allP ?? []).forEach((p: any) => { pMap2[p.id] = p; });
+    setManagers((mgrRoles ?? []).map((r: any) => ({ ...r, profile: pMap2[r.user_id] })));
   };
   useEffect(() => { load(); }, []);
+
+  const managerIdSet = new Set(managers.map(m => m.user_id));
+  const mgrCandidates = allProfiles.filter(p => !managerIdSet.has(p.id)).filter(p => {
+    if (!mgrQ) return true;
+    const s = mgrQ.toLowerCase();
+    return (p.full_name ?? "").toLowerCase().includes(s) || (p.phone ?? "").toLowerCase().includes(s);
+  });
+
+  const addManager = async () => {
+    if (!mgrSelectedId) return toast.error("사용자를 선택하세요");
+    const { error } = await supabase.from("user_roles").insert({ user_id: mgrSelectedId, role: "manager" as any });
+    if (error) return toast.error(error.message);
+    toast.success("보조관리자로 지정되었습니다"); setMgrSelectedId(""); load();
+  };
+  const removeManager = async (id: string, name: string) => {
+    if (!confirm(`'${name}' 보조관리자 권한을 해제할까요?`)) return;
+    const { error } = await supabase.from("user_roles").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("해제되었습니다"); load();
+  };
+
 
   const partnerIds = new Set(programs.map(p => p.employer_id));
   const empMap: Record<string, any> = {};
