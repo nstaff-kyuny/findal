@@ -15,6 +15,8 @@ import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRigh
 import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
+import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
+import { Languages } from "lucide-react";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const { user, signOut } = useAuth();
