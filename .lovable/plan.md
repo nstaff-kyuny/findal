@@ -1,66 +1,62 @@
-# 구인-구직 매칭 플랫폼 MVP
+## 목표
+구직자(seeker) 화면 전체를 5개 언어(한국어/영어/몽골어/러시아어/중국어)로 표시. 관리자·구인자 화면은 한국어 유지.
 
-호텔/모텔/리조트/식당/병원/요양원 일용직을 대상으로 한 구인-구직 매칭 모바일 웹앱과 PC 관리자 페이지를 만듭니다. ('알바프리/동네알바' 컨셉)
+## 1. 언어 저장 구조
+- `seeker_profiles`에 `preferred_language text default 'ko'` 컬럼 추가 (ko/en/mn/ru/zh).
+- 로그인 직후 / 온보딩 단계에서 언어 선택 화면 노출 → DB에 저장.
+- 동시에 `localStorage["seeker_lang"]`에도 미러링(앱 부팅 시 깜빡임 방지).
+- 구직자 설정 페이지(`/seeker/me`)에 "언어 변경" 항목 추가.
 
-## 기술 스택
-- React + Vite + TypeScript + Tailwind + shadcn/ui
-- **Lovable Cloud** (DB / Auth / Storage / Edge Functions) — 활성화 필요
-- 모바일 우선 반응형 (구인자/구직자), `/admin` 만 데스크탑 레이아웃
+## 2. i18n 코어 (`src/lib/i18n.tsx`)
+- `LanguageProvider` Context: `{ lang, setLang, t(key), tDynamic(text[]) }`.
+- `t(key)`: 정적 UI 문자열 사전 조회 (5개 언어 사전 하드코딩).
+- `tDynamic(texts)`: DB에서 온 한국어 텍스트(공고 제목, 업체명, 메모 등) → 기존 `translateTexts` 서버펑션으로 일괄 번역. 결과를 `localStorage`에 `hash(text)+lang` 키로 캐싱하여 재호출 최소화.
+- `MobileLayout` 등 구직자 컴포넌트만 Provider로 감싸고, 관리자/구인자/`manager.tsx`/`admin.tsx`/`admin2.tsx`는 영향 없음.
 
-## 사용자 역할 (user_roles 테이블, RLS 안전 패턴)
-- `seeker` (구직자)
-- `employer` (구인자)
-- `admin` (앱관리자)
+## 3. 정적 문자열 사전 (`src/lib/i18n-dict.ts`)
+다음 카테고리만 5개 언어로 번역:
+- 메뉴/탭 라벨 ("홈", "추천", "신청내역", "즐겨찾기", "내 정보")
+- 공통 버튼/상태 ("신청하기", "승인", "대기", "확정", "노쇼")
+- 산업/직무 라벨 (`INDUSTRY_LABEL`, `ROLE_LABEL` → 언어별 매핑)
+- 지역명(`REGIONS`) → 언어별 매핑
+- 페이지 헤더/안내 문구
+- "일당", "원", "근무일", "협의" 등 단위/포맷
 
-## 데이터 모델 (주요 테이블)
-- `profiles` — auth.users 연결, 공통 프로필
-- `seeker_profiles` — 국적(외국인/내국인), 경력(<5/≥5), 한국어가능, 비자상태(학생/구직/거주/기타), 추천인 코드
-- `employer_profiles` — 회사명, 위치, 담당자, 연락처, **credits**(기본 2)
-- `referrers` — 추천인 마스터(관리자 관리), 가입자 수 집계
-- `jobs` — 업종(hotel/motel/resort/restaurant/hospital/nursing), 직무(객실청소/기물청소/홀써빙/간병 등), 사진, 장소명, 위치, 일당, 급여일, 준비물, 담당자 연락처(비공개), **work_dates[]**, **rooms_per_day**(호텔류 객실청소 시 필수), `status`
-  - 구인자당 active 게시물 ≤ 20 (서버 검증)
-- `job_applications` — 구직자 요청 → 구인자 승인. 승인 시 employer credits -1, `approved_at` 기록
-- `credit_transactions` — 구매/사용/관리자지급
-- `promoted_jobs` — 추천 페이지 상단 배너(2/5/10일, 10/20/25 크레딧), 최대 12개 슬롯
-- `ad_banners` — 하단 광고 배너(관리자 관리, 기간 설정)
+## 4. 동적 콘텐츠 번역 처리
+대상: `jobs.title`, `jobs.place_name`, `jobs.preparations`, `employer_profiles.company_name` 등.
+- 카드/배너 리스트 렌더 직전에 표시 대상 텍스트 모아 `tDynamic(texts)` 호출.
+- 비동기 결과로 다시 setState → 한국어 ko 모드에서는 호출 자체를 스킵.
+- 캐시 키: `lang::sha1(text)` 형태로 localStorage(최대 ~200KB 윈도우 LRU).
+- 비용 보호: 한 화면당 최대 50개 항목, 같은 텍스트 중복 제거.
 
-## 화면 구성
+## 5. 적용 대상 화면
+- `MobileLayout` 하단 탭 라벨, 상단 헤더
+- `routes/seeker/home.tsx` (검색 UI + 공고 카드)
+- `routes/seeker/featured.tsx` (추천 배너)
+- `routes/seeker/favorites.tsx` (즐겨찾기 카드)
+- `routes/seeker/applications.tsx` (상태 라벨)
+- `routes/seeker/jobs.$id.tsx` (공고 상세)
+- `routes/seeker/me.tsx` (설정 화면 + 언어 변경)
+- `routes/onboarding.tsx` (seeker 분기에서 언어 선택 1단계 추가)
+- `routes/auth.tsx` (구직자 로그인 직후 첫 진입 시 언어 미선택이면 선택 모달)
 
-### 구직자 (모바일)
-1. **홈/구인목록** — 상단 지역 검색 + 위치기반 찾기 토글
-2. **추천(피처드)** — ① 프로모티드 배너 2열 최대 12개 → ② 랜덤 배너 2열 최대 20개 → ③ 광고배너 1열 3개
-3. **구인 상세** → "일하고 싶어요" 요청
-4. **나의 신청 현황** (일/주/월 필터)
-5. **마이페이지** (프로필, 추천인 입력)
+영향 없음(한국어 유지): `routes/admin.tsx`, `routes/admin2.tsx`, `routes/manager.tsx`, 모든 `routes/employer/*`, `routes/guide.$role.tsx`(이미 자체 번역 기능 있음).
 
-### 구인자 (모바일)
-1. **대시보드** — 크레딧 잔액, 진행중 공고
-2. **구인 등록/수정** — 업종 선택 → 동적 필드(객실청소 시 객실수 필수), 일자 선택, 연락처(기본/개별), 사진 업로드
-3. **요청 목록** — 승인/거절 (승인 시 크레딧 차감 확인)
-4. **승인 기록** (일/주/월)
-5. **크레딧 구매** — 20/50/100 (₩1,000/credit) — *결제 연동은 추후, 지금은 구매요청 기록*
-6. **공고 프로모션** — 2일(10), 5일(20), 10일(25)
+## 6. DB 마이그레이션
+```sql
+ALTER TABLE public.seeker_profiles
+  ADD COLUMN preferred_language text NOT NULL DEFAULT 'ko'
+  CHECK (preferred_language IN ('ko','en','mn','ru','zh'));
+```
 
-### 관리자 (PC 전용 `/admin`)
-- 가입자(구인자/구직자) 리스트 & 상세
-- 크레딧 현황 / 무상 지급
-- 추천인 관리 + 가입자 수 통계
-- 하단 광고 배너 관리 (기간 설정)
+## 7. 작업 순서
+1. 마이그레이션 추가 (preferred_language).
+2. `src/lib/i18n.tsx` + `src/lib/i18n-dict.ts` 생성 (사전 + Provider + 캐시).
+3. `MobileLayout`을 LanguageProvider로 감싸고 탭 라벨 t() 적용.
+4. seeker 화면별로 t() / tDynamic() 적용 (home → featured → favorites → applications → jobs.$id → me).
+5. `onboarding.tsx`에 언어 선택 단계 추가, `auth.tsx`에서 seeker 첫 로그인 시 보장.
+6. `seeker/me.tsx`에 언어 변경 셀렉트 추가.
 
-## 비즈니스 규칙 (서버측 강제)
-- 공고 ≤ 20 / 구인자
-- 승인 시 크레딧 ≥ 1 검증 후 차감 (edge function, 원자적)
-- 프로모션 신청 시 크레딧 차감 + 만료일 설정
-- 연락처는 구직자 응답에 마스킹, 승인 완료 시에만 공개
-
-## 이번 작업 범위 (1차 MVP)
-- 위 모든 화면의 UI + DB 스키마 + RLS + 핵심 플로우 (가입/등록/요청/승인/크레딧차감/관리자)
-- 결제 연동 ❌ (크레딧 구매는 "요청 기록"으로 남기고 관리자가 수동 지급)
-- 실시간 채팅 ❌ (연락처 공개로 대체 — 요구사항대로)
-- 푸시 알림 ❌
-- 다국어 (영어/베트남어 등) ❌ — 현재는 한국어 UI
-
-## 진행 방식
-규모가 크므로 한 번에 전체를 빌드합니다. 시작 시 **Lovable Cloud를 활성화**해야 합니다 (DB/Auth/Storage 필요). 결제·실시간 채팅·다국어는 1차 완료 후 단계적으로 추가 권장.
-
-승인해 주시면 바로 구현 시작하겠습니다.
+## 비용·성능 메모
+- 동적 번역은 Lovable AI Gateway(`google/gemini-2.5-flash-lite`) 사용 → 카드 50개 일괄 1회 호출, 캐싱으로 재방문은 0회 호출.
+- ko 선택 시 번역 경로 완전 우회.

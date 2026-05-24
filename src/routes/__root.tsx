@@ -11,6 +11,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { AuthProvider } from "@/lib/auth";
+import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 import { EventPopup } from "@/components/EventPopup";
 import { InstallPrompt } from "@/components/InstallPrompt";
@@ -136,10 +137,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ClientOnly fallback={<div className="min-h-screen" />}>
         <AuthProvider>
-          <Outlet />
-          <EventPopup />
-          <InstallPrompt />
-          <Toaster />
+          <I18nProvider>
+            <Outlet />
+            <EventPopup />
+            <InstallPrompt />
+            <Toaster />
+          </I18nProvider>
         </AuthProvider>
       </ClientOnly>
     </QueryClientProvider>

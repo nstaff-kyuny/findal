@@ -674,6 +674,7 @@ export type Database = {
           nationality: Database["public"]["Enums"]["nationality"]
           notify_marketing: boolean
           notify_push: boolean
+          preferred_language: string
           preferred_region: string | null
           referrer_code: string | null
           user_id: string
@@ -686,6 +687,7 @@ export type Database = {
           nationality: Database["public"]["Enums"]["nationality"]
           notify_marketing?: boolean
           notify_push?: boolean
+          preferred_language?: string
           preferred_region?: string | null
           referrer_code?: string | null
           user_id: string
@@ -698,6 +700,7 @@ export type Database = {
           nationality?: Database["public"]["Enums"]["nationality"]
           notify_marketing?: boolean
           notify_push?: boolean
+          preferred_language?: string
           preferred_region?: string | null
           referrer_code?: string | null
           user_id?: string
