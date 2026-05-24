@@ -85,6 +85,13 @@ function Page() {
     }
   };
 
+  const dynTexts = useMemo(() => {
+    const arr: string[] = [];
+    [...promoted, ...random].forEach((j: any) => { if (j?.title) arr.push(j.title); if (j?.place_name) arr.push(j.place_name); });
+    return arr.slice(0, 60);
+  }, [promoted, random]);
+  const tx = useDynamicTranslate(dynTexts);
+
   const premiumCard = (j: any) => (
     <Card key={j.id} className="p-3 cursor-pointer border-2 border-primary/60 shadow-md" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
       {j.photo_url ? (
@@ -92,27 +99,27 @@ function Page() {
       ) : (
         <div className={`relative w-full h-28 rounded mb-2 overflow-hidden bg-gradient-to-br ${INDUSTRY_GRADIENT[j.industry] ?? "from-slate-400 to-slate-600"} flex flex-col items-center justify-center text-white`}>
           <div className="text-3xl drop-shadow">{INDUSTRY_EMOJI[j.industry] ?? "🏢"}</div>
-          <div className="text-xs font-bold tracking-wide mt-1 px-2 py-0.5 rounded-full bg-white/25 backdrop-blur">{INDUSTRY_LABEL[j.industry]}</div>
+          <div className="text-xs font-bold tracking-wide mt-1 px-2 py-0.5 rounded-full bg-white/25 backdrop-blur">{tIndustry(j.industry)}</div>
           <div className="absolute -right-3 -bottom-3 text-7xl opacity-15 select-none">{INDUSTRY_EMOJI[j.industry] ?? "🏢"}</div>
         </div>
       )}
       <div className="flex items-center justify-between gap-1">
-        <Badge variant="secondary" className="text-sm">{INDUSTRY_LABEL[j.industry]}</Badge>
+        <Badge variant="secondary" className="text-sm">{tIndustry(j.industry)}</Badge>
         {matches[j.id] && (
           <Badge className="text-xs border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
-            AI {matches[j.id].score}점
+            AI {matches[j.id].score}
           </Badge>
         )}
       </div>
-      <h3 className="text-base font-bold mt-1 truncate">{j.title}</h3>
+      <h3 className="text-base font-bold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
       {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
-      <p className="text-sm text-muted-foreground truncate">🏨 {j.place_name}</p>
-      <p className="text-base text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
+      <p className="text-sm text-muted-foreground truncate">🏨 {tx[j.place_name] ?? j.place_name}</p>
+      <p className="text-base text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}{t("won")}</p>
       <div className="mt-0.5">
-        <span className="text-[10px] text-muted-foreground mr-1">근무일</span>
-        <span className="text-[12px] font-semibold">{formatWorkDatesWithWeekday(j.work_dates) || "협의"}</span>
+        <span className="text-[10px] text-muted-foreground mr-1">{t("work_dates")}</span>
+        <span className="text-[12px] font-semibold">{formatWorkDatesWithWeekday(j.work_dates) || t("to_be_arranged")}</span>
       </div>
-      <p className="text-xs text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
+      <p className="text-xs text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
     </Card>
   );
 
@@ -121,25 +128,26 @@ function Page() {
       <div className="absolute right-1 bottom-1 text-6xl opacity-10 pointer-events-none select-none">{industryIcon(j.industry)}</div>
       <div className="relative">
         <div className="flex items-center justify-between gap-1">
-          <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
+          <Badge variant="secondary" className="text-xs">{tIndustry(j.industry)}</Badge>
           {matches[j.id] && (
             <Badge className="text-xs border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
-              AI {matches[j.id].score}점
+              AI {matches[j.id].score}
             </Badge>
           )}
         </div>
-        <h3 className="text-sm font-semibold mt-1 truncate">{j.title}</h3>
+        <h3 className="text-sm font-semibold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
         {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
-        <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {j.place_name}</p>
-        <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}원</p>
+        <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {tx[j.place_name] ?? j.place_name}</p>
+        <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}{t("won")}</p>
         <div className="mt-0.5">
-          <span className="text-[10px] text-muted-foreground mr-1">근무일</span>
-          <span className="text-[11px] font-semibold">{formatWorkDatesWithWeekday(j.work_dates) || "협의"}</span>
+          <span className="text-[10px] text-muted-foreground mr-1">{t("work_dates")}</span>
+          <span className="text-[11px] font-semibold">{formatWorkDatesWithWeekday(j.work_dates) || t("to_be_arranged")}</span>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">👥 지원 {counts[j.id] ?? 0} / 필요 {j.headcount ?? 1}명</p>
+        <p className="text-[10px] text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
       </div>
     </Card>
   );
+
 
   return (
     <MobileLayout role="seeker">
