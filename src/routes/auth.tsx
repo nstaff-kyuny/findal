@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { Search, Building2, CheckCircle2 } from "lucide-react";
+import { Search, Building2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeReferrerCode } from "@/lib/utils";
 
@@ -62,6 +62,9 @@ function AuthPage() {
   const [role, setRole] = useState<"seeker" | "employer">("seeker");
   const [referrer, setReferrer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showLoginPw, setShowLoginPw] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  const [showPwConfirm, setShowPwConfirm] = useState(false);
   const [emailSentDialog, setEmailSentDialog] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
   const [agreeAge, setAgreeAge] = useState(false);
@@ -109,8 +112,6 @@ function AuthPage() {
 
   const signUp = async () => {
     if (password.length < 6) return toast.error("비밀번호는 6자 이상이어야 합니다");
-    if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password))
-      return toast.error("비밀번호는 영문, 숫자, 특수기호를 모두 포함해야 합니다");
     if (password !== passwordConfirm) return toast.error("비밀번호 확인이 일치하지 않습니다");
     if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
     if (!allRequired) return toast.error("필수 약관에 모두 동의해 주세요");
@@ -155,7 +156,10 @@ function AuthPage() {
           </TabsList>
           <TabsContent value="login" className="space-y-4 mt-5">
             <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" value={loginId} onChange={e => setLoginId(e.target.value)} placeholder="example@email.com" /></div>
-            <div><Label className="text-base">비밀번호 (Password)</Label><Input className="h-14 text-base mt-1" type="password" value={loginPw} onChange={e => setLoginPw(e.target.value)} /></div>
+            <div>
+              <Label className="text-base">비밀번호 (Password)</Label>
+              <PasswordInput value={loginPw} onChange={setLoginPw} show={showLoginPw} setShow={setShowLoginPw} />
+            </div>
             <Button className="w-full h-14 text-lg" onClick={signIn} disabled={loading}>로그인 (Sign in)</Button>
             <button type="button" onClick={forgotPassword} className="w-full text-sm text-primary hover:underline mt-1">
               비밀번호를 잊으셨나요? 비밀번호 재설정
@@ -198,26 +202,12 @@ function AuthPage() {
             <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
               <Label className="text-base">비밀번호 (Password)</Label>
-              <Input
-                className="h-14 text-base mt-1"
-                type="password"
-                minLength={6}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="영문+숫자+특수기호 6자 이상"
-              />
-              <p className="text-xs text-muted-foreground mt-1">영문·숫자·특수기호를 모두 포함, 6자 이상</p>
+              <PasswordInput value={password} onChange={setPassword} show={showPw} setShow={setShowPw} placeholder="6자 이상" minLength={6} />
+              <p className="text-xs text-muted-foreground mt-1">6자 이상이면 사용 가능합니다.</p>
             </div>
             <div>
               <Label className="text-base">비밀번호 확인 (Confirm Password)</Label>
-              <Input
-                className="h-14 text-base mt-1"
-                type="password"
-                minLength={6}
-                value={passwordConfirm}
-                onChange={e => setPasswordConfirm(e.target.value)}
-                placeholder="비밀번호를 한 번 더 입력하세요"
-              />
+              <PasswordInput value={passwordConfirm} onChange={setPasswordConfirm} show={showPwConfirm} setShow={setShowPwConfirm} placeholder="비밀번호를 한 번 더 입력하세요" minLength={6} />
               {passwordConfirm.length > 0 && password !== passwordConfirm && (
                 <p className="text-xs text-destructive mt-1">비밀번호가 일치하지 않습니다</p>
               )}
@@ -282,6 +272,29 @@ function AgreeRow({ checked, onCheckedChange, label, onView, required, optional 
         </span>
       </label>
       <button type="button" onClick={onView} className="text-xs underline text-muted-foreground shrink-0">보기</button>
+    </div>
+  );
+}
+
+function PasswordInput({ value, onChange, show, setShow, placeholder, minLength }: { value: string; onChange: (v: string) => void; show: boolean; setShow: (v: boolean) => void; placeholder?: string; minLength?: number }) {
+  return (
+    <div className="relative mt-1">
+      <Input
+        className="h-14 text-base pr-12"
+        type={show ? "text" : "password"}
+        minLength={minLength}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      <button
+        type="button"
+        onClick={() => setShow(!show)}
+        aria-label={show ? "비밀번호 숨기기" : "비밀번호 보기"}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+      >
+        {show ? <EyeOff size={20} /> : <Eye size={20} />}
+      </button>
     </div>
   );
 }
