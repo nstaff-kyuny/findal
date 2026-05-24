@@ -681,8 +681,8 @@ function UsersTab() {
     if (!newEmail || !newPwd || !newName) return toast.error("이메일, 비밀번호, 이름 필수");
     setBusy(true);
     try {
-      await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, referrerCode: newReferrer, preferredRegions: newRole === "seeker" ? serializeRegions(newRegions) : "" } });
-      toast.success("사용자가 추가되었습니다");
+      const res: any = await createUser({ data: { email: newEmail, password: newPwd, fullName: newName, phone: newPhone, role: newRole, gender: newGender, referrerCode: newReferrer, preferredRegions: newRole === "seeker" ? serializeRegions(newRegions) : "" } });
+      toast.success(`사용자가 추가되었습니다 (사번: ${res?.staffNo ?? "-"})`);
       setNewEmail(""); setNewPwd(""); setNewName(""); setNewPhone(""); setNewReferrer(""); setNewRegions([]);
       load();
     } catch (e: any) {
