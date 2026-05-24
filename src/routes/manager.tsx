@@ -117,7 +117,7 @@ function ManagerPage() {
     return <LoginForm />;
   }
 
-  const previewSrc = TAB_META[tab].previewSrc;
+  
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
