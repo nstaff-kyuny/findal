@@ -725,7 +725,7 @@ export type Database = {
       unmark_no_show: { Args: { _app_id: string }; Returns: Json }
     }
     Enums: {
-      app_role: "seeker" | "employer" | "admin"
+      app_role: "seeker" | "employer" | "admin" | "manager"
       application_status:
         | "pending"
         | "approved"
@@ -739,6 +739,8 @@ export type Database = {
         | "promotion_use"
         | "admin_grant"
         | "signup_bonus"
+        | "partner_monthly"
+        | "partner_recharge"
       experience_level: "lt5" | "gte5"
       industry:
         | "hotel"
@@ -878,7 +880,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["seeker", "employer", "admin"],
+      app_role: ["seeker", "employer", "admin", "manager"],
       application_status: [
         "pending",
         "approved",
@@ -893,6 +895,8 @@ export const Constants = {
         "promotion_use",
         "admin_grant",
         "signup_bonus",
+        "partner_monthly",
+        "partner_recharge",
       ],
       experience_level: ["lt5", "gte5"],
       industry: [
