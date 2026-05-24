@@ -107,7 +107,7 @@ function Page() {
     if (error) return toast.error(error.message);
     toast.success("노쇼 처리됨"); load();
   };
-  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 출근 확정", no_show:"노쇼" };
+  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"출근 확정", no_show:"노쇼" };
   const unmarkNoShow = async (id: string) => {
     if (!confirm("노쇼 표시를 취소하고 이전 상태로 복구하시겠습니까?")) return;
     const { error } = await supabase.rpc("unmark_no_show", { _app_id: id } as any);
@@ -126,8 +126,9 @@ function Page() {
   const renderCard = (a: any) => (
     <Card key={a.id}><CardContent className="p-3 space-y-2">
       <div className="flex justify-between items-start">
-        <div className="min-w-0">
-          <p className="text-xs text-muted-foreground">{a.jobs?.title} · {a.jobs?.place_name}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-muted-foreground truncate">{a.jobs?.title}</p>
+          <p className="text-xs text-muted-foreground truncate">{a.jobs?.place_name}</p>
           <p className="font-semibold mt-1">{a.profiles?.full_name ?? "(이름미입력)"}</p>
           <div className="flex gap-1 flex-wrap mt-1">
             <Badge className="text-[10px] border-transparent text-white" style={{ backgroundColor: a.visits > 0 ? "#0047AB" : "#94a3b8" }}>
@@ -150,7 +151,7 @@ function Page() {
             </div>;
           })()}
         </div>
-        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 font-semibold ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
+        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 font-semibold whitespace-nowrap shrink-0 ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
       </div>
       {a.status === "pending" && (
         <div className="flex gap-2">
