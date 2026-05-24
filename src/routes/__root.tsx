@@ -137,10 +137,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ClientOnly fallback={<div className="min-h-screen" />}>
         <AuthProvider>
-          <Outlet />
-          <EventPopup />
-          <InstallPrompt />
-          <Toaster />
+          <I18nProvider>
+            <Outlet />
+            <EventPopup />
+            <InstallPrompt />
+            <Toaster />
+          </I18nProvider>
         </AuthProvider>
       </ClientOnly>
     </QueryClientProvider>
