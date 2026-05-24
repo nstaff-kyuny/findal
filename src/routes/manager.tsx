@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  LogOut, Smartphone, Monitor, RefreshCw, Megaphone, Plus,
+  LogOut, Monitor, Megaphone, Plus,
 } from "lucide-react";
 import {
   INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS, CREDIT_PACKS,
