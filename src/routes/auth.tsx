@@ -204,26 +204,14 @@ function AuthPage() {
             <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
             <div>
               <Label className="text-base">비밀번호 (Password)</Label>
-              <Input
-                className="h-14 text-base mt-1"
-                type="password"
-                minLength={6}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder="영문+숫자+특수기호 6자 이상"
-              />
-              <p className="text-xs text-muted-foreground mt-1">영문·숫자·특수기호를 모두 포함, 6자 이상</p>
+            <div>
+              <Label className="text-base">비밀번호 (Password)</Label>
+              <PasswordInput value={password} onChange={setPassword} show={showPw} setShow={setShowPw} placeholder="6자 이상" minLength={6} />
+              <p className="text-xs text-muted-foreground mt-1">6자 이상이면 사용 가능합니다.</p>
             </div>
             <div>
               <Label className="text-base">비밀번호 확인 (Confirm Password)</Label>
-              <Input
-                className="h-14 text-base mt-1"
-                type="password"
-                minLength={6}
-                value={passwordConfirm}
-                onChange={e => setPasswordConfirm(e.target.value)}
-                placeholder="비밀번호를 한 번 더 입력하세요"
-              />
+              <PasswordInput value={passwordConfirm} onChange={setPasswordConfirm} show={showPwConfirm} setShow={setShowPwConfirm} placeholder="비밀번호를 한 번 더 입력하세요" minLength={6} />
               {passwordConfirm.length > 0 && password !== passwordConfirm && (
                 <p className="text-xs text-destructive mt-1">비밀번호가 일치하지 않습니다</p>
               )}
