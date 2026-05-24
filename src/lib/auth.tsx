@@ -28,31 +28,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadRoles = async (uid: string | undefined) => {
-    if (!uid) return setRoles([]);
+    if (!uid) { setRoles([]); return; }
     const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
     setRoles((data ?? []).map((r: any) => r.role));
   };
 
   useEffect(() => {
     let cancelled = false;
-    // 안전장치: 어떤 이유로든 3초 내 응답이 없으면 loading 해제
+    // 안전장치: 5초 내 응답이 없으면 loading 해제
     const safety = setTimeout(() => {
       if (!cancelled) setLoading(false);
-    }, 3000);
+    }, 5000);
+
+    const finishWithSession = async (s: Session | null) => {
+      if (cancelled) return;
+      setSession(s);
+      // 역할까지 로드한 뒤에 loading 해제 (라우팅 race 방지)
+      try {
+        await loadRoles(s?.user?.id);
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+          clearTimeout(safety);
+        }
+      }
+    };
 
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
-      setSession(s);
-      setLoading(false);
-      clearTimeout(safety);
-      setTimeout(() => loadRoles(s?.user?.id), 0);
+      // setTimeout 0: supabase 콜백 안에서 직접 await 호출 금지 (deadlock 방지)
+      setTimeout(() => { void finishWithSession(s); }, 0);
     });
     supabase.auth.getSession().then(({ data }) => {
-      if (cancelled) return;
-      setSession(data.session);
-      clearTimeout(safety);
-      loadRoles(data.session?.user?.id).finally(() => setLoading(false));
+      void finishWithSession(data.session);
     }).catch(() => {
-      if (!cancelled) setLoading(false);
+      if (!cancelled) { setLoading(false); clearTimeout(safety); }
     });
     return () => {
       cancelled = true;
