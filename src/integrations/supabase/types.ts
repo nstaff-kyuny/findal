@@ -508,6 +508,45 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_programs: {
+        Row: {
+          active: boolean
+          auto_recharge_amount: number
+          auto_recharge_threshold: number
+          created_at: string
+          employer_id: string
+          id: string
+          last_monthly_grant_at: string | null
+          monthly_credits: number
+          note: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          auto_recharge_amount?: number
+          auto_recharge_threshold?: number
+          created_at?: string
+          employer_id: string
+          id?: string
+          last_monthly_grant_at?: string | null
+          monthly_credits?: number
+          note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          auto_recharge_amount?: number
+          auto_recharge_threshold?: number
+          created_at?: string
+          employer_id?: string
+          id?: string
+          last_monthly_grant_at?: string | null
+          monthly_credits?: number
+          note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -721,6 +760,7 @@ export type Database = {
         }
         Returns: Json
       }
+      run_partner_monthly_grants: { Args: never; Returns: Json }
       seeker_confirm_application: { Args: { _app_id: string }; Returns: Json }
       unmark_no_show: { Args: { _app_id: string }; Returns: Json }
     }
