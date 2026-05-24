@@ -1,5 +1,5 @@
 import { createFileRoute, useParams, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
@@ -8,12 +8,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { INDUSTRY_LABEL, ROLE_LABEL } from "@/lib/constants";
+import { INDUSTRY_LABEL } from "@/lib/constants";
 import { INDUSTRY_FALLBACK_IMAGE, formatWorkDates } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
+import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { toast } from "sonner";
-import { MapPin, Calendar, Wallet, Wrench, Languages, ClipboardCheck, Heart } from "lucide-react";
-import { generateScreeningQuestions, translateJobDetails, moderateText } from "@/lib/ai.functions";
+import { MapPin, Calendar, Wallet, Wrench, ClipboardCheck, Heart } from "lucide-react";
+import { generateScreeningQuestions, moderateText } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/jobs/$id")({
   component: () => <RoleGate role="seeker"><Page /></RoleGate>,
