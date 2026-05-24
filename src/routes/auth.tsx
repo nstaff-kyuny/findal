@@ -112,8 +112,6 @@ function AuthPage() {
 
   const signUp = async () => {
     if (password.length < 6) return toast.error("비밀번호는 6자 이상이어야 합니다");
-    if (!/[A-Za-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password))
-      return toast.error("비밀번호는 영문, 숫자, 특수기호를 모두 포함해야 합니다");
     if (password !== passwordConfirm) return toast.error("비밀번호 확인이 일치하지 않습니다");
     if (!email || !name || !phone) return toast.error("모든 항목을 입력하세요");
     if (!allRequired) return toast.error("필수 약관에 모두 동의해 주세요");
