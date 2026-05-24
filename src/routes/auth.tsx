@@ -62,6 +62,9 @@ function AuthPage() {
   const [role, setRole] = useState<"seeker" | "employer">("seeker");
   const [referrer, setReferrer] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showLoginPw, setShowLoginPw] = useState(false);
+  const [showPw, setShowPw] = useState(false);
+  const [showPwConfirm, setShowPwConfirm] = useState(false);
   const [emailSentDialog, setEmailSentDialog] = useState(false);
   const [sentToEmail, setSentToEmail] = useState("");
   const [agreeAge, setAgreeAge] = useState(false);
