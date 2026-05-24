@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
+import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { toast } from "sonner";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
 
-const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"✅ 승인 받음", no_show:"노쇼", cancelled:"취소됨" };
+const STATUS_KEY: Record<string,string> = { pending:"st_pending", approved:"st_approved", rejected:"st_rejected", confirmed:"st_confirmed", no_show:"st_no_show", cancelled:"st_cancelled" };
 const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
 const STATUS_CLASS: Record<string,string> = { confirmed: "bg-orange-500 hover:bg-orange-500 text-white border-transparent" };
 
