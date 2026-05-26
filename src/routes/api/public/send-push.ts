@@ -1,7 +1,43 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import webpush from "web-push";
+import { buildPushHTTPRequest } from "@pushforge/builder";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+
+// base64url helpers
+function b64urlToBytes(s: string): Uint8Array {
+  const pad = "=".repeat((4 - (s.length % 4)) % 4);
+  const b64 = (s + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+function bytesToB64url(b: Uint8Array): string {
+  let s = "";
+  for (let i = 0; i < b.length; i++) s += String.fromCharCode(b[i]);
+  return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// Convert raw VAPID keys (web-push format) to JWK that PushForge expects.
+// Public key: uncompressed P-256 point (65 bytes: 0x04 || x(32) || y(32)) in base64url.
+// Private key: 32-byte scalar (d) in base64url.
+function vapidToJWK(publicRawB64u: string, privateRawB64u: string): JsonWebKey {
+  const pub = b64urlToBytes(publicRawB64u);
+  if (pub.length !== 65 || pub[0] !== 0x04) {
+    throw new Error("VAPID_PUBLIC_KEY must be uncompressed P-256 point (65 bytes, base64url)");
+  }
+  const x = pub.slice(1, 33);
+  const y = pub.slice(33, 65);
+  const d = b64urlToBytes(privateRawB64u);
+  if (d.length !== 32) throw new Error("VAPID_PRIVATE_KEY must be 32 bytes (base64url)");
+  return {
+    kty: "EC",
+    crv: "P-256",
+    x: bytesToB64url(x),
+    y: bytesToB64url(y),
+    d: bytesToB64url(d),
+  };
+}
 
 export const Route = createFileRoute("/api/public/send-push")({
   server: {
@@ -39,7 +75,13 @@ export const Route = createFileRoute("/api/public/send-push")({
         const userId: string | undefined = payload.user_id;
         if (!userId) return new Response("Missing user_id", { status: 400 });
 
-        webpush.setVapidDetails(vapidSub, vapidPub, vapidPriv);
+        let privateJWK: JsonWebKey;
+        try {
+          privateJWK = vapidToJWK(vapidPub, vapidPriv);
+        } catch (e: any) {
+          console.error("[send-push] VAPID JWK build failed", e?.message);
+          return new Response("VAPID config error", { status: 500 });
+        }
 
         const { data: subs, error } = await supabaseAdmin
           .from("push_subscriptions")
@@ -54,13 +96,13 @@ export const Route = createFileRoute("/api/public/send-push")({
           return Response.json({ sent: 0 });
         }
 
-        const pushPayload = JSON.stringify({
+        const pushPayload = {
           title: payload.title,
           body: payload.body,
           link_url: payload.link_url,
           notification_id: payload.notification_id,
           type: payload.type,
-        });
+        };
 
         let sent = 0;
         const stale: string[] = [];
@@ -68,22 +110,29 @@ export const Route = createFileRoute("/api/public/send-push")({
         await Promise.all(
           subs.map(async (s) => {
             try {
-              await webpush.sendNotification(
-                {
+              const { endpoint, headers, body: reqBody } = await buildPushHTTPRequest({
+                privateJWK,
+                subscription: {
                   endpoint: s.endpoint,
                   keys: { p256dh: s.p256dh, auth: s.auth },
                 },
-                pushPayload,
-                { TTL: 60 * 60 * 24 }
-              );
-              sent++;
-            } catch (err: any) {
-              const status = err?.statusCode;
-              if (status === 404 || status === 410) {
+                message: {
+                  payload: pushPayload,
+                  adminContact: vapidSub,
+                  options: { ttl: 60 * 60 * 24, urgency: "high" },
+                },
+              });
+              const res = await fetch(endpoint, { method: "POST", headers, body: reqBody });
+              if (res.status === 201 || res.status === 202 || res.status === 200) {
+                sent++;
+              } else if (res.status === 404 || res.status === 410) {
                 stale.push(s.id);
               } else {
-                console.warn("[send-push] failed", status, err?.body || err?.message);
+                const text = await res.text().catch(() => "");
+                console.warn("[send-push] push failed", res.status, text.slice(0, 200));
               }
+            } catch (err: any) {
+              console.warn("[send-push] error", err?.message || err);
             }
           })
         );
