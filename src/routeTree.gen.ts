@@ -38,6 +38,7 @@ import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
 import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
 import { Route as EmployerHistoryDateRouteImport } from './routes/employer/history.$date'
 import { Route as EmployerCreditsHistoryRouteImport } from './routes/employer/credits_.history'
+import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
 import { Route as EmployerJobsEditIdRouteImport } from './routes/employer/jobs/edit.$id'
 
 const TermsRoute = TermsRouteImport.update({
@@ -185,6 +186,11 @@ const EmployerCreditsHistoryRoute = EmployerCreditsHistoryRouteImport.update({
   path: '/employer/credits/history',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSendPushRoute = ApiPublicSendPushRouteImport.update({
+  id: '/api/public/send-push',
+  path: '/api/public/send-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const EmployerJobsEditIdRoute = EmployerJobsEditIdRouteImport.update({
   id: '/employer/jobs/edit/$id',
   path: '/employer/jobs/edit/$id',
@@ -216,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/employer/credits/history': typeof EmployerCreditsHistoryRoute
   '/employer/history/$date': typeof EmployerHistoryDateRoute
   '/employer/jobs/new': typeof EmployerJobsNewRoute
@@ -248,6 +255,7 @@ export interface FileRoutesByTo {
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/employer/credits/history': typeof EmployerCreditsHistoryRoute
   '/employer/history/$date': typeof EmployerHistoryDateRoute
   '/employer/jobs/new': typeof EmployerJobsNewRoute
@@ -281,6 +289,7 @@ export interface FileRoutesById {
   '/seeker/featured': typeof SeekerFeaturedRoute
   '/seeker/home': typeof SeekerHomeRoute
   '/seeker/me': typeof SeekerMeRoute
+  '/api/public/send-push': typeof ApiPublicSendPushRoute
   '/employer/credits_/history': typeof EmployerCreditsHistoryRoute
   '/employer/history/$date': typeof EmployerHistoryDateRoute
   '/employer/jobs/new': typeof EmployerJobsNewRoute
@@ -315,6 +324,7 @@ export interface FileRouteTypes {
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/api/public/send-push'
     | '/employer/credits/history'
     | '/employer/history/$date'
     | '/employer/jobs/new'
@@ -347,6 +357,7 @@ export interface FileRouteTypes {
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/api/public/send-push'
     | '/employer/credits/history'
     | '/employer/history/$date'
     | '/employer/jobs/new'
@@ -379,6 +390,7 @@ export interface FileRouteTypes {
     | '/seeker/featured'
     | '/seeker/home'
     | '/seeker/me'
+    | '/api/public/send-push'
     | '/employer/credits_/history'
     | '/employer/history/$date'
     | '/employer/jobs/new'
@@ -412,6 +424,7 @@ export interface RootRouteChildren {
   SeekerFeaturedRoute: typeof SeekerFeaturedRoute
   SeekerHomeRoute: typeof SeekerHomeRoute
   SeekerMeRoute: typeof SeekerMeRoute
+  ApiPublicSendPushRoute: typeof ApiPublicSendPushRoute
   EmployerCreditsHistoryRoute: typeof EmployerCreditsHistoryRoute
   EmployerJobsNewRoute: typeof EmployerJobsNewRoute
   SeekerJobsIdRoute: typeof SeekerJobsIdRoute
@@ -624,6 +637,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployerCreditsHistoryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/send-push': {
+      id: '/api/public/send-push'
+      path: '/api/public/send-push'
+      fullPath: '/api/public/send-push'
+      preLoaderRoute: typeof ApiPublicSendPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/employer/jobs/edit/$id': {
       id: '/employer/jobs/edit/$id'
       path: '/employer/jobs/edit/$id'
@@ -671,6 +691,7 @@ const rootRouteChildren: RootRouteChildren = {
   SeekerFeaturedRoute: SeekerFeaturedRoute,
   SeekerHomeRoute: SeekerHomeRoute,
   SeekerMeRoute: SeekerMeRoute,
+  ApiPublicSendPushRoute: ApiPublicSendPushRoute,
   EmployerCreditsHistoryRoute: EmployerCreditsHistoryRoute,
   EmployerJobsNewRoute: EmployerJobsNewRoute,
   SeekerJobsIdRoute: SeekerJobsIdRoute,
@@ -680,13 +701,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

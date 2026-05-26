@@ -1,10 +1,12 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Link, useLocation } from "@tanstack/react-router";
 import { Home, Star, FileText, Settings, Briefcase, Inbox, CreditCard, LayoutDashboard, Heart, Languages } from "lucide-react";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { ensurePushSubscription } from "@/lib/push-client";
 
 
 type Tab = { to: string; key: string; fallback: string; icon: any };
@@ -61,7 +63,14 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
   const loc = useLocation();
   const cols = tabs.length === 5 ? "grid-cols-5" : "grid-cols-4";
   const { t } = useI18n();
+  const { user } = useAuth();
   const label = (tab: Tab) => role === "seeker" && tab.key ? t(tab.key) : tab.fallback;
+
+  useEffect(() => {
+    if (!user) return;
+    // Register service worker + subscribe to web push (mobile/PWA notifications)
+    ensurePushSubscription(user.id).catch(() => {});
+  }, [user]);
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col max-w-md mx-auto shadow-xl">
       <header
