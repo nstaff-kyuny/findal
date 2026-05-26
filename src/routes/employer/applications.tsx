@@ -120,6 +120,7 @@ function Page() {
   const groups = useMemo(() => ({
     pending: apps.filter(a => a.status === "pending"),
     approved: apps.filter(a => a.status === "approved" || a.status === "confirmed"),
+    rejected: apps.filter(a => a.status === "rejected"),
     no_show: apps.filter(a => a.status === "no_show"),
   }), [apps]);
 
