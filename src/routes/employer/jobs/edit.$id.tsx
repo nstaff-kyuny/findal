@@ -48,7 +48,8 @@ function Page() {
     if (reached) return toast.error(`수정은 최대 ${MAX_EDITS}회까지만 가능합니다`);
     setSaving(true);
     try {
-      const combined = `${job.title ?? ""}\n${job.preparations ?? ""}\n${job.place_name ?? ""}`.trim();
+      // 제목/장소명만 엄격 검수 (준비물은 욕설만 차단)
+      const combined = `${job.title ?? ""}\n${job.place_name ?? ""}`.trim();
       if (combined) {
         const mod = await moderate({ data: { text: combined, context: "job" } });
         if (!mod.allow) {
@@ -56,6 +57,10 @@ function Page() {
           return;
         }
         if (mod.risk === "보통") toast.warning(`주의 표현이 감지되었습니다: ${mod.reason}`);
+      }
+      if (job.preparations && /(시발|씨발|개새끼|좆|병신|fuck|shit|asshole|bitch)/i.test(job.preparations)) {
+        toast.error("준비물 내용에 욕설이 포함되어 있습니다");
+        return;
       }
       const { error } = await supabase.from("jobs").update({
         title: job.title, place_name: job.place_name, location: job.location, region: job.region,
