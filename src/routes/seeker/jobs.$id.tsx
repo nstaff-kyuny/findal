@@ -167,7 +167,21 @@ function Page() {
           ) : app?.status === "rejected" ? (
             <Button className="w-full" disabled variant="outline">{t("rejected_btn")}</Button>
           ) : app?.status === "cancelled" ? (
-            <Button className="w-full" disabled variant="outline">{t("cancelled_btn")}</Button>
+            <div className="space-y-2">
+              <p className="text-xs text-muted-foreground text-center">이전 신청을 취소했습니다. 다시 신청할 수 있습니다.</p>
+              <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />{t("ai_pre_questions")}</Button>
+              {questions.length > 0 && <Card className="p-3 bg-muted/40"><ul className="text-sm space-y-1 list-disc list-inside">{questions.map((q, i) => <li key={i}>{q}</li>)}</ul></Card>}
+              <Textarea placeholder={t("msg_to_employer_ph")} value={msg} onChange={e => setMsg(e.target.value)} />
+              <Button
+                className="w-full text-lg font-bold py-6 text-white hover:opacity-90"
+                style={{ backgroundColor: "#1E90FF" }}
+                onClick={apply}
+                disabled={busy}
+              >
+                {t("want_to_work")}
+              </Button>
+            </div>
+          ) : null && (
           ) : (
             <div className="space-y-2">
               <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />{t("ai_pre_questions")}</Button>
