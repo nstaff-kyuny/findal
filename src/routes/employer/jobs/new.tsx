@@ -235,12 +235,18 @@ function Page() {
           <div><Label>준비물 / 출근시 필요사항</Label><Textarea rows={5} value={prep} onChange={e => setPrep(e.target.value)} /></div>
           <div>
             <Label>근무 일자 <span className="text-xs text-muted-foreground font-normal">(최대 {MAX_WORK_DATES}일)</span></Label>
-            <div className="flex gap-2 mt-1 items-center">
-              <div className="relative flex-1 min-w-0">
+            <div className="grid grid-cols-[minmax(0,1fr)_auto] gap-2 mt-1 items-center w-full">
+              <div className="relative min-w-0 w-full">
                 <CalendarDays size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none z-10" />
-                <Input type="date" value={dateInput} onChange={e => setDateInput(e.target.value)} className="pl-9 w-full" />
+                <Input
+                  type="date"
+                  value={dateInput}
+                  onChange={e => setDateInput(e.target.value)}
+                  className="pl-9 w-full min-w-0 appearance-none"
+                  style={{ WebkitAppearance: "none", minWidth: 0 }}
+                />
               </div>
-              <Button type="button" onClick={addDate} disabled={dates.length >= MAX_WORK_DATES} className="shrink-0">추가</Button>
+              <Button type="button" onClick={addDate} disabled={dates.length >= MAX_WORK_DATES} className="shrink-0 px-4">추가</Button>
             </div>
             <div className="flex flex-wrap gap-1 mt-2">
               {dates.map(d => <span key={d} className="px-2 py-1 bg-muted rounded text-xs cursor-pointer" onClick={() => setDates(dates.filter(x => x !== d))}>{d} ✕</span>)}
