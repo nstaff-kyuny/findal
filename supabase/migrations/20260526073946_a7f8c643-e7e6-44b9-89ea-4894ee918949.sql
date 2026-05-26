@@ -1,0 +1,1 @@
+UPDATE public.push_dispatch_config SET endpoint_url='https://findar.nstaff.co.kr/api/public/send-push', updated_at=now();
