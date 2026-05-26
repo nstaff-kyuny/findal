@@ -612,6 +612,60 @@ export type Database = {
           },
         ]
       }
+      push_dispatch_config: {
+        Row: {
+          endpoint_url: string
+          id: boolean
+          updated_at: string
+          webhook_secret: string
+        }
+        Insert: {
+          endpoint_url: string
+          id?: boolean
+          updated_at?: string
+          webhook_secret: string
+        }
+        Update: {
+          endpoint_url?: string
+          id?: boolean
+          updated_at?: string
+          webhook_secret?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       referrers: {
         Row: {
           active: boolean
