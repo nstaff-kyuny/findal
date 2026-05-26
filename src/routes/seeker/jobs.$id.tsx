@@ -100,8 +100,8 @@ function Page() {
         if (!m.allow) { toast.error(m.reason); return; }
         if (m.risk === "보통") { toast.warning(m.reason); }
       }
-      // If a previous cancelled application exists, reactivate it instead of inserting (avoids unique key conflict)
-      if (app?.status === "cancelled") {
+      // If a previous cancelled/rejected application exists, reactivate it instead of inserting (avoids unique key conflict)
+      if (app?.status === "cancelled" || app?.status === "rejected") {
         const { error: rpcErr } = await supabase.rpc("seeker_reapply_application", { _app_id: app.id, _message: msg || null } as any);
         if (rpcErr) return toast.error(rpcErr.message);
         toast.success("OK");
