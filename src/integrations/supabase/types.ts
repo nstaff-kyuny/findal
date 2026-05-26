@@ -819,6 +819,10 @@ export type Database = {
       }
       run_partner_monthly_grants: { Args: never; Returns: Json }
       seeker_confirm_application: { Args: { _app_id: string }; Returns: Json }
+      seeker_reapply_application: {
+        Args: { _app_id: string; _message: string }
+        Returns: Json
+      }
       unmark_no_show: { Args: { _app_id: string }; Returns: Json }
     }
     Enums: {

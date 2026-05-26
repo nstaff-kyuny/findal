@@ -100,10 +100,13 @@ function Page() {
         if (!m.allow) { toast.error(m.reason); return; }
         if (m.risk === "보통") { toast.warning(m.reason); }
       }
-      // If a previous cancelled application exists, remove it so the user can re-apply
+      // If a previous cancelled application exists, reactivate it instead of inserting (avoids unique key conflict)
       if (app?.status === "cancelled") {
-        const { error: delErr } = await supabase.from("job_applications").delete().eq("id", app.id);
-        if (delErr) return toast.error(delErr.message);
+        const { error: rpcErr } = await supabase.rpc("seeker_reapply_application", { _app_id: app.id, _message: msg || null } as any);
+        if (rpcErr) return toast.error(rpcErr.message);
+        toast.success("OK");
+        load();
+        return;
       }
       const { error } = await supabase.from("job_applications").insert({
         job_id: job.id, seeker_id: user.id, employer_id: job.employer_id, message: msg || null,
