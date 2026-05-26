@@ -117,13 +117,19 @@ function Page() {
     if (isRoomCleaningHotel && !rooms) return toast.error("객실청소 공고는 일일 객실수가 필수입니다");
     setSaving(true);
     try {
-      const combined = `${title}\n${prep ?? ""}\n${placeName}`.trim();
+      // 제목/장소명만 엄격 검수 (준비물은 욕설만 차단)
+      const combined = `${title}\n${placeName}`.trim();
       const mod = await moderate({ data: { text: combined, context: "job" } });
       if (!mod.allow) {
         toast.error(`부적절한 표현이 감지되어 공고를 등록할 수 없습니다: ${mod.reason}`);
         return;
       }
       if (mod.risk === "보통") toast.warning(`주의 표현이 감지되었습니다: ${mod.reason}`);
+      // 준비물: 욕설만 로컬에서 차단
+      if (prep && /(시발|씨발|개새끼|좆|병신|fuck|shit|asshole|bitch)/i.test(prep)) {
+        toast.error("준비물 내용에 욕설이 포함되어 있습니다");
+        return;
+      }
       const fullRegion = district ? `${region} ${district}` : region;
       const { error } = await supabase.from("jobs").insert({
         employer_id: user.id, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
