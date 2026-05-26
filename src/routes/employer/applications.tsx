@@ -189,12 +189,13 @@ function Page() {
         </div>
         <p className="text-[11px] text-muted-foreground -mt-1">대기 중 지원자를 AI가 한 줄 요약하고 노쇼 위험을 표시합니다 (최대 20명).</p>
         <Tabs defaultValue="pending">
-          <TabsList className="grid grid-cols-3 w-full">
+          <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="pending">대기 ({groups.pending.length})</TabsTrigger>
             <TabsTrigger value="approved">승인 ({groups.approved.length})</TabsTrigger>
+            <TabsTrigger value="rejected">거절 ({groups.rejected.length})</TabsTrigger>
             <TabsTrigger value="no_show">노쇼 ({groups.no_show.length})</TabsTrigger>
           </TabsList>
-          {(["pending", "approved", "no_show"] as const).map(key => (
+          {(["pending", "approved", "rejected", "no_show"] as const).map(key => (
             <TabsContent key={key} value={key} className="space-y-2 mt-2">
               {groups[key].length === 0
                 ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
