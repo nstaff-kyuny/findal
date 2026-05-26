@@ -181,7 +181,6 @@ function Page() {
                 {t("want_to_work")}
               </Button>
             </div>
-          ) : null && (
           ) : (
             <div className="space-y-2">
               <Button variant="secondary" className="w-full" onClick={runScreening} disabled={aiBusy}><ClipboardCheck size={16} className="mr-1" />{t("ai_pre_questions")}</Button>
