@@ -2,6 +2,8 @@
 self.addEventListener("install", (e) => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
+const APP_ICON = "/icons/icon-192.png";
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
@@ -12,8 +14,8 @@ self.addEventListener("push", (event) => {
   const title = data.title || "Find AR";
   const options = {
     body: data.body || "",
-    icon: "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-192.png",
-    badge: "https://adrnhxpzkqyqzfcihokt.supabase.co/storage/v1/object/public/app-icons/icon-192.png",
+    icon: APP_ICON,
+    badge: APP_ICON,
     tag: data.notification_id || data.tag || undefined,
     data: { link_url: data.link_url || "/notifications" },
     vibrate: [120, 60, 120],
