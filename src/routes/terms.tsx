@@ -60,6 +60,40 @@ ${COMPANY_INFO.name}(이하 "회사")는 회원의 개인정보를 중요시하�
 회원은 언제든지 개인정보 열람, 수정, 삭제, 처리정지 등을 요청할 수 있습니다.
 `;
 
+const REFUND = `
+${COMPANY_INFO.name}(이하 "회사")는 ${COMPANY_INFO.appName} 서비스 이용 시 발생하는 결제에 대해 다음과 같이 환불정책을 운영합니다.
+
+1. 환불 대상
+- 본 환불정책은 구인자가 결제한 "크레딧" 상품에 적용됩니다.
+- 구직자의 서비스 이용은 무료이므로 환불 대상에 해당하지 않습니다.
+
+2. 환불 가능 기준
+가. 전액 환불
+- 결제 후 7일 이내이며, 구매한 크레딧을 1회도 사용하지 않은 경우 전액 환불이 가능합니다.
+- 회사의 귀책사유(서비스 장애, 결제 오류 등)로 정상적인 서비스 이용이 불가능한 경우 전액 환불됩니다.
+
+나. 부분 환불
+- 결제 후 7일이 지났거나, 구매한 크레딧 중 일부를 사용한 경우 잔여 크레딧에 한하여 환불이 가능합니다.
+- 환불 금액 = (잔여 크레딧 / 구매 크레딧) × 결제 금액 - 결제대행 수수료(결제 금액의 약 3.3%)
+
+다. 환불 불가
+- 구매한 크레딧을 전부 사용한 경우
+- 부정한 방법으로 크레딧을 사용하거나 적립한 경우
+- 이벤트 또는 프로모션으로 무상 지급된 크레딧
+- 회원 자격이 정지·말소된 경우
+
+3. 환불 신청 방법
+- 앱 내 "MY → 1:1 문의" 또는 고객센터(${COMPANY_INFO.email || "support@nstaff.co.kr"})로 신청해 주시기 바랍니다.
+- 신청 시 가입 이메일, 결제일시, 주문번호, 환불 사유를 함께 보내주시기 바랍니다.
+
+4. 환불 처리 기간
+- 환불 신청 접수일로부터 영업일 기준 3~7일 이내에 처리됩니다.
+- 결제수단(카드, 계좌이체 등)에 따라 실제 환급까지 추가 영업일이 소요될 수 있습니다.
+
+5. 기타
+- 본 환불정책에 명시되지 않은 사항은 「전자상거래 등에서의 소비자보호에 관한 법률」 및 관련 법령에 따릅니다.
+`;
+
 function Page() {
   return (
     <div className="min-h-screen bg-muted/30 max-w-md mx-auto">
@@ -69,15 +103,19 @@ function Page() {
       </header>
       <div className="p-3">
         <Tabs defaultValue="terms">
-          <TabsList className="grid grid-cols-2 w-full">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="terms">이용약관</TabsTrigger>
-            <TabsTrigger value="privacy">개인정보처리방침</TabsTrigger>
+            <TabsTrigger value="privacy">개인정보</TabsTrigger>
+            <TabsTrigger value="refund">환불정책</TabsTrigger>
           </TabsList>
           <TabsContent value="terms">
             <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{TERMS}</pre>
           </TabsContent>
           <TabsContent value="privacy">
             <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{PRIVACY}</pre>
+          </TabsContent>
+          <TabsContent value="refund">
+            <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{REFUND}</pre>
           </TabsContent>
         </Tabs>
       </div>
