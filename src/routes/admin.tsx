@@ -146,6 +146,7 @@ function AdminPanel() {
         <TabsTrigger value="partners">협력업체</TabsTrigger>
         <TabsTrigger value="ai-insights">AI 인사이트</TabsTrigger>
         <TabsTrigger value="company">사업자정보</TabsTrigger>
+        <TabsTrigger value="legal">약관/정책</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
       </TabsList>
