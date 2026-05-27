@@ -23,11 +23,6 @@ export function NotificationBell() {
     if (!user) return;
     refresh();
 
-    // Request browser notification permission once
-    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission().catch(() => {});
-    }
-
     const channel = supabase
       .channel(`notif-${user.id}`)
       .on(
