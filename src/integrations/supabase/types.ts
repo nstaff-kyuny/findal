@@ -110,6 +110,48 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_orders: {
+        Row: {
+          amount_krw: number
+          approved_at: string | null
+          created_at: string
+          employer_id: string
+          id: string
+          method: string | null
+          pack: number
+          payment_key: string | null
+          raw: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_krw: number
+          approved_at?: string | null
+          created_at?: string
+          employer_id: string
+          id: string
+          method?: string | null
+          pack: number
+          payment_key?: string | null
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_krw?: number
+          approved_at?: string | null
+          created_at?: string
+          employer_id?: string
+          id?: string
+          method?: string | null
+          pack?: number
+          payment_key?: string | null
+          raw?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_purchase_requests: {
         Row: {
           amount_krw: number
