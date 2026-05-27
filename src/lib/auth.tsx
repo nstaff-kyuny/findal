@@ -29,7 +29,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadRoles = async (uid: string | undefined) => {
     if (!uid) { setRoles([]); return; }
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+    const timeout = new Promise<{ data: null }>((resolve) => {
+      window.setTimeout(() => resolve({ data: null }), 8000);
+    });
+    const { data } = await Promise.race([
+      supabase.from("user_roles").select("role").eq("user_id", uid),
+      timeout,
+    ]);
     setRoles((data ?? []).map((r: any) => r.role));
   };
 
