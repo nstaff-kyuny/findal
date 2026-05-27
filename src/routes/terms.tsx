@@ -1,11 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { BackToSettings } from "@/components/BackToSettings";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { COMPANY_INFO } from "@/lib/company";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/terms")({ component: Page });
 
-const TERMS = `
+export const DEFAULT_TERMS = `
 제1조 (목적)
 이 약관은 ${COMPANY_INFO.name}(이하 "회사")가 제공하는 ${COMPANY_INFO.appName} 서비스(이하 "서비스")의 이용과 관련하여 회사와 회원의 권리, 의무 및 책임사항 등을 규정함을 목적으로 합니다.
 
@@ -31,9 +33,9 @@ const TERMS = `
 
 부칙
 본 약관은 2026년 5월 17일부터 시행됩니다.
-`;
+`.trim();
 
-const PRIVACY = `
+export const DEFAULT_PRIVACY = `
 ${COMPANY_INFO.name}(이하 "회사")는 회원의 개인정보를 중요시하며, 「개인정보 보호법」 등 관련 법령을 준수합니다.
 
 1. 수집하는 개인정보 항목
@@ -58,9 +60,9 @@ ${COMPANY_INFO.name}(이하 "회사")는 회원의 개인정보를 중요시하�
 
 6. 이용자의 권리
 회원은 언제든지 개인정보 열람, 수정, 삭제, 처리정지 등을 요청할 수 있습니다.
-`;
+`.trim();
 
-const REFUND = `
+export const DEFAULT_REFUND = `
 ${COMPANY_INFO.name}(이하 "회사")는 ${COMPANY_INFO.appName} 서비스 이용 시 발생하는 결제에 대해 다음과 같이 환불정책을 운영합니다.
 
 1. 환불 대상
@@ -92,9 +94,29 @@ ${COMPANY_INFO.name}(이하 "회사")는 ${COMPANY_INFO.appName} 서비스 이�
 
 5. 기타
 - 본 환불정책에 명시되지 않은 사항은 「전자상거래 등에서의 소비자보호에 관한 법률」 및 관련 법령에 따릅니다.
-`;
+`.trim();
 
 function Page() {
+  const [docs, setDocs] = useState<{ terms: string; privacy: string; refund: string }>({
+    terms: DEFAULT_TERMS,
+    privacy: DEFAULT_PRIVACY,
+    refund: DEFAULT_REFUND,
+  });
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase as any).from("legal_documents").select("kind, content");
+      if (!data) return;
+      const map: any = {};
+      for (const r of data) map[r.kind] = (r.content || "").trim();
+      setDocs({
+        terms: map.terms || DEFAULT_TERMS,
+        privacy: map.privacy || DEFAULT_PRIVACY,
+        refund: map.refund || DEFAULT_REFUND,
+      });
+    })();
+  }, []);
+
   return (
     <div className="min-h-screen bg-muted/30 max-w-md mx-auto">
       <header className="sticky top-0 bg-background border-b px-4 py-3 flex items-center gap-2">
@@ -109,13 +131,13 @@ function Page() {
             <TabsTrigger value="refund">환불정책</TabsTrigger>
           </TabsList>
           <TabsContent value="terms">
-            <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{TERMS}</pre>
+            <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{docs.terms}</pre>
           </TabsContent>
           <TabsContent value="privacy">
-            <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{PRIVACY}</pre>
+            <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{docs.privacy}</pre>
           </TabsContent>
           <TabsContent value="refund">
-            <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{REFUND}</pre>
+            <pre className="text-xs whitespace-pre-wrap font-sans leading-6 p-3 bg-background rounded">{docs.refund}</pre>
           </TabsContent>
         </Tabs>
       </div>
