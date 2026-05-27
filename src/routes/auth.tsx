@@ -82,19 +82,28 @@ function AuthPage() {
   const signIn = async () => {
     if (!loginId || !loginPw) return toast.error("이메일/비밀번호를 입력하세요");
     setLoading(true);
-    const { email: e, password: p } = normalizeLogin(loginId, loginPw);
-    const { error } = await supabase.auth.signInWithPassword({ email: e, password: p });
-    setLoading(false);
-    if (error) {
-      const msg = error.message?.toLowerCase() ?? "";
-      if (msg.includes("invalid") || msg.includes("credentials") || msg.includes("password")) {
-        toast.error("비밀번호가 올바르지 않습니다. 비밀번호를 잊으셨다면 아래 '비밀번호 찾기'를 눌러주세요.");
-      } else {
-        toast.error(error.message);
+    try {
+      const { email: e, password: p } = normalizeLogin(loginId, loginPw);
+      const result = await Promise.race([
+        supabase.auth.signInWithPassword({ email: e, password: p }),
+        new Promise<{ error: Error }>((resolve) => {
+          window.setTimeout(() => resolve({ error: new Error("로그인 응답이 지연되고 있습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.") }), 12000);
+        }),
+      ]);
+      if (result.error) {
+        const msg = result.error.message?.toLowerCase() ?? "";
+        if (msg.includes("invalid") || msg.includes("credentials") || msg.includes("password")) {
+          toast.error("비밀번호가 올바르지 않습니다. 비밀번호를 잊으셨다면 아래 '비밀번호 찾기'를 눌러주세요.");
+        } else {
+          toast.error(result.error.message);
+        }
+        return;
       }
-      return;
+      await supabase.auth.getUser().catch(() => null);
+      window.location.assign("/");
+    } finally {
+      setLoading(false);
     }
-    nav({ to: "/" });
   };
 
   const forgotPassword = async () => {
