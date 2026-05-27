@@ -119,7 +119,9 @@ export const Route = createFileRoute("/api/public/send-push")({
                 message: {
                   payload: pushPayload,
                   adminContact: vapidSub,
-                  options: { ttl: 60 * 60 * 24, urgency: "high" },
+                  // NOTE: pushforge sets JWT exp = now + ttl. Apple web push rejects
+                  // exp >= 24h with "BadJwtToken". Keep ttl < 24h (use 12h).
+                  options: { ttl: 60 * 60 * 12, urgency: "high" },
                 },
               });
               const res = await fetch(endpoint, { method: "POST", headers, body: reqBody });
