@@ -18,7 +18,7 @@ export const Route = createFileRoute("/employer/credits_/fail")({
 });
 
 function Page() {
-  const search = useSearch({ from: "/employer/credits/fail" });
+  const search = useSearch({ from: "/employer/credits_/fail" });
   const nav = useNavigate();
   return (
     <MobileLayout role="employer">

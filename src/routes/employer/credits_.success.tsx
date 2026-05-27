@@ -21,7 +21,7 @@ export const Route = createFileRoute("/employer/credits_/success")({
 });
 
 function Page() {
-  const search = useSearch({ from: "/employer/credits/success" });
+  const search = useSearch({ from: "/employer/credits_/success" });
   const confirm = useServerFn(confirmCreditOrder);
   const nav = useNavigate();
   const [state, setState] = useState<"loading" | "ok" | "fail">("loading");
