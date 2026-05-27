@@ -146,6 +146,7 @@ function AdminPanel() {
         <TabsTrigger value="partners">협력업체</TabsTrigger>
         <TabsTrigger value="ai-insights">AI 인사이트</TabsTrigger>
         <TabsTrigger value="company">사업자정보</TabsTrigger>
+        <TabsTrigger value="legal">약관/정책</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
       </TabsList>
@@ -162,9 +163,82 @@ function AdminPanel() {
       <TabsContent value="partners"><PartnersTab /></TabsContent>
       <TabsContent value="ai-insights"><AiInsightsTab /></TabsContent>
       <TabsContent value="company"><CompanyInfoTab /></TabsContent>
+      <TabsContent value="legal"><LegalDocsTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
       <TabsContent value="icons"><IconsTab /></TabsContent>
     </Tabs>
+  );
+}
+
+function LegalDocsTab() {
+  const KINDS = [
+    { key: "terms", label: "이용약관" },
+    { key: "privacy", label: "개인정보처리방침" },
+    { key: "refund", label: "환불정책" },
+  ] as const;
+  const [active, setActive] = useState<"terms" | "privacy" | "refund">("terms");
+  const [contents, setContents] = useState<Record<string, string>>({ terms: "", privacy: "", refund: "" });
+  const [defaults, setDefaults] = useState<Record<string, string>>({ terms: "", privacy: "", refund: "" });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const [{ data }, mod] = await Promise.all([
+        (supabase as any).from("legal_documents").select("kind, content"),
+        import("@/routes/terms"),
+      ]);
+      const def = { terms: mod.DEFAULT_TERMS, privacy: mod.DEFAULT_PRIVACY, refund: mod.DEFAULT_REFUND };
+      setDefaults(def);
+      const next: any = { ...def };
+      for (const r of (data || [])) {
+        if (r.content && r.content.trim()) next[r.kind] = r.content;
+      }
+      setContents(next);
+      setLoading(false);
+    })();
+  }, []);
+
+  const save = async () => {
+    setSaving(true);
+    const { error } = await (supabase as any)
+      .from("legal_documents")
+      .upsert({ kind: active, content: contents[active] }, { onConflict: "kind" });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("저장되었습니다");
+  };
+
+  const resetToDefault = () => {
+    setContents((p) => ({ ...p, [active]: defaults[active] }));
+  };
+
+  if (loading) return <div className="text-sm text-muted-foreground py-8 text-center">불러오는 중...</div>;
+
+  return (
+    <Card className="mt-4 max-w-3xl"><CardContent className="p-4 space-y-3">
+      <div>
+        <h3 className="font-bold">약관 및 정책 관리</h3>
+        <p className="text-xs text-muted-foreground mt-1">설정 → 약관 및 정책 페이지에 표시되는 내용입니다. 저장 후 즉시 반영됩니다.</p>
+      </div>
+      <div className="flex gap-2 flex-wrap">
+        {KINDS.map((k) => (
+          <Button key={k.key} size="sm" variant={active === k.key ? "default" : "outline"} onClick={() => setActive(k.key)}>
+            {k.label}
+          </Button>
+        ))}
+      </div>
+      <Textarea
+        value={contents[active]}
+        onChange={(e) => setContents((p) => ({ ...p, [active]: e.target.value }))}
+        rows={24}
+        className="font-mono text-xs"
+      />
+      <div className="flex gap-2 justify-end">
+        <Button variant="outline" onClick={resetToDefault} disabled={saving}>기본값으로 되돌리기</Button>
+        <Button onClick={save} disabled={saving}>{saving ? "저장 중..." : "저장"}</Button>
+      </div>
+    </CardContent></Card>
   );
 }
 
