@@ -16,6 +16,7 @@ import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company"
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
+import { requestPushPermissionAndSubscribe } from "@/lib/push-client";
 import { Languages } from "lucide-react";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
@@ -29,6 +30,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const [notifyMkt, setNotifyMkt] = useState(false);
   const [version, setVersion] = useState<{ version: string; is_latest: boolean } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [pushBusy, setPushBusy] = useState(false);
   const [form, setForm] = useState<any>({});
   const [company, setCompany] = useState<CompanyInfo>(COMPANY_INFO);
   const table = role === "seeker" ? "seeker_profiles" : "employer_profiles";
@@ -50,6 +52,18 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
     if (!user) return;
     setNotifyPush(push); setNotifyMkt(mkt);
     await supabase.from(table).update({ notify_push: push, notify_marketing: mkt } as any).eq("user_id", user.id);
+    if (push) {
+      setPushBusy(true);
+      try {
+        const ok = await requestPushPermissionAndSubscribe(user.id);
+        if (ok) toast.success("푸시 알림이 등록되었습니다");
+        else toast.info("브라우저 또는 휴대폰 설정에서 알림 권한을 허용해 주세요");
+      } catch (e: any) {
+        toast.error(e?.message ?? "푸시 알림 등록에 실패했습니다");
+      } finally {
+        setPushBusy(false);
+      }
+    }
   };
 
   const checkUpdate = async () => {
@@ -148,7 +162,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         <SectionHeader>알림 설정</SectionHeader>
         <Row>
           <div className="flex items-center gap-2"><Bell size={16} /> <span>푸시 알림</span></div>
-          <Switch checked={notifyPush} onCheckedChange={(v) => updateNotify(v, notifyMkt)} />
+          <Switch checked={notifyPush} disabled={pushBusy} onCheckedChange={(v) => updateNotify(v, notifyMkt)} />
         </Row>
         <Row>
           <div className="flex items-center gap-2"><Megaphone size={16} /> <span>마케팅/이벤트 알림</span></div>
