@@ -83,7 +83,7 @@ ${COMPANY_INFO.name}(이하 "회사")는 ${COMPANY_INFO.appName} 서비스 이�
 - 회원 자격이 정지·말소된 경우
 
 3. 환불 신청 방법
-- 앱 내 "MY → 1:1 문의" 또는 고객센터(${COMPANY_INFO.email || "support@nstaff.co.kr"})로 신청해 주시기 바랍니다.
+- 앱 내 "MY → 1:1 문의" 또는 고객센터(${COMPANY_INFO.email || "findar@nstaff.co.kr"})로 신청해 주시기 바랍니다.
 - 신청 시 가입 이메일, 결제일시, 주문번호, 환불 사유를 함께 보내주시기 바랍니다.
 
 4. 환불 처리 기간
