@@ -12,7 +12,7 @@ const searchSchema = z.object({
   orderId: z.string().optional(),
 });
 
-export const Route = createFileRoute("/employer/credits/fail")({
+export const Route = createFileRoute("/employer/credits_/fail")({
   validateSearch: (s) => searchSchema.parse(s),
   component: () => <RoleGate role="employer"><Page /></RoleGate>,
 });

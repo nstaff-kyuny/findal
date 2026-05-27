@@ -15,7 +15,7 @@ const searchSchema = z.object({
   amount: z.coerce.number().optional(),
 });
 
-export const Route = createFileRoute("/employer/credits/success")({
+export const Route = createFileRoute("/employer/credits_/success")({
   validateSearch: (s) => searchSchema.parse(s),
   component: () => <RoleGate role="employer"><Page /></RoleGate>,
 });
