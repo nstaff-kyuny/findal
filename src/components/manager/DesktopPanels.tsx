@@ -123,13 +123,16 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
       if (!mod.allow) return toast.error(`부적절한 표현: ${mod.reason}`);
       if (mod.risk === "보통") toast.warning(`주의 표현: ${mod.reason}`);
       const fullRegion = district ? `${region} ${district}` : region;
-      const { error } = await supabase.from("jobs").insert({
+      const phoneToUse = useDefaultContact ? (emp?.contact_phone ?? "") : contact;
+      const { data: inserted, error } = await supabase.from("jobs").insert({
         employer_id: userId, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
         photo_url: photoUrl, daily_wage: wageNum, pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
-        contact_phone: useDefaultContact ? (emp?.contact_phone ?? "") : contact,
         work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: headcountNum, is_active: true,
-      } as any);
+      } as any).select("id").single();
       if (error) return toast.error(error.message);
+      if (inserted?.id && phoneToUse) {
+        await supabase.from("job_contacts").upsert({ job_id: inserted.id, employer_id: userId, contact_phone: phoneToUse }, { onConflict: "job_id" });
+      }
       toast.success("공고 등록 완료");
       // reset
       setTitle(""); setPlaceName(""); setLocation(""); setWage(""); setPrep("");
