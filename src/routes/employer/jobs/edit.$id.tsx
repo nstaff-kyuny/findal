@@ -67,10 +67,13 @@ function Page() {
         industry: job.industry, job_role: job.job_role, daily_wage: Number(job.daily_wage) || 0,
         pay_day: job.pay_day, preparations: job.preparations, headcount: Math.max(1, Number(job.headcount) || 1),
         rooms_per_day: job.rooms_per_day ? Number(job.rooms_per_day) : null,
-        contact_phone: job.contact_phone, photo_url: job.photo_url,
+        photo_url: job.photo_url,
         edit_count: editCount + 1,
       } as any).eq("id", id);
       if (error) return toast.error(error.message);
+      if (job.contact_phone) {
+        await supabase.from("job_contacts").upsert({ job_id: id, employer_id: job.employer_id, contact_phone: job.contact_phone }, { onConflict: "job_id" });
+      }
       toast.success(`수정 완료 (${editCount + 1}/${MAX_EDITS})`);
       nav({ to: "/employer/jobs" });
     } finally {
