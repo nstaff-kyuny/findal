@@ -423,7 +423,6 @@ export type Database = {
       }
       jobs: {
         Row: {
-          contact_phone: string
           created_at: string
           daily_wage: number
           edit_count: number
@@ -445,7 +444,6 @@ export type Database = {
           work_dates: string[]
         }
         Insert: {
-          contact_phone: string
           created_at?: string
           daily_wage: number
           edit_count?: number
@@ -467,7 +465,6 @@ export type Database = {
           work_dates?: string[]
         }
         Update: {
-          contact_phone?: string
           created_at?: string
           daily_wage?: number
           edit_count?: number
