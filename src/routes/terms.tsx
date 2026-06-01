@@ -5,7 +5,19 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { COMPANY_INFO } from "@/lib/company";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/terms")({ component: Page });
+export const Route = createFileRoute("/terms")({
+  component: Page,
+  head: () => ({
+    meta: [
+      { title: "이용약관 및 개인정보처리방침 | Find AR" },
+      { name: "description", content: "Find AR(파인달) 통합 회원 이용약관, 개인정보처리방침, 마케팅 수신 동의 안내." },
+      { property: "og:title", content: "이용약관 및 개인정보처리방침 | Find AR" },
+      { property: "og:description", content: "Find AR(파인달) 통합 회원 약관 및 개인정보처리방침." },
+      { property: "og:url", content: "https://findar.nstaff.co.kr/terms" },
+    ],
+    links: [{ rel: "canonical", href: "https://findar.nstaff.co.kr/terms" }],
+  }),
+});
 
 export const DEFAULT_TERMS = `
 제1조 (목적)
