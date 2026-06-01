@@ -18,6 +18,34 @@ export const Route = createFileRoute("/faq")({
       { property: "og:url", content: "https://findar.nstaff.co.kr/faq" },
     ],
     links: [{ rel: "canonical", href: "https://findar.nstaff.co.kr/faq" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          name: "Find AR 자주 묻는 질문",
+          url: "https://findar.nstaff.co.kr/faq",
+          mainEntity: [
+            {
+              "@type": "Question",
+              name: "Find AR은 어떤 서비스인가요?",
+              acceptedAnswer: { "@type": "Answer", text: "Find AR(파인달)은 외식·호텔·요양 등 단기 근무 일자리와 구직자를 연결하는 일용직 매칭 플랫폼입니다." },
+            },
+            {
+              "@type": "Question",
+              name: "구직자는 이용료가 있나요?",
+              acceptedAnswer: { "@type": "Answer", text: "구직자는 공고 열람과 신청을 무료로 이용할 수 있습니다." },
+            },
+            {
+              "@type": "Question",
+              name: "구인자는 어떻게 결제하나요?",
+              acceptedAnswer: { "@type": "Answer", text: "구인자는 크레딧을 충전해 매칭 승인 등 유료 기능에 사용합니다." },
+            },
+          ],
+        }),
+      },
+    ],
   }),
 });
 
