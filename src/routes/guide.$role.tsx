@@ -9,7 +9,29 @@ import { GuideAiChat } from "@/components/GuideAiChat";
 import { translateTexts } from "@/lib/ai.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/guide/$role")({ component: Page });
+export const Route = createFileRoute("/guide/$role")({
+  component: Page,
+  head: ({ params }) => {
+    const isSeeker = params.role === "seeker";
+    const title = isSeeker
+      ? "구직자 가이드 | Find AR — 공고 신청·출근 확정 흐름"
+      : "구인자 가이드 | Find AR — 공고 등록·승인·완료 흐름";
+    const desc = isSeeker
+      ? "Find AR 구직자 이용 가이드: 공고 둘러보기, 신청, 승인 확인, 출근 확정, 완료 처리까지 단계별 안내."
+      : "Find AR 구인자 이용 가이드: 공고 등록, 신청자 검토, 승인, 출근 확정 확인, 완료 처리까지 단계별 안내.";
+    const url = `https://findar.nstaff.co.kr/guide/${params.role}`;
+    return {
+      meta: [
+        { title },
+        { name: "description", content: desc },
+        { property: "og:title", content: title },
+        { property: "og:description", content: desc },
+        { property: "og:url", content: url },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
+});
 
 type Step = { badge: string; title: string; desc: string };
 
@@ -113,7 +135,7 @@ function Page() {
             <div className="flex items-start gap-3">
               <Badge variant="default" className="text-base px-3 py-1 shrink-0">{s.badge}</Badge>
               <div className="min-w-0">
-                <h3 className="font-semibold text-base">{s.title}</h3>
+                <h2 className="font-semibold text-base">{s.title}</h2>
                 <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap leading-relaxed">{s.desc}</p>
               </div>
             </div>

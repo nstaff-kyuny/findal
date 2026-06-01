@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin2
+Disallow: /manager
+Disallow: /api/
+Disallow: /employer/
+Disallow: /seeker/
+Disallow: /notifications
+Disallow: /onboarding
+Disallow: /reset-password
+
+Sitemap: https://findar.nstaff.co.kr/sitemap.xml

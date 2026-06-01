@@ -5,7 +5,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BackToSettings } from "@/components/BackToSettings";
 
-export const Route = createFileRoute("/notices")({ component: Page });
+export const Route = createFileRoute("/notices")({
+  component: Page,
+  head: () => ({
+    meta: [
+      { title: "공지사항 | Find AR" },
+      { name: "description", content: "Find AR(파인달) 서비스 공지사항. 운영 변경, 업데이트, 안내 사항을 확인하세요." },
+      { property: "og:title", content: "공지사항 | Find AR" },
+      { property: "og:description", content: "Find AR(파인달) 서비스 운영 공지." },
+      { property: "og:url", content: "https://findar.nstaff.co.kr/notices" },
+    ],
+    links: [{ rel: "canonical", href: "https://findar.nstaff.co.kr/notices" }],
+  }),
+});
 
 function Page() {
   const [list, setList] = useState<any[]>([]);
@@ -25,7 +37,7 @@ function Page() {
           <Card key={n.id}><CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               {n.pinned && <Badge>중요</Badge>}
-              <h3 className="font-semibold">{n.title}</h3>
+              <h2 className="font-semibold">{n.title}</h2>
             </div>
             <p className="text-xs text-muted-foreground">{new Date(n.created_at).toLocaleDateString("ko-KR")}</p>
             <p className="text-sm mt-2 whitespace-pre-wrap">{n.body}</p>
