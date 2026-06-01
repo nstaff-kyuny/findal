@@ -13,7 +13,19 @@ import { Search, Building2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeReferrerCode } from "@/lib/utils";
 
-export const Route = createFileRoute("/auth")({ component: AuthPage });
+export const Route = createFileRoute("/auth")({
+  component: AuthPage,
+  head: () => ({
+    meta: [
+      { title: "회원가입·로그인 | Find AR — 일용직 일자리 매칭 플랫폼" },
+      { name: "description", content: "구직자·구인자 통합 회원가입과 로그인. 외식·호텔·요양 등 단기 근무 일자리를 Find AR에서 찾아보세요." },
+      { property: "og:title", content: "회원가입·로그인 | Find AR" },
+      { property: "og:description", content: "구직자·구인자 통합 회원가입과 로그인. 단기 근무 일자리를 빠르게 매칭하세요." },
+      { property: "og:url", content: "https://findar.nstaff.co.kr/auth" },
+    ],
+    links: [{ rel: "canonical", href: "https://findar.nstaff.co.kr/auth" }],
+  }),
+});
 
 const ADMIN_ALIAS = "nstaff";
 const ADMIN_EMAIL = "nstaff@findar.app";
@@ -280,7 +292,7 @@ function AgreeRow({ checked, onCheckedChange, label, onView, required, optional 
           {label}
         </span>
       </label>
-      <button type="button" onClick={onView} className="text-xs underline text-muted-foreground shrink-0">보기</button>
+      <button type="button" onClick={onView} aria-label={`${label} 보기`} className="text-xs underline text-muted-foreground shrink-0">보기</button>
     </div>
   );
 }
