@@ -7,7 +7,19 @@ import { BookOpen } from "lucide-react";
 import { BackToSettings } from "@/components/BackToSettings";
 import { useAuth } from "@/lib/auth";
 
-export const Route = createFileRoute("/faq")({ component: Page });
+export const Route = createFileRoute("/faq")({
+  component: Page,
+  head: () => ({
+    meta: [
+      { title: "자주 묻는 질문(FAQ) | Find AR" },
+      { name: "description", content: "Find AR 자주 묻는 질문 모음. 신청·승인·확정·노쇼 처리 등 일용직 매칭 이용 방법을 안내합니다." },
+      { property: "og:title", content: "자주 묻는 질문(FAQ) | Find AR" },
+      { property: "og:description", content: "신청·승인·확정·노쇼 처리 등 Find AR 이용 방법 안내." },
+      { property: "og:url", content: "https://findar.nstaff.co.kr/faq" },
+    ],
+    links: [{ rel: "canonical", href: "https://findar.nstaff.co.kr/faq" }],
+  }),
+});
 
 function Page() {
   const [list, setList] = useState<any[]>([]);
@@ -24,7 +36,7 @@ function Page() {
         <h1 className="font-bold">자주 묻는 질문</h1>
       </header>
       <div className="p-3 space-y-3">
-        <Link to="/guide/$role" params={{ role }}>
+        <Link to="/guide/$role" params={{ role }} aria-label="앱 사용법 가이드 보기 — 신청·승인·확정·노쇼 처리 흐름 안내">
           <Card className="p-4 bg-primary text-primary-foreground flex items-center gap-3 hover:opacity-95 transition">
             <BookOpen size={22} />
             <div className="flex-1">

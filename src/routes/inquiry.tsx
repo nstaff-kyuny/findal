@@ -12,7 +12,19 @@ import { Badge } from "@/components/ui/badge";
 import { BackToSettings } from "@/components/BackToSettings";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/inquiry")({ component: Page });
+export const Route = createFileRoute("/inquiry")({
+  component: Page,
+  head: () => ({
+    meta: [
+      { title: "1:1 문의하기 | Find AR" },
+      { name: "description", content: "Find AR(파인달) 1:1 문의. AI가 즉시 1차 답변하고 민감 문의는 관리자가 확인해 드립니다." },
+      { property: "og:title", content: "1:1 문의하기 | Find AR" },
+      { property: "og:description", content: "AI·관리자 1:1 문의 접수 — Find AR(파인달)." },
+      { property: "og:url", content: "https://findar.nstaff.co.kr/inquiry" },
+    ],
+    links: [{ rel: "canonical", href: "https://findar.nstaff.co.kr/inquiry" }],
+  }),
+});
 
 function Page() {
   const { user } = useAuth();
@@ -52,7 +64,7 @@ function Page() {
           <p className="text-[11px] text-muted-foreground">일반 문의는 AI가 즉시 1차 답변하고, 결제·분쟁·개인정보 등 민감 문의는 관리자 확인으로 접수됩니다.</p>
           <Button className="w-full" onClick={submit} disabled={submitting}>{submitting ? "등록 중..." : "문의 등록"}</Button>
         </CardContent></Card>
-        <h3 className="font-bold text-sm">내 문의 내역</h3>
+        <h2 className="font-bold text-sm">내 문의 내역</h2>
         {list.length === 0 && <p className="text-center text-xs text-muted-foreground py-6">문의 내역이 없습니다</p>}
         {list.map(q => (
           <Card key={q.id}><CardContent className="p-4">
