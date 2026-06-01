@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as NotificationsRouteImport } from './routes/notifications'
@@ -46,6 +47,11 @@ import { Route as EmployerJobsEditIdRouteImport } from './routes/employer/jobs/e
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
@@ -222,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
@@ -257,6 +264,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
@@ -293,6 +301,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/onboarding': typeof OnboardingRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
@@ -330,6 +339,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/terms'
     | '/employer/applications'
     | '/employer/credits'
@@ -365,6 +375,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/terms'
     | '/employer/applications'
     | '/employer/credits'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/onboarding'
     | '/reset-password'
+    | '/sitemap.xml'
     | '/terms'
     | '/employer/applications'
     | '/employer/credits'
@@ -436,6 +448,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   OnboardingRoute: typeof OnboardingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   EmployerApplicationsRoute: typeof EmployerApplicationsRoute
   EmployerCreditsRoute: typeof EmployerCreditsRoute
@@ -465,6 +478,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reset-password': {
@@ -719,6 +739,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   OnboardingRoute: OnboardingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   EmployerApplicationsRoute: EmployerApplicationsRoute,
   EmployerCreditsRoute: EmployerCreditsRoute,

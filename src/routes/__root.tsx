@@ -94,8 +94,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "일용직알바찾기_FInd AR" },
       { name: "twitter:description", content: "Find AR (파인달) connects employers with temporary workers for hospitality, restaurants, and healthcare roles." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b960614b-6802-4c79-9831-baf58dfba981/id-preview-52e8e032--0901552f-1f39-43d3-90dd-086a05e6d476.lovable.app-1778999799501.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/b960614b-6802-4c79-9831-baf58dfba981/id-preview-52e8e032--0901552f-1f39-43d3-90dd-086a05e6d476.lovable.app-1778999799501.png" },
     ],
     links: [
       {
@@ -138,7 +136,9 @@ function RootComponent() {
       <ClientOnly fallback={<div className="min-h-screen" />}>
         <AuthProvider>
           <I18nProvider>
-            <Outlet />
+            <main>
+              <Outlet />
+            </main>
             <EventPopup />
             <InstallPrompt />
             <Toaster />
