@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { parseRegions } from "@/components/RegionPicker";
 import { generateSeekerMatchReasons } from "@/lib/ai.functions";
+import { SeekerAiJobChat } from "@/components/SeekerAiJobChat";
 
 export const Route = createFileRoute("/seeker/featured")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
@@ -152,6 +153,7 @@ function Page() {
   return (
     <MobileLayout role="seeker">
       <div className="p-3 space-y-5">
+        <SeekerAiJobChat />
         <Card className="p-3 bg-primary/5 border-primary/30">
           <p className="text-xs text-muted-foreground">{t("my_pref_regions")}</p>
           <div className="flex flex-wrap gap-1 mt-1">
@@ -176,9 +178,17 @@ function Page() {
             {ads.length === 0 && <p className="text-xs text-muted-foreground">{t("empty_ads")}</p>}
             {ads.map(a => (
               <a key={a.id} href={a.link_url ?? "#"} target="_blank" rel="noopener" className="block">
-                <Card className="p-3 flex items-center gap-3">
-                  {a.image_url && <img src={a.image_url} className="w-16 h-16 rounded object-cover" alt={a.title} />}
-                  <div className="font-semibold text-sm">{a.title}</div>
+                <Card className="overflow-hidden">
+                  {a.image_url ? (
+                    <div className="w-full aspect-[16/5] bg-muted">
+                      <img src={a.image_url} className="w-full h-full object-cover" alt={a.title} />
+                    </div>
+                  ) : (
+                    <div className="w-full aspect-[16/5] bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                      <p className="font-semibold text-sm px-3 text-center">{a.title}</p>
+                    </div>
+                  )}
+                  {a.image_url && <div className="px-3 py-1.5 text-xs font-semibold truncate">{a.title}</div>}
                 </Card>
               </a>
             ))}
