@@ -9,8 +9,12 @@ import { Badge } from "@/components/ui/badge";
 import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI, formatWorkDatesWithWeekday } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
-import { parseRegions } from "@/components/RegionPicker";
+import { parseRegions, serializeRegions, RegionPicker } from "@/components/RegionPicker";
 import { generateSeekerMatchReasons } from "@/lib/ai.functions";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Pencil } from "lucide-react";
 import { SeekerAiJobChat } from "@/components/SeekerAiJobChat";
 
 export const Route = createFileRoute("/seeker/featured")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
