@@ -134,6 +134,26 @@ export const UI: Dict = {
   ai_match_results: { ko: "추천 공고", en: "Recommended jobs", mn: "Санал болгох зар", ru: "Рекомендуемые вакансии", zh: "推荐职位" },
   ai_match_send: { ko: "메시지 보내기", en: "Send message", mn: "Илгээх", ru: "Отправить", zh: "发送" },
   ai_match_error: { ko: "잠시 후 다시 시도해주세요.", en: "Please try again in a moment.", mn: "Түр хүлээгээд дахин оролдоно уу.", ru: "Попробуйте, пожалуйста, ещё раз чуть позже.", zh: "请稍后再试。" },
+
+  // edit / save / saved
+  edit: { ko: "수정", en: "Edit", mn: "Засах", ru: "Изменить", zh: "修改" },
+  saved: { ko: "저장되었습니다", en: "Saved", mn: "Хадгалагдлаа", ru: "Сохранено", zh: "已保存" },
+
+  // contract type
+  contract_type: { ko: "급여 형태", en: "Wage type", mn: "Цалингийн төрөл", ru: "Тип оплаты", zh: "薪资类型" },
+  contract_daily: { ko: "일당", en: "Daily wage", mn: "Өдрийн цалин", ru: "Подённая оплата", zh: "日薪" },
+  contract_monthly: { ko: "단기계약(월급)", en: "Short-term (monthly)", mn: "Богино хугацаа (сарын)", ru: "Краткосрочный (месячный)", zh: "短期合同（月薪）" },
+  monthly_wage: { ko: "월급여", en: "Monthly wage", mn: "Сарын цалин", ru: "Месячная зарплата", zh: "月薪" },
+  contract_months: { ko: "계약 기간 (개월)", en: "Contract length (months)", mn: "Гэрээний хугацаа (сар)", ru: "Срок контракта (мес.)", zh: "合同期（月）" },
+  one_month_plus: { ko: "1개월 이상", en: "1 month or more", mn: "1 сараас дээш", ru: "1 месяц и более", zh: "1个月以上" },
+  per_month: { ko: "월", en: "/mo", mn: "/сар", ru: "/мес", zh: "/月" },
+  months_unit: { ko: "개월", en: "months", mn: "сар", ru: "мес.", zh: "个月" },
+
+  // completed badge
+  completed_badge: { ko: "완료", en: "Closed", mn: "Дууссан", ru: "Завершено", zh: "已结束" },
+
+  // detail location label (replaces "상세주소")
+  detail_location: { ko: "상세위치", en: "Detailed location", mn: "Дэлгэрэнгүй байршил", ru: "Подробное место", zh: "详细位置" },
 };
 
 export function t(key: string, lang: Lang): string {
