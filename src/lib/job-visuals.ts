@@ -50,3 +50,21 @@ export function formatWorkDatesWithWeekday(dates: string[] | null | undefined): 
     })
     .join(", ");
 }
+
+export function isJobCompleted(job: { contract_type?: string | null; work_dates?: string[] | null; created_at?: string | null; contract_months?: number | null } | null | undefined): boolean {
+  if (!job) return false;
+  if (job.contract_type === "monthly") {
+    if (!job.contract_months || !job.created_at) return false;
+    const start = new Date(job.created_at);
+    const end = new Date(start);
+    end.setMonth(end.getMonth() + Number(job.contract_months));
+    return end.getTime() < Date.now();
+  }
+  if (!job.work_dates || job.work_dates.length === 0) return false;
+  const max = [...job.work_dates].sort().pop()!;
+  const parts = max.split("-");
+  if (parts.length !== 3) return false;
+  const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+  return d.getTime() < Date.now();
+}
+

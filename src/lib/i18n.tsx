@@ -13,6 +13,9 @@ export { LANG_LABEL, LANG_FLAG };
 
 const LS_KEY = "seeker_lang";
 
+type CustomInd = { key: string; label: string; sort_order: number };
+type CustomRole = { key: string; industry_key: string; label: string; sort_order: number };
+
 type Ctx = {
   lang: Lang;
   setLang: (l: Lang) => Promise<void>;
@@ -20,6 +23,9 @@ type Ctx = {
   tIndustry: (key: string) => string;
   tRole: (key: string) => string;
   tRegion: (key: string) => string;
+  customIndustries: CustomInd[];
+  customRoles: CustomRole[];
+  refreshTaxonomy: () => Promise<void>;
 };
 
 const I18nCtx = createContext<Ctx>({
@@ -29,6 +35,9 @@ const I18nCtx = createContext<Ctx>({
   tIndustry: (k) => k,
   tRole: (k) => k,
   tRegion: (k) => k,
+  customIndustries: [],
+  customRoles: [],
+  refreshTaxonomy: async () => {},
 });
 
 export function I18nProvider({ children }: { children: ReactNode }) {
@@ -38,6 +47,19 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     const v = localStorage.getItem(LS_KEY) as Lang | null;
     return v && ["ko","en","mn","ru","zh"].includes(v) ? v : "ko";
   });
+  const [customIndustries, setCustomIndustries] = useState<CustomInd[]>([]);
+  const [customRoles, setCustomRoles] = useState<CustomRole[]>([]);
+
+  const refreshTaxonomy = useCallback(async () => {
+    const [{ data: i }, { data: r }] = await Promise.all([
+      supabase.from("custom_industries" as any).select("*").order("sort_order"),
+      supabase.from("custom_job_roles" as any).select("*").order("sort_order"),
+    ]);
+    setCustomIndustries((i ?? []) as any);
+    setCustomRoles((r ?? []) as any);
+  }, []);
+
+  useEffect(() => { if (user) refreshTaxonomy(); }, [user, refreshTaxonomy]);
 
   // load preference from DB once we know the user is a seeker
   useEffect(() => {
@@ -68,10 +90,23 @@ export function I18nProvider({ children }: { children: ReactNode }) {
     lang,
     setLang,
     t: (k) => tStr(k, lang),
-    tIndustry: (k) => tIndustry(k, lang),
-    tRole: (k) => tRole(k, lang),
+    tIndustry: (k) => {
+      const built = tIndustry(k, lang);
+      if (built !== k) return built;
+      const c = customIndustries.find((x) => x.key === k);
+      return c?.label ?? k;
+    },
+    tRole: (k) => {
+      const built = tRole(k, lang);
+      if (built !== k) return built;
+      const c = customRoles.find((x) => x.key === k);
+      return c?.label ?? k;
+    },
     tRegion: (k) => tRegion(k, lang),
-  }), [lang, setLang]);
+    customIndustries,
+    customRoles,
+    refreshTaxonomy,
+  }), [lang, setLang, customIndustries, customRoles, refreshTaxonomy]);
 
   return <I18nCtx.Provider value={value}>{children}</I18nCtx.Provider>;
 }

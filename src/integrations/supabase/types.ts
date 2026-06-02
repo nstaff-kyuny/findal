@@ -212,6 +212,51 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_industries: {
+        Row: {
+          created_at: string
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      custom_job_roles: {
+        Row: {
+          created_at: string
+          industry_key: string
+          key: string
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          industry_key: string
+          key: string
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          industry_key?: string
+          key?: string
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       employer_profiles: {
         Row: {
           company_name: string
@@ -423,16 +468,19 @@ export type Database = {
       }
       jobs: {
         Row: {
+          contract_months: number | null
+          contract_type: string
           created_at: string
-          daily_wage: number
+          daily_wage: number | null
           edit_count: number
           employer_id: string
           headcount: number
           id: string
-          industry: Database["public"]["Enums"]["industry"]
+          industry: string
           is_active: boolean
-          job_role: Database["public"]["Enums"]["job_role"]
+          job_role: string
           location: string
+          monthly_wage: number | null
           pay_day: string
           photo_url: string | null
           place_name: string
@@ -444,16 +492,19 @@ export type Database = {
           work_dates: string[]
         }
         Insert: {
+          contract_months?: number | null
+          contract_type?: string
           created_at?: string
-          daily_wage: number
+          daily_wage?: number | null
           edit_count?: number
           employer_id: string
           headcount?: number
           id?: string
-          industry: Database["public"]["Enums"]["industry"]
+          industry: string
           is_active?: boolean
-          job_role: Database["public"]["Enums"]["job_role"]
+          job_role: string
           location: string
+          monthly_wage?: number | null
           pay_day: string
           photo_url?: string | null
           place_name: string
@@ -465,16 +516,19 @@ export type Database = {
           work_dates?: string[]
         }
         Update: {
+          contract_months?: number | null
+          contract_type?: string
           created_at?: string
-          daily_wage?: number
+          daily_wage?: number | null
           edit_count?: number
           employer_id?: string
           headcount?: number
           id?: string
-          industry?: Database["public"]["Enums"]["industry"]
+          industry?: string
           is_active?: boolean
-          job_role?: Database["public"]["Enums"]["job_role"]
+          job_role?: string
           location?: string
+          monthly_wage?: number | null
           pay_day?: string
           photo_url?: string | null
           place_name?: string
