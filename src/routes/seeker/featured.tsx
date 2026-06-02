@@ -6,7 +6,7 @@ import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI, formatWorkDatesWithWeekday } from "@/lib/job-visuals";
+import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI, formatWorkDatesWithWeekday, isJobCompleted } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { parseRegions, serializeRegions, RegionPicker } from "@/components/RegionPicker";

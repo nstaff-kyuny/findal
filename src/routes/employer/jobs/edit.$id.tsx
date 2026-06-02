@@ -109,7 +109,7 @@ function Page() {
           </div>
           <div><Label>공고 제목</Label><Input value={job.title ?? ""} onChange={e => set("title", e.target.value)} /></div>
           <div><Label>일할 곳 이름</Label><Input value={job.place_name ?? ""} onChange={e => set("place_name", e.target.value)} /></div>
-          <div><Label>위치</Label><Input value={job.location ?? ""} onChange={e => set("location", e.target.value)} /></div>
+          <div><Label>상세위치</Label><Input value={job.location ?? ""} onChange={e => set("location", e.target.value)} /></div>
           <div><Label>지역</Label>
             <Select value={job.region ?? "서울"} onValueChange={(v) => set("region", v)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -121,7 +121,7 @@ function Page() {
             <div><Label>급여 지급일</Label><Input value={job.pay_day ?? ""} onChange={e => set("pay_day", e.target.value)} /></div>
           </div>
           <div><Label>필요 인원수</Label><Input type="number" min={1} value={job.headcount ?? 1} onChange={e => set("headcount", e.target.value)} /></div>
-          <div><Label>준비물</Label><Textarea value={job.preparations ?? ""} onChange={e => set("preparations", e.target.value)} /></div>
+          <div><Label>준비물</Label><Textarea rows={7} value={job.preparations ?? ""} onChange={e => set("preparations", e.target.value)} /></div>
           <div><Label>담당자 연락처</Label><Input value={job.contact_phone ?? ""} onChange={e => set("contact_phone", e.target.value)} /></div>
           <Button className="w-full" onClick={save} disabled={saving || reached}>
             {reached ? "수정 불가" : `수정 저장 (${editCount}/${MAX_EDITS})`}

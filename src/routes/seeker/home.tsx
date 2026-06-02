@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { REGIONS } from "@/lib/constants";
-import { formatWorkDatesWithWeekday } from "@/lib/job-visuals";
+import { formatWorkDatesWithWeekday, isJobCompleted } from "@/lib/job-visuals";
 import { MapPin, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
@@ -142,8 +142,11 @@ function Page() {
           </Card>
         </Link>
         {jobs.length === 0 && <div className="text-center text-sm text-muted-foreground py-12">{t("empty_jobs")}</div>}
-        {jobs.map(j => (
-          <Card key={j.id} className="p-3 cursor-pointer" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+        {jobs.map(j => {
+          const done = isJobCompleted(j);
+          return (
+          <Card key={j.id} className={`p-3 cursor-pointer relative ${done ? "grayscale opacity-70" : ""}`} onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+            {done && <Badge className="absolute top-2 right-2 z-10 bg-gray-600 text-white">{t("completed_badge")}</Badge>}
             <div className="flex gap-3">
               {j.photo_url ? (
                 <img src={j.photo_url} className="w-20 h-20 rounded object-cover" alt={j.title} />
@@ -157,17 +160,24 @@ function Page() {
                 </div>
                 <h3 className="font-semibold text-sm truncate">{tx[j.title] ?? j.title}</h3>
                 <p className="text-xs text-muted-foreground truncate flex items-center gap-1"><MapPin size={10} />{tx[j.place_name] ?? j.place_name}</p>
-                <p className="text-sm font-bold text-primary mt-1">{t("daily_wage")} {Number(j.daily_wage).toLocaleString()}{t("won")}</p>
+                {j.contract_type === "monthly" ? (
+                  <p className="text-sm font-bold text-primary mt-1">{t("monthly_wage")} {Number(j.monthly_wage ?? 0).toLocaleString()}{t("won")}{t("per_month")}</p>
+                ) : (
+                  <p className="text-sm font-bold text-primary mt-1">{t("daily_wage")} {Number(j.daily_wage ?? 0).toLocaleString()}{t("won")}</p>
+                )}
               </div>
               <div className="flex flex-col items-end justify-start shrink-0 text-right">
                 <span className="text-xs text-muted-foreground">{t("work_dates")}</span>
                 <span className="text-sm font-semibold text-foreground leading-tight whitespace-pre-line">
-                  {formatWorkDatesWithWeekday(j.work_dates)?.split(", ").slice(0, 2).join("\n") || t("to_be_arranged")}
+                  {j.contract_type === "monthly"
+                    ? (j.contract_months ? `${j.contract_months}${t("months_unit")}` : t("one_month_plus"))
+                    : (formatWorkDatesWithWeekday(j.work_dates)?.split(", ").slice(0, 2).join("\n") || t("to_be_arranged"))}
                 </span>
               </div>
             </div>
           </Card>
-        ))}
+          );
+        })}
         <Link to="/seeker/featured" className="block text-center text-xs text-primary py-3">{t("to_featured")}</Link>
       </div>
     </MobileLayout>

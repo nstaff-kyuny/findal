@@ -144,9 +144,19 @@ function Page() {
             </Button>
           </div>
           <Card><CardContent className="p-4 space-y-2 text-sm">
-            <div className="flex items-center gap-2"><MapPin size={14} className="text-muted-foreground" /><span>{tx[job.place_name] ?? job.place_name} · {tx[job.location] ?? job.location}</span></div>
-            <div className="flex items-center gap-2"><Wallet size={14} className="text-muted-foreground" /><span>{t("daily_wage")} <b>{Number(job.daily_wage).toLocaleString()}{t("won")}</b> ({t("pay_day_label")}: {job.pay_day})</span></div>
-            <div className="flex items-center gap-2"><Calendar size={14} className="text-muted-foreground" /><span>{t("work_dates")}: {formatWorkDates(job.work_dates)}</span></div>
+            <div className="flex items-center gap-2"><MapPin size={14} className="text-muted-foreground" /><span>{tx[job.place_name] ?? job.place_name} · <span className="text-muted-foreground">{t("detail_location")}:</span> {tx[job.location] ?? job.location}</span></div>
+            <div className="flex items-center gap-2"><Wallet size={14} className="text-muted-foreground" />
+              {job.contract_type === "monthly" ? (
+                <span>{t("monthly_wage")} <b>{Number(job.monthly_wage ?? 0).toLocaleString()}{t("won")}</b>{t("per_month")} ({t("pay_day_label")}: {job.pay_day})</span>
+              ) : (
+                <span>{t("daily_wage")} <b>{Number(job.daily_wage ?? 0).toLocaleString()}{t("won")}</b> ({t("pay_day_label")}: {job.pay_day})</span>
+              )}
+            </div>
+            <div className="flex items-center gap-2"><Calendar size={14} className="text-muted-foreground" />
+              {job.contract_type === "monthly"
+                ? <span>{t("contract_months")}: {job.contract_months ? `${job.contract_months}${t("months_unit")}` : t("one_month_plus")}</span>
+                : <span>{t("work_dates")}: {formatWorkDates(job.work_dates)}</span>}
+            </div>
             {job.rooms_per_day && <div className="flex items-center gap-2">🛏️ {t("rooms_per_day")}: {job.rooms_per_day}</div>}
             {job.preparations && <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded p-2"><Wrench size={14} className="text-amber-700 mt-0.5" /><span className="font-semibold text-amber-900">{t("prep_label")}: <span className="font-bold">{tx[job.preparations] ?? job.preparations}</span></span></div>}
             <div className="text-xs text-muted-foreground pt-2">{t("contact_after_approval")}</div>
