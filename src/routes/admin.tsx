@@ -20,7 +20,7 @@ import { Download, Trash2, UserPlus, KeyRound, Pencil } from "lucide-react";
 import { VISA_LABEL, NATIONALITY_LABEL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
-import { analyzeInquiryText, generateAdminAiInsights } from "@/lib/ai.functions";
+import { analyzeInquiryText, generateAdminAiInsights, generateAdBannerImage } from "@/lib/ai.functions";
 
 
 export const Route = createFileRoute("/admin")({ component: Admin });
