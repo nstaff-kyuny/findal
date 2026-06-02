@@ -128,12 +128,94 @@ function Page() {
   const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
   const STATUS_CLASS: Record<string,string> = { confirmed: "bg-green-600 hover:bg-green-600 text-white border-transparent" };
 
+  const [search, setSearch] = useState("");
+  const matchSearch = (a: any) => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    const fields = [
+      a.profiles?.full_name,
+      a.profiles?.phone,
+      a.jobs?.title,
+      a.jobs?.place_name,
+      a.message,
+      a.seeker_profiles?.nationality,
+      a.seeker_profiles?.visa,
+      ...(Array.isArray(a.jobs?.work_dates) ? a.jobs.work_dates : []),
+      a.created_at?.slice(0, 10),
+    ];
+    return fields.some((f) => f && String(f).toLowerCase().includes(q));
+  };
+
   const groups = useMemo(() => ({
-    pending: apps.filter(a => a.status === "pending"),
-    approved: apps.filter(a => a.status === "approved" || a.status === "confirmed"),
-    rejected: apps.filter(a => a.status === "rejected"),
-    no_show: apps.filter(a => a.status === "no_show"),
-  }), [apps]);
+    pending: apps.filter(a => a.status === "pending").filter(matchSearch),
+    approved: apps.filter(a => a.status === "approved" || a.status === "confirmed").filter(matchSearch),
+    rejected: apps.filter(a => a.status === "rejected").filter(matchSearch),
+    no_show: apps.filter(a => a.status === "no_show").filter(matchSearch),
+  }), [apps, search]);
+
+  // Approved 그룹: 공고별 묶음
+  const approvedByJob = useMemo(() => {
+    const map = new Map<string, { job: any; items: any[] }>();
+    groups.approved.forEach((a) => {
+      const jid = a.job_id;
+      if (!map.has(jid)) map.set(jid, { job: a.jobs ?? { title: "(공고)", place_name: "" }, items: [] });
+      map.get(jid)!.items.push(a);
+    });
+    return Array.from(map.entries()).map(([job_id, v]) => ({ job_id, ...v }));
+  }, [groups.approved]);
+
+  const [groupApproved, setGroupApproved] = useState(false);
+  const pdfRef = useRef<HTMLDivElement>(null);
+  const [pdfData, setPdfData] = useState<{ job: any; items: any[] } | null>(null);
+
+  const downloadJobPdf = async (job: any, items: any[]) => {
+    setPdfData({ job, items });
+    // wait for render
+    await new Promise((r) => setTimeout(r, 80));
+    const el = pdfRef.current;
+    if (!el) { setPdfData(null); return; }
+    try {
+      const canvas = await html2canvas(el, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+      const img = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ unit: "pt", format: "a4", orientation: "portrait" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW - 40;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      let y = 20;
+      if (imgH <= pageH - 40) {
+        pdf.addImage(img, "PNG", 20, y, imgW, imgH);
+      } else {
+        // multi-page
+        let remaining = imgH;
+        let sY = 0;
+        const pageContentH = pageH - 40;
+        const sliceH = (pageContentH * canvas.width) / imgW;
+        while (remaining > 0) {
+          const c2 = document.createElement("canvas");
+          c2.width = canvas.width;
+          c2.height = Math.min(sliceH, canvas.height - sY);
+          const ctx = c2.getContext("2d")!;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, c2.width, c2.height);
+          ctx.drawImage(canvas, 0, sY, canvas.width, c2.height, 0, 0, canvas.width, c2.height);
+          const partImg = c2.toDataURL("image/png");
+          const partH = (c2.height * imgW) / canvas.width;
+          pdf.addImage(partImg, "PNG", 20, 20, imgW, partH);
+          sY += c2.height;
+          remaining -= partH;
+          if (remaining > 0) pdf.addPage();
+        }
+      }
+      const fname = `승인자_${(job?.place_name || job?.title || "공고").replace(/[\\/:*?"<>|]/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`;
+      pdf.save(fname);
+      toast.success("PDF가 생성되었습니다");
+    } catch (e: any) {
+      toast.error(e?.message ?? "PDF 생성 실패");
+    } finally {
+      setPdfData(null);
+    }
+  };
 
   const renderCard = (a: any) => (
     <Card key={a.id}><CardContent className="p-3 space-y-2">
@@ -195,10 +277,21 @@ function Page() {
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold">받은 신청</h2>
           <Button size="sm" variant="default" onClick={runAiAnalyze} disabled={aiBusy || apps.filter(a => a.status === "pending").length === 0}>
-            {aiBusy ? "분석 중..." : "🤖 AI 지원자 요약·노쇼 위험"}
+            {aiBusy ? "분석 중..." : "🤖 AI 요약·노쇼 위험"}
           </Button>
         </div>
         <p className="text-[11px] text-muted-foreground -mt-1">대기 중 지원자를 AI가 한 줄 요약하고 노쇼 위험을 표시합니다 (최대 20명).</p>
+
+        <div className="relative">
+          <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="이름 · 업무장소 · 날짜(YYYY-MM-DD) · 업무 검색"
+            className="pl-7 h-9 text-sm"
+          />
+        </div>
+
         <Tabs defaultValue="pending">
           <TabsList className="grid grid-cols-4 w-full">
             <TabsTrigger value="pending">대기 ({groups.pending.length})</TabsTrigger>
@@ -206,15 +299,90 @@ function Page() {
             <TabsTrigger value="rejected">거절 ({groups.rejected.length})</TabsTrigger>
             <TabsTrigger value="no_show">노쇼 ({groups.no_show.length})</TabsTrigger>
           </TabsList>
-          {(["pending", "approved", "rejected", "no_show"] as const).map(key => (
-            <TabsContent key={key} value={key} className="space-y-2 mt-2">
-              {groups[key].length === 0
-                ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
-                : groups[key].map(renderCard)}
-            </TabsContent>
-          ))}
+
+          <TabsContent value="pending" className="space-y-2 mt-2">
+            {groups.pending.length === 0
+              ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
+              : groups.pending.map(renderCard)}
+          </TabsContent>
+
+          <TabsContent value="approved" className="space-y-2 mt-2">
+            <div className="flex items-center justify-end">
+              <Button size="sm" variant={groupApproved ? "default" : "outline"} onClick={() => setGroupApproved(v => !v)}>
+                {groupApproved ? "전체 목록 보기" : "공고별 보기 / PDF"}
+              </Button>
+            </div>
+            {groups.approved.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
+            ) : groupApproved ? (
+              approvedByJob.map(({ job_id, job, items }) => (
+                <Card key={job_id}><CardContent className="p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-semibold truncate">{job?.place_name || job?.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{job?.title}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">승인자 {items.length}명</p>
+                    </div>
+                    <Button size="sm" onClick={() => downloadJobPdf(job, items)}>
+                      <FileDown size={14} className="mr-1" />PDF
+                    </Button>
+                  </div>
+                  <div className="space-y-2">{items.map(renderCard)}</div>
+                </CardContent></Card>
+              ))
+            ) : (
+              groups.approved.map(renderCard)
+            )}
+          </TabsContent>
+
+          <TabsContent value="rejected" className="space-y-2 mt-2">
+            {groups.rejected.length === 0
+              ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
+              : groups.rejected.map(renderCard)}
+          </TabsContent>
+
+          <TabsContent value="no_show" className="space-y-2 mt-2">
+            {groups.no_show.length === 0
+              ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
+              : groups.no_show.map(renderCard)}
+          </TabsContent>
         </Tabs>
       </div>
+
+      {/* 오프스크린 PDF 렌더 영역 */}
+      {pdfData && (
+        <div style={{ position: "fixed", left: -10000, top: 0, width: 800, background: "#fff", color: "#111", padding: 24, fontFamily: "'Noto Sans KR', system-ui, sans-serif" }} ref={pdfRef}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>승인자 명단</h1>
+          <p style={{ fontSize: 13, color: "#444" }}>{pdfData.job?.place_name || "-"} · {pdfData.job?.title || "-"}</p>
+          <p style={{ fontSize: 12, color: "#666", marginBottom: 12 }}>
+            발급일: {new Date().toLocaleString("ko-KR")} · 모집인원: {pdfData.job?.headcount ?? "-"} · 승인 {pdfData.items.length}명
+          </p>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
+            <thead>
+              <tr style={{ background: "#f3f4f6" }}>
+                {["#", "이름", "연락처", "국적", "비자", "한국어", "경력", "승인일", "확정일"].map(h => (
+                  <th key={h} style={{ border: "1px solid #d1d5db", padding: "6px 4px", textAlign: "left" }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pdfData.items.map((a, i) => (
+                <tr key={a.id}>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{i + 1}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.profiles?.full_name ?? "-"}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.profiles?.phone ?? "-"}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.seeker_profiles?.nationality === "foreigner" ? "외국인" : a.seeker_profiles?.nationality === "korean" ? "내국인" : "-"}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.seeker_profiles?.visa ?? "-"}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.seeker_profiles?.korean_ok ? "가능" : "불가"}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.seeker_profiles?.experience === "lt5" ? "5회 미만" : a.seeker_profiles?.experience === "gte5" ? "5회 이상" : "-"}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.approved_at ? new Date(a.approved_at).toLocaleDateString("ko-KR") : "-"}</td>
+                  <td style={{ border: "1px solid #e5e7eb", padding: "6px 4px" }}>{a.confirmed_at ? new Date(a.confirmed_at).toLocaleDateString("ko-KR") : "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </MobileLayout>
   );
 }
