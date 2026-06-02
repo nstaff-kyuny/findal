@@ -159,13 +159,42 @@ function Page() {
       <div className="p-3 space-y-5">
         <SeekerAiJobChat />
         <Card className="p-3 bg-primary/5 border-primary/30">
-          <p className="text-xs text-muted-foreground">{t("my_pref_regions")}</p>
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs text-muted-foreground">{t("my_pref_regions")}</p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 px-2 text-[11px]"
+              onClick={() => { setEditRegions(prefRegions); setRegionDlg(true); }}
+            >
+              <Pencil size={11} className="mr-1" />{t("edit") || "수정"}
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-1 mt-1">
             {prefRegions.length === 0
               ? <span className="text-sm text-muted-foreground">{t("no_pref_region")}</span>
               : prefRegions.map(r => <Badge key={r} variant="default" className="text-xs">{tRegion(r)}</Badge>)}
           </div>
         </Card>
+        <Dialog open={regionDlg} onOpenChange={setRegionDlg}>
+          <DialogContent className="max-w-md">
+            <DialogHeader><DialogTitle>{t("my_pref_regions")}</DialogTitle></DialogHeader>
+            <RegionPicker value={editRegions} onChange={setEditRegions} />
+            <DialogFooter className="gap-2">
+              <Button variant="outline" onClick={() => setRegionDlg(false)}>{t("cancel") || "취소"}</Button>
+              <Button onClick={async () => {
+                if (!user) return;
+                const { error } = await supabase.from("seeker_profiles")
+                  .update({ preferred_region: serializeRegions(editRegions) })
+                  .eq("user_id", user.id);
+                if (error) { toast.error(error.message); return; }
+                setPrefRegions(editRegions);
+                setRegionDlg(false);
+                toast.success(t("saved") || "저장되었습니다");
+              }}>{t("save") || "저장"}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <section>
           <h2 className="font-bold mb-2 flex items-center gap-1">{t("premium_section")}</h2>
           {promoted.length === 0 ? <p className="text-xs text-muted-foreground">{t("empty_promoted")}</p>
