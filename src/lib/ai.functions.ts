@@ -218,3 +218,75 @@ export const moderateText = createServerFn({ method: "POST" })
       { role: "user", content: `[${data.context}] ${data.text}` },
     ], { allow: true, risk: "낮음", categories: [], reason: "검수 결과 정상으로 간주합니다.", cleaned: data.text });
   });
+
+// === 광고 배너 AI 생성 (관리자 전용, 16:5) ===
+export const generateAdBannerImage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    description: z.string().min(2).max(500),
+    title: z.string().max(120).optional().default(""),
+  }).parse(input))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context.userId);
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("AI 기능을 사용할 수 없습니다");
+    const prompt = `한국 모바일 앱용 가로형 광고 배너 (16:5 비율, 640x200px 노출). 광고 주제: "${data.title || data.description}". 상세: ${data.description}. 텍스트나 글자는 절대 넣지 마세요(나중에 따로 합성). 사람 얼굴 클로즈업 금지. 밝고 깔끔한 일러스트 또는 사진풍, 모바일에서 한눈에 보이는 강한 시각적 임팩트, 좌측 또는 우측에 메인 비주얼 배치하여 텍스트 공간 확보, 한국적이면서 세련된 톤.`;
+    const res = await fetch(AI_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ model: IMAGE_MODEL, messages: [{ role: "user", content: prompt }], modalities: ["image", "text"] }),
+    });
+    if (!res.ok) throw new Error(`이미지 생성 실패 (${res.status})`);
+    const json = await res.json() as any;
+    const url = json?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    if (!url) throw new Error("이미지를 생성하지 못했습니다");
+    const base64 = String(url).includes(",") ? String(url).split(",").pop()! : String(url);
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const fileBody = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+    const path = `ai/${Date.now()}-${Math.random().toString(36).slice(2)}.png`;
+    const { error } = await supabaseAdmin.storage.from("ad-banners").upload(path, fileBody, { contentType: "image/png", upsert: false });
+    if (error) throw new Error(error.message);
+    const { data: publicUrl } = supabaseAdmin.storage.from("ad-banners").getPublicUrl(path);
+    return { imageUrl: publicUrl.publicUrl };
+  });
+
+// === 구직자 AI 채팅 매칭 ===
+export const seekerJobChat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) => z.object({
+    language: z.enum(["ko", "en", "mn", "ru", "zh"]).default("ko"),
+    history: z.array(z.object({
+      role: z.enum(["user", "assistant"]),
+      content: z.string().max(2000),
+    })).max(20),
+    message: z.string().min(1).max(1000),
+  }).parse(input))
+  .handler(async ({ data }) => {
+    const langName = { ko: "Korean (한국어)", en: "English", mn: "Mongolian (Монгол)", ru: "Russian (Русский, дружелюбный естественный тон)", zh: "Simplified Chinese (简体中文)" }[data.language];
+    const validIndustries = ["hotel","motel","resort","restaurant","hospital","nursing"];
+    const validRoles = ["room_cleaning","dish_cleaning","hall_serving","care"];
+    const validRegions = ["서울","경기","인천","강원","충북","충남","대전","세종","전북","전남","광주","경북","경남","대구","울산","부산","제주"];
+    const sys = `You are a friendly Korean short-term job matching assistant on the Find AR app. Reply ALWAYS in ${langName}. Naturally ask the seeker about: desired job type (industry/role), preferred region, minimum daily wage, language ability, dates. Keep replies SHORT (1-3 sentences). When you have enough info (at least region or industry/role), call out the criteria.
+
+ALWAYS return a single JSON object only, no markdown:
+{
+  "reply": "your conversational reply in ${langName}",
+  "ready": true|false,           // true if criteria are usable for searching
+  "criteria": {
+    "industries": [],            // subset of ${JSON.stringify(validIndustries)}
+    "roles": [],                 // subset of ${JSON.stringify(validRoles)}
+    "regions": [],               // subset of ${JSON.stringify(validRegions)}
+    "minWage": null              // KRW per day, integer or null
+  }
+}`;
+    const messages: AiMessage[] = [
+      { role: "system", content: sys },
+      ...data.history.map((m) => ({ role: m.role, content: m.content })),
+      { role: "user", content: data.message },
+    ];
+    return callAiJson<{ reply: string; ready: boolean; criteria: { industries: string[]; roles: string[]; regions: string[]; minWage: number | null } }>(
+      messages,
+      { reply: data.language === "ko" ? "조금 더 알려주세요." : "Could you tell me more?", ready: false, criteria: { industries: [], roles: [], regions: [], minWage: null } },
+      TEXT_MODEL,
+    );
+  });
