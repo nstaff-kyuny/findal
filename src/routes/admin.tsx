@@ -149,6 +149,7 @@ function AdminPanel() {
         <TabsTrigger value="legal">약관/정책</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
+        <TabsTrigger value="taxonomy">업종/직무</TabsTrigger>
       </TabsList>
       <TabsContent value="all-users"><AllUsersTab /></TabsContent>
       <TabsContent value="users"><UsersTab /></TabsContent>
@@ -166,6 +167,7 @@ function AdminPanel() {
       <TabsContent value="legal"><LegalDocsTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
       <TabsContent value="icons"><IconsTab /></TabsContent>
+      <TabsContent value="taxonomy"><TaxonomyTab /></TabsContent>
     </Tabs>
   );
 }
