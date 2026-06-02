@@ -159,7 +159,7 @@ function Page() {
   return (
     <MobileLayout role="seeker">
       <div className="p-3 space-y-5">
-        <SeekerAiJobChat />
+        
         <Card className="p-3 bg-primary/5 border-primary/30">
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-muted-foreground">{t("my_pref_regions")}</p>
