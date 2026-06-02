@@ -14,6 +14,7 @@ import { MapPin, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { parseRegions } from "@/components/RegionPicker";
+import { SeekerAiJobChat } from "@/components/SeekerAiJobChat";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
