@@ -28,6 +28,8 @@ function Page() {
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [matches, setMatches] = useState<Record<string, { score: number; reason: string }>>({});
   const [prefRegions, setPrefRegions] = useState<string[]>([]);
+  const [regionDlg, setRegionDlg] = useState(false);
+  const [editRegions, setEditRegions] = useState<string[]>([]);
   const getReasons = useServerFn(generateSeekerMatchReasons);
   const nav = useNavigate();
 
