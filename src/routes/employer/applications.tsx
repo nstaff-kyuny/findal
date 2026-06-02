@@ -35,7 +35,7 @@ function Page() {
     const seekerIds = Array.from(new Set(list.map((a: any) => a.seeker_id)));
     const jobIds = Array.from(new Set(list.map((a: any) => a.job_id)));
     const [jobsRes, profilesRes, seekerProfilesRes] = await Promise.all([
-      jobIds.length ? supabase.from("jobs").select("id, title, place_name").in("id", jobIds) : Promise.resolve({ data: [] as any[] }),
+      jobIds.length ? supabase.from("jobs").select("id, title, place_name, work_dates, headcount").in("id", jobIds) : Promise.resolve({ data: [] as any[] }),
       seekerIds.length ? supabase.from("profiles").select("id, full_name, phone").in("id", seekerIds) : Promise.resolve({ data: [] as any[] }),
       seekerIds.length ? supabase.from("seeker_profiles").select("user_id, nationality, experience, korean_ok, visa").in("user_id", seekerIds) : Promise.resolve({ data: [] as any[] }),
     ]);
