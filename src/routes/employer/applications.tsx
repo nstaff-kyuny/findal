@@ -7,7 +7,12 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Search, FileDown } from "lucide-react";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas-pro";
+import { useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { analyzeApplications } from "@/lib/ai.functions";
@@ -91,7 +96,13 @@ function Page() {
 
   const approve = async (id: string) => {
     const { error } = await supabase.rpc("approve_application", { _app_id: id } as any);
-    if (error) return toast.error(error.message);
+    if (error) {
+      const msg = error.message || "";
+      if (msg.includes("HEADCOUNT_FULL")) {
+        return toast.error("필요 인원을 모두 채웠습니다. 더 이상 승인할 수 없습니다.");
+      }
+      return toast.error(msg);
+    }
     toast.success("승인 완료! 1 크레딧 차감됨.");
     load();
   };

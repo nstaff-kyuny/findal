@@ -20,7 +20,7 @@ import { Download, Trash2, UserPlus, KeyRound, Pencil } from "lucide-react";
 import { VISA_LABEL, NATIONALITY_LABEL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
-import { analyzeInquiryText, generateAdminAiInsights } from "@/lib/ai.functions";
+import { analyzeInquiryText, generateAdminAiInsights, generateAdBannerImage } from "@/lib/ai.functions";
 
 
 export const Route = createFileRoute("/admin")({ component: Admin });
@@ -1164,6 +1164,9 @@ function BannersTab() {
   const [start, setStart] = useState(""); const [end, setEnd] = useState("");
   const [uploading, setUploading] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const genBanner = useServerFn(generateAdBannerImage);
   const load = async () => {
     const { data } = await supabase.from("ad_banners").select("*").order("created_at", { ascending: false });
     setList(data ?? []);
@@ -1187,6 +1190,18 @@ function BannersTab() {
     }
   };
 
+  const generateWithAi = async (setter: (v: string) => void) => {
+    if (!aiPrompt.trim()) return toast.error("광고 내용을 입력해 주세요");
+    setAiBusy(true);
+    try {
+      const r = await genBanner({ data: { description: aiPrompt.trim(), title } });
+      setter(r.imageUrl);
+      toast.success("AI 배너 이미지가 생성되었습니다 (16:5 비율로 표시됨)");
+    } catch (e: any) {
+      toast.error(e?.message ?? "AI 생성 실패");
+    } finally { setAiBusy(false); }
+  };
+
   const add = async () => {
     if (!title || !end) return toast.error("제목과 종료일 필수");
     const { error } = await supabase.from("ad_banners").insert({
@@ -1194,7 +1209,7 @@ function BannersTab() {
       starts_at: start || new Date().toISOString(), ends_at: end,
     } as any);
     if (error) return toast.error(error.message);
-    setTitle(""); setImg(""); setUrl(""); setStart(""); setEnd(""); load();
+    setTitle(""); setImg(""); setUrl(""); setStart(""); setEnd(""); setAiPrompt(""); load();
     toast.success("배너가 등록되었습니다");
   };
   const toggle = async (b: any) => { await supabase.from("ad_banners").update({ active: !b.active }).eq("id", b.id); load(); };
@@ -1225,7 +1240,10 @@ function BannersTab() {
 
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-4">
-      <h3 className="font-bold">광고 배너 관리</h3>
+      <div>
+        <h3 className="font-bold">광고 배너 관리</h3>
+        <p className="text-xs text-muted-foreground mt-1">권장 배너 사이즈: <b>640 × 200px (16:5 가로형)</b> · 모바일에서 가로 꽉 차게 표시됩니다. 다른 비율 이미지는 자동으로 16:5로 잘려서 표시됩니다.</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label>제목 *</Label>
@@ -1235,14 +1253,29 @@ function BannersTab() {
           <Label>링크 URL</Label>
           <Input placeholder="https://..." value={url} onChange={e => setUrl(e.target.value)} />
         </div>
+        <div className="space-y-1 md:col-span-2 p-3 rounded-md bg-primary/5 border border-primary/30">
+          <Label className="text-primary font-semibold">🤖 AI 배너 자동 생성 (16:5)</Label>
+          <p className="text-[11px] text-muted-foreground">광고 내용 / 컨셉을 입력하면 AI가 모바일 최적 가로형 이미지를 만들어 자동으로 등록합니다.</p>
+          <div className="flex gap-2">
+            <Textarea placeholder="예) 외국인 노동자 비자 상담 무료 이벤트. 환영 분위기, 따뜻한 색감." value={aiPrompt} onChange={e => setAiPrompt(e.target.value)} rows={2} />
+            <Button onClick={() => generateWithAi(setImg)} disabled={aiBusy || !aiPrompt.trim()}>{aiBusy ? "생성 중…" : "AI 생성"}</Button>
+          </div>
+        </div>
         <div className="space-y-1 md:col-span-2">
-          <Label>이미지 (URL 입력 또는 파일 업로드)</Label>
+          <Label>이미지 (URL 입력 또는 파일 업로드 · 권장 640×200)</Label>
           <div className="flex gap-2">
             <Input placeholder="이미지 URL" value={img} onChange={e => setImg(e.target.value)} />
             <Input type="file" accept="image/*" disabled={uploading} className="max-w-[220px]"
               onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadFile(f, setImg); e.currentTarget.value = ""; }} />
           </div>
-          {img && <img src={img} alt="미리보기" className="h-20 mt-1 rounded border object-cover" />}
+          {img && (
+            <div className="mt-1">
+              <p className="text-[10px] text-muted-foreground mb-1">미리보기 (실제 표시 비율 16:5)</p>
+              <div className="w-full max-w-md aspect-[16/5] rounded border overflow-hidden bg-muted">
+                <img src={img} alt="미리보기" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          )}
         </div>
         <div className="space-y-1">
           <Label>시작일시</Label>
@@ -1253,7 +1286,7 @@ function BannersTab() {
           <Input type="datetime-local" value={end} onChange={e => setEnd(e.target.value)} />
         </div>
       </div>
-      <Button onClick={add} disabled={uploading}>등록</Button>
+      <Button onClick={add} disabled={uploading || aiBusy}>등록</Button>
       <table className="w-full text-sm">
         <thead><tr className="text-left border-b"><th className="py-2">제목</th><th>기간</th><th>활성</th><th></th></tr></thead>
         <tbody>

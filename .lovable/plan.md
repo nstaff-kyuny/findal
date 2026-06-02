@@ -1,62 +1,51 @@
-## 목표
-구직자(seeker) 화면 전체를 5개 언어(한국어/영어/몽골어/러시아어/중국어)로 표시. 관리자·구인자 화면은 한국어 유지.
+## 작업 계획
 
-## 1. 언어 저장 구조
-- `seeker_profiles`에 `preferred_language text default 'ko'` 컬럼 추가 (ko/en/mn/ru/zh).
-- 로그인 직후 / 온보딩 단계에서 언어 선택 화면 노출 → DB에 저장.
-- 동시에 `localStorage["seeker_lang"]`에도 미러링(앱 부팅 시 깜빡임 방지).
-- 구직자 설정 페이지(`/seeker/me`)에 "언어 변경" 항목 추가.
+### 1. 광고 배너 관리 (관리자 + AI 생성)
+- `ad_banners` 테이블은 이미 존재 (image_url, link_url, title, active, starts_at, ends_at).
+- 관리자(`admin.tsx`)에 **광고 배너 관리** 섹션 추가:
+  - 배너 목록 / 등록 / 수정 / 삭제
+  - **AI 배너 생성**: 텍스트 입력 → `imagegen` 또는 Lovable AI image API로 640x200 (16:5) PNG 생성 → `ad-banners` 버킷 업로드 → URL 자동 입력
+  - 사이즈: **640×200 (16:5)**, 모바일에서 가로 꽉 차는 비율
+- `seeker/featured.tsx` 광고 섹션을 16:5 고정 비율(`aspect-[16/5]`)로 표시
+- `featured.tsx`에서 보던 기존 광고 표시 로직은 유지 (이미 ad_banners 사용 중)
 
-## 2. i18n 코어 (`src/lib/i18n.tsx`)
-- `LanguageProvider` Context: `{ lang, setLang, t(key), tDynamic(text[]) }`.
-- `t(key)`: 정적 UI 문자열 사전 조회 (5개 언어 사전 하드코딩).
-- `tDynamic(texts)`: DB에서 온 한국어 텍스트(공고 제목, 업체명, 메모 등) → 기존 `translateTexts` 서버펑션으로 일괄 번역. 결과를 `localStorage`에 `hash(text)+lang` 키로 캐싱하여 재호출 최소화.
-- `MobileLayout` 등 구직자 컴포넌트만 Provider로 감싸고, 관리자/구인자/`manager.tsx`/`admin.tsx`/`admin2.tsx`는 영향 없음.
+### 2. AI 채팅으로 추천받기 (구직자 추천 페이지 상단)
+- `seeker/featured.tsx` 상단에 접을 수 있는 `AiJobMatchChat` 컴포넌트 추가
+- 새 server function `getSeekerJobChatReply` (in `src/lib/ai.functions.ts`):
+  - 입력: 대화 히스토리, 현재 사용자 lang
+  - LLM(`google/gemini-3-flash-preview`)이 직종/지역/희망급여 등 정보를 자연스럽게 수집
+  - 충분한 정보 모이면 structured output으로 `{ industries, roles, regions, minWage }` 반환
+- 추출된 조건으로 `supabase.from("jobs")` 필터 → 추천 카드(2~6개) 채팅 하단에 표시
+- 다국어: 시스템 프롬프트에 사용자 `lang` 전달 → 해당 언어로 응답
+- UI 라벨: `i18n-dict.ts`에 새 키 추가 (`ai_match_title`, `ai_match_placeholder`, `ai_match_recommend` 등 5개국어)
 
-## 3. 정적 문자열 사전 (`src/lib/i18n-dict.ts`)
-다음 카테고리만 5개 언어로 번역:
-- 메뉴/탭 라벨 ("홈", "추천", "신청내역", "즐겨찾기", "내 정보")
-- 공통 버튼/상태 ("신청하기", "승인", "대기", "확정", "노쇼")
-- 산업/직무 라벨 (`INDUSTRY_LABEL`, `ROLE_LABEL` → 언어별 매핑)
-- 지역명(`REGIONS`) → 언어별 매핑
-- 페이지 헤더/안내 문구
-- "일당", "원", "근무일", "협의" 등 단위/포맷
+### 3. 러시아어 번역 개선
+- `src/lib/i18n-dict.ts`의 `ru` 키를 전수 점검
+- 너무 직역되어 딱딱한 표현 자연스럽게 다듬기 (구어/존중 톤)
+- 주요 화면 라벨(공고, 신청, 승인, 알림, 결제, 프로필 등) 중심으로 자연스러운 러시아어로 교체
 
-## 4. 동적 콘텐츠 번역 처리
-대상: `jobs.title`, `jobs.place_name`, `jobs.preparations`, `employer_profiles.company_name` 등.
-- 카드/배너 리스트 렌더 직전에 표시 대상 텍스트 모아 `tDynamic(texts)` 호출.
-- 비동기 결과로 다시 setState → 한국어 ko 모드에서는 호출 자체를 스킵.
-- 캐시 키: `lang::sha1(text)` 형태로 localStorage(최대 ~200KB 윈도우 LRU).
-- 비용 보호: 한 화면당 최대 50개 항목, 같은 텍스트 중복 제거.
+### 4. 신청/승인 내역 검색
+- `employer/applications.tsx`에 검색 입력창 1개 추가
+- 모든 상태 탭(pending/approved/rejected/confirmed/no_show 등)에서 동일 적용
+- 검색 대상: 신청자 이름(profile.full_name), 업무장소(job.place_name), 날짜(work_dates), 업무(job.title / job_role 라벨)
+- 클라이언트 사이드 필터링 (이미 join 데이터 있음)
 
-## 5. 적용 대상 화면
-- `MobileLayout` 하단 탭 라벨, 상단 헤더
-- `routes/seeker/home.tsx` (검색 UI + 공고 카드)
-- `routes/seeker/featured.tsx` (추천 배너)
-- `routes/seeker/favorites.tsx` (즐겨찾기 카드)
-- `routes/seeker/applications.tsx` (상태 라벨)
-- `routes/seeker/jobs.$id.tsx` (공고 상세)
-- `routes/seeker/me.tsx` (설정 화면 + 언어 변경)
-- `routes/onboarding.tsx` (seeker 분기에서 언어 선택 1단계 추가)
-- `routes/auth.tsx` (구직자 로그인 직후 첫 진입 시 언어 미선택이면 선택 모달)
+### 5. 공고별 승인자 PDF
+- `employer/applications.tsx` 승인 탭 상단에 "공고별 보기" 토글 추가
+- 공고별로 그룹화 → 각 공고 카드에 "PDF 다운로드" 버튼
+- 클라이언트에서 `jspdf` + `jspdf-autotable`로 생성 (한글 폰트 임베드)
+- PDF 내용: 공고명/장소/일자/모집인원, 표 (이름·연락처·국적·비자·한국어가능·경력·승인일·확정일)
+- 한글 폰트: Noto Sans KR Regular base64 임베드 또는 가벼운 한글 폰트
 
-영향 없음(한국어 유지): `routes/admin.tsx`, `routes/admin2.tsx`, `routes/manager.tsx`, 모든 `routes/employer/*`, `routes/guide.$role.tsx`(이미 자체 번역 기능 있음).
+### 6. 필요인원 초과 승인 차단
+- DB의 `approve_application` 함수를 수정:
+  - 승인 직전, 같은 `job_id`의 `approved`+`confirmed` 카운트가 `jobs.headcount` 이상이면 `RAISE EXCEPTION 'HEADCOUNT_FULL'`
+- 정원 도달 시 `jobs.is_active = false` 자동 설정 (선택: 해당 트리거 또는 함수 내부)
+- 프론트(`employer/applications.tsx`)에서 에러 메시지 한글로 토스트 표시
 
-## 6. DB 마이그레이션
-```sql
-ALTER TABLE public.seeker_profiles
-  ADD COLUMN preferred_language text NOT NULL DEFAULT 'ko'
-  CHECK (preferred_language IN ('ko','en','mn','ru','zh'));
-```
+### 기술 노트
+- AI 이미지 생성: 백엔드 server function에서 Lovable AI Gateway `/v1/images/generations` 호출 → base64 PNG → Storage `ad-banners` 업로드 → URL 반환
+- 모든 server function은 `requireSupabaseAuth` + admin 권한 체크
+- PDF 한글 폰트는 한 번만 lazy load (CDN base64) 하여 번들 크기 영향 최소화
 
-## 7. 작업 순서
-1. 마이그레이션 추가 (preferred_language).
-2. `src/lib/i18n.tsx` + `src/lib/i18n-dict.ts` 생성 (사전 + Provider + 캐시).
-3. `MobileLayout`을 LanguageProvider로 감싸고 탭 라벨 t() 적용.
-4. seeker 화면별로 t() / tDynamic() 적용 (home → featured → favorites → applications → jobs.$id → me).
-5. `onboarding.tsx`에 언어 선택 단계 추가, `auth.tsx`에서 seeker 첫 로그인 시 보장.
-6. `seeker/me.tsx`에 언어 변경 셀렉트 추가.
-
-## 비용·성능 메모
-- 동적 번역은 Lovable AI Gateway(`google/gemini-2.5-flash-lite`) 사용 → 카드 50개 일괄 1회 호출, 캐싱으로 재방문은 0회 호출.
-- ko 선택 시 번역 경로 완전 우회.
+진행해도 될까요?

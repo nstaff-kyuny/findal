@@ -123,7 +123,17 @@ export const UI: Dict = {
   confirmed_only_note: { ko: "확정 된 기록만 표시됩니다.", en: "Only confirmed records are shown.", mn: "Зөвхөн баталгаажсан бичлэг.", ru: "Показаны только подтверждённые.", zh: "仅显示已确认的记录。" },
 
   // onboarding
-  onb_choose_lang: { ko: "사용 언어를 먼저 선택해 주세요", en: "Please choose your language first", mn: "Эхлээд хэлээ сонгоно уу", ru: "Сначала выберите язык", zh: "请先选择您的语言" },
+  onb_choose_lang: { ko: "사용 언어를 먼저 선택해 주세요", en: "Please choose your language first", mn: "Эхлээд хэлээ сонгоно уу", ru: "Сначала выберите язык, пожалуйста", zh: "请先选择您的语言" },
+
+  // AI job match chat
+  ai_match_title: { ko: "🤖 AI 채팅으로 추천받기", en: "🤖 Get AI recommendations", mn: "🤖 AI-аар санал авах", ru: "🤖 Подбор работы через AI", zh: "🤖 AI 智能推荐" },
+  ai_match_subtitle: { ko: "원하는 직종·지역·급여를 채팅으로 알려주세요", en: "Tell me your preferred job, region, and pay", mn: "Хүссэн ажил, бүс, цалингаа надад хэлээрэй", ru: "Расскажите, какая работа, регион и зарплата вам подходят", zh: "告诉我您想要的职位、地区和薪资" },
+  ai_match_greeting: { ko: "안녕하세요! 어떤 일을 찾고 계세요? 직종, 지역, 희망 일당을 알려주시면 맞춤 공고를 찾아드릴게요. 🙂", en: "Hi! What kind of job are you looking for? Tell me the role, region, and minimum daily wage and I'll find matching jobs.", mn: "Сайн байна уу! Ямар ажил хайж байна вэ? Ажлын төрөл, бүс, өдрийн доод цалингаа хэлбэл тохирох ажил олж өгье.", ru: "Здравствуйте! Какую работу вы ищете? Подскажите род занятий, регион и желаемую дневную оплату — подберу подходящие вакансии.", zh: "您好！您在找什么样的工作？告诉我职位、地区和最低日薪，我来帮您找匹配的岗位。" },
+  ai_match_placeholder: { ko: "예: 서울에서 식당 일 하고 싶어요", en: "e.g., I want restaurant work in Seoul", mn: "ж: Сөүл хотод ресторанд ажиллахыг хүсч байна", ru: "Например: хочу работать в ресторане в Сеуле", zh: "例如：我想在首尔找餐厅工作" },
+  ai_match_thinking: { ko: "AI가 생각 중…", en: "AI is thinking…", mn: "AI бодож байна…", ru: "AI думает…", zh: "AI 思考中…" },
+  ai_match_results: { ko: "추천 공고", en: "Recommended jobs", mn: "Санал болгох зар", ru: "Рекомендуемые вакансии", zh: "推荐职位" },
+  ai_match_send: { ko: "메시지 보내기", en: "Send message", mn: "Илгээх", ru: "Отправить", zh: "发送" },
+  ai_match_error: { ko: "잠시 후 다시 시도해주세요.", en: "Please try again in a moment.", mn: "Түр хүлээгээд дахин оролдоно уу.", ru: "Попробуйте, пожалуйста, ещё раз чуть позже.", zh: "请稍后再试。" },
 };
 
 export function t(key: string, lang: Lang): string {
