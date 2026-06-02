@@ -50,11 +50,11 @@ export const UI: Dict = {
   daily_wage: { ko: "일당", en: "Daily wage", mn: "Өдрийн цалин", ru: "Дневная оплата", zh: "日薪" },
   won: { ko: "원", en: "KRW", mn: "вон", ru: "вон", zh: "韩元" },
   work_dates: { ko: "근무일", en: "Work dates", mn: "Ажиллах өдөр", ru: "Рабочие дни", zh: "工作日" },
-  to_be_arranged: { ko: "협의", en: "TBD", mn: "Тохиролцох", ru: "По договору", zh: "面议" },
-  applicants: { ko: "지원", en: "Applicants", mn: "Өргөдөл", ru: "Заявки", zh: "申请人" },
-  needed: { ko: "필요", en: "Needed", mn: "Шаардлагатай", ru: "Требуется", zh: "需要" },
+  to_be_arranged: { ko: "협의", en: "TBD", mn: "Тохиролцох", ru: "По договорённости", zh: "面议" },
+  applicants: { ko: "지원", en: "Applicants", mn: "Өргөдөл", ru: "Откликов", zh: "申请人" },
+  needed: { ko: "필요", en: "Needed", mn: "Шаардлагатай", ru: "Нужно", zh: "需要" },
   people: { ko: "명", en: "people", mn: "хүн", ru: "чел.", zh: "人" },
-  ai_score: { ko: "AI 점수", en: "AI score", mn: "AI оноо", ru: "AI балл", zh: "AI 评分" },
+  ai_score: { ko: "AI 점수", en: "AI score", mn: "AI оноо", ru: "AI-оценка", zh: "AI 评分" },
 
   // sections / labels
   premium_section: { ko: "⭐ 프리미엄 추천", en: "⭐ Premium picks", mn: "⭐ Дээд зэрэглэлийн санал", ru: "⭐ Премиум подборка", zh: "⭐ 精选推荐" },
