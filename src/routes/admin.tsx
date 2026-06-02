@@ -149,6 +149,7 @@ function AdminPanel() {
         <TabsTrigger value="legal">약관/정책</TabsTrigger>
         <TabsTrigger value="version">앱 버전</TabsTrigger>
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
+        <TabsTrigger value="taxonomy">업종/직무</TabsTrigger>
       </TabsList>
       <TabsContent value="all-users"><AllUsersTab /></TabsContent>
       <TabsContent value="users"><UsersTab /></TabsContent>
@@ -166,6 +167,7 @@ function AdminPanel() {
       <TabsContent value="legal"><LegalDocsTab /></TabsContent>
       <TabsContent value="version"><VersionTab /></TabsContent>
       <TabsContent value="icons"><IconsTab /></TabsContent>
+      <TabsContent value="taxonomy"><TaxonomyTab /></TabsContent>
     </Tabs>
   );
 }
@@ -2045,3 +2047,112 @@ function PartnersTab() {
   );
 }
 
+
+function TaxonomyTab() {
+  const [industries, setIndustries] = useState<any[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
+  const [iKey, setIKey] = useState(""); const [iLabel, setILabel] = useState("");
+  const [rIndustry, setRIndustry] = useState(""); const [rKey, setRKey] = useState(""); const [rLabel, setRLabel] = useState("");
+
+  const load = async () => {
+    const { data: i } = await supabase.from("custom_industries").select("*").order("sort_order").order("created_at");
+    const { data: r } = await supabase.from("custom_job_roles").select("*").order("industry_key").order("sort_order").order("created_at");
+    setIndustries(i ?? []); setRoles(r ?? []);
+  };
+  useEffect(() => { load(); }, []);
+
+  const addIndustry = async () => {
+    const key = iKey.trim().toLowerCase().replace(/\s+/g, "_");
+    if (!key || !iLabel.trim()) { toast.error("키와 라벨을 입력하세요"); return; }
+    const { error } = await supabase.from("custom_industries").insert({ key, label: iLabel.trim() });
+    if (error) { toast.error(error.message); return; }
+    setIKey(""); setILabel(""); toast.success("추가됨"); load();
+  };
+  const updateIndustry = async (key: string, label: string) => {
+    const { error } = await supabase.from("custom_industries").update({ label }).eq("key", key);
+    if (error) toast.error(error.message); else { toast.success("수정됨"); load(); }
+  };
+  const delIndustry = async (key: string) => {
+    if (!confirm(`'${key}' 업종을 삭제할까요? (관련 직무도 함께 삭제)`)) return;
+    await supabase.from("custom_job_roles").delete().eq("industry_key", key);
+    const { error } = await supabase.from("custom_industries").delete().eq("key", key);
+    if (error) toast.error(error.message); else { toast.success("삭제됨"); load(); }
+  };
+
+  const addRole = async () => {
+    const key = rKey.trim().toLowerCase().replace(/\s+/g, "_");
+    if (!rIndustry || !key || !rLabel.trim()) { toast.error("업종/키/라벨을 입력하세요"); return; }
+    const { error } = await supabase.from("custom_job_roles").insert({ industry_key: rIndustry, key, label: rLabel.trim() });
+    if (error) { toast.error(error.message); return; }
+    setRKey(""); setRLabel(""); toast.success("추가됨"); load();
+  };
+  const updateRole = async (industry_key: string, key: string, label: string) => {
+    const { error } = await supabase.from("custom_job_roles").update({ label }).eq("industry_key", industry_key).eq("key", key);
+    if (error) toast.error(error.message); else { toast.success("수정됨"); load(); }
+  };
+  const delRole = async (industry_key: string, key: string) => {
+    if (!confirm(`'${key}' 직무를 삭제할까요?`)) return;
+    const { error } = await supabase.from("custom_job_roles").delete().eq("industry_key", industry_key).eq("key", key);
+    if (error) toast.error(error.message); else { toast.success("삭제됨"); load(); }
+  };
+
+  const allIndustryKeys = industries.map((x: any) => x.key);
+
+  return (
+    <div className="space-y-6">
+      <Card><CardContent className="pt-4 space-y-3">
+        <h3 className="font-bold">업종 (커스텀)</h3>
+        <p className="text-xs text-muted-foreground">기본 업종(호텔/모텔/리조트/식당/병원/요양원) 외에 추가할 수 있습니다.</p>
+        <div className="flex gap-2 flex-wrap items-end">
+          <div><Label className="text-xs">키(영문)</Label><Input value={iKey} onChange={e => setIKey(e.target.value)} placeholder="cafe" className="h-9 w-32" /></div>
+          <div><Label className="text-xs">라벨</Label><Input value={iLabel} onChange={e => setILabel(e.target.value)} placeholder="카페" className="h-9 w-40" /></div>
+          <Button size="sm" onClick={addIndustry}>추가</Button>
+        </div>
+        <table className="w-full text-sm">
+          <thead><tr className="border-b text-left text-xs text-muted-foreground"><th className="py-2">키</th><th>라벨</th><th></th></tr></thead>
+          <tbody>
+            {industries.map((i: any) => (
+              <tr key={i.key} className="border-b">
+                <td className="py-2 font-mono text-xs">{i.key}</td>
+                <td><Input defaultValue={i.label} className="h-8 w-44" onBlur={e => e.target.value !== i.label && updateIndustry(i.key, e.target.value)} /></td>
+                <td className="text-right"><Button size="sm" variant="destructive" onClick={() => delIndustry(i.key)}><Trash2 size={12} /></Button></td>
+              </tr>
+            ))}
+            {industries.length === 0 && <tr><td colSpan={3} className="py-4 text-center text-xs text-muted-foreground">커스텀 업종 없음</td></tr>}
+          </tbody>
+        </table>
+      </CardContent></Card>
+
+      <Card><CardContent className="pt-4 space-y-3">
+        <h3 className="font-bold">직무 (커스텀)</h3>
+        <p className="text-xs text-muted-foreground">업종별 직무를 추가합니다. 업종 키는 기본 키(hotel 등)도 입력 가능합니다.</p>
+        <div className="flex gap-2 flex-wrap items-end">
+          <div>
+            <Label className="text-xs">업종 키</Label>
+            <Input value={rIndustry} onChange={e => setRIndustry(e.target.value)} placeholder="hotel 또는 cafe" className="h-9 w-36" list="industry-keys" />
+            <datalist id="industry-keys">
+              {["hotel","motel","resort","restaurant","hospital","nursing", ...allIndustryKeys].map(k => <option key={k} value={k} />)}
+            </datalist>
+          </div>
+          <div><Label className="text-xs">직무 키</Label><Input value={rKey} onChange={e => setRKey(e.target.value)} placeholder="barista" className="h-9 w-32" /></div>
+          <div><Label className="text-xs">라벨</Label><Input value={rLabel} onChange={e => setRLabel(e.target.value)} placeholder="바리스타" className="h-9 w-40" /></div>
+          <Button size="sm" onClick={addRole}>추가</Button>
+        </div>
+        <table className="w-full text-sm">
+          <thead><tr className="border-b text-left text-xs text-muted-foreground"><th className="py-2">업종</th><th>직무 키</th><th>라벨</th><th></th></tr></thead>
+          <tbody>
+            {roles.map((r: any) => (
+              <tr key={`${r.industry_key}-${r.key}`} className="border-b">
+                <td className="py-2 font-mono text-xs">{r.industry_key}</td>
+                <td className="font-mono text-xs">{r.key}</td>
+                <td><Input defaultValue={r.label} className="h-8 w-44" onBlur={e => e.target.value !== r.label && updateRole(r.industry_key, r.key, e.target.value)} /></td>
+                <td className="text-right"><Button size="sm" variant="destructive" onClick={() => delRole(r.industry_key, r.key)}><Trash2 size={12} /></Button></td>
+              </tr>
+            ))}
+            {roles.length === 0 && <tr><td colSpan={4} className="py-4 text-center text-xs text-muted-foreground">커스텀 직무 없음</td></tr>}
+          </tbody>
+        </table>
+      </CardContent></Card>
+    </div>
+  );
+}

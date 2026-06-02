@@ -99,8 +99,18 @@ function Page() {
   }, [promoted, random]);
   const tx = useDynamicTranslate(dynTexts);
 
-  const premiumCard = (j: any) => (
-    <Card key={j.id} className="p-3 cursor-pointer border-2 border-primary/60 shadow-md" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+  const renderWage = (j: any) => j.contract_type === "monthly"
+    ? `${t("monthly_wage")} ${Number(j.monthly_wage ?? 0).toLocaleString()}${t("won")}${t("per_month")}`
+    : `${Number(j.daily_wage ?? 0).toLocaleString()}${t("won")}`;
+  const renderDates = (j: any) => j.contract_type === "monthly"
+    ? (j.contract_months ? `${j.contract_months}${t("months_unit")}` : t("one_month_plus"))
+    : (formatWorkDatesWithWeekday(j.work_dates) || t("to_be_arranged"));
+
+  const premiumCard = (j: any) => {
+    const done = isJobCompleted(j);
+    return (
+    <Card key={j.id} className={`relative p-3 cursor-pointer border-2 border-primary/60 shadow-md ${done ? "grayscale opacity-70" : ""}`} onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+      {done && <Badge className="absolute top-2 right-2 z-10 bg-gray-600 text-white">{t("completed_badge")}</Badge>}
       {j.photo_url ? (
         <img src={j.photo_url} className="w-full h-28 rounded object-cover mb-2" alt={j.title} />
       ) : (
@@ -121,17 +131,21 @@ function Page() {
       <h3 className="text-base font-bold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
       {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
       <p className="text-sm text-muted-foreground truncate">🏨 {tx[j.place_name] ?? j.place_name}</p>
-      <p className="text-base text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}{t("won")}</p>
+      <p className="text-base text-primary font-bold mt-1">{renderWage(j)}</p>
       <div className="mt-0.5">
         <span className="text-[10px] text-muted-foreground mr-1">{t("work_dates")}</span>
-        <span className="text-[12px] font-semibold">{formatWorkDatesWithWeekday(j.work_dates) || t("to_be_arranged")}</span>
+        <span className="text-[12px] font-semibold">{renderDates(j)}</span>
       </div>
       <p className="text-xs text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
     </Card>
-  );
+    );
+  };
 
-  const todayCard = (j: any) => (
-    <Card key={j.id} className="relative p-3 cursor-pointer overflow-hidden" onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+  const todayCard = (j: any) => {
+    const done = isJobCompleted(j);
+    return (
+    <Card key={j.id} className={`relative p-3 cursor-pointer overflow-hidden ${done ? "grayscale opacity-70" : ""}`} onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
+      {done && <Badge className="absolute top-2 right-2 z-10 bg-gray-600 text-white">{t("completed_badge")}</Badge>}
       <div className="absolute right-1 bottom-1 text-6xl opacity-10 pointer-events-none select-none">{industryIcon(j.industry)}</div>
       <div className="relative">
         <div className="flex items-center justify-between gap-1">
@@ -145,15 +159,16 @@ function Page() {
         <h3 className="text-sm font-semibold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
         {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
         <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {tx[j.place_name] ?? j.place_name}</p>
-        <p className="text-sm text-primary font-bold mt-1">{Number(j.daily_wage).toLocaleString()}{t("won")}</p>
+        <p className="text-sm text-primary font-bold mt-1">{renderWage(j)}</p>
         <div className="mt-0.5">
           <span className="text-[10px] text-muted-foreground mr-1">{t("work_dates")}</span>
-          <span className="text-[11px] font-semibold">{formatWorkDatesWithWeekday(j.work_dates) || t("to_be_arranged")}</span>
+          <span className="text-[11px] font-semibold">{renderDates(j)}</span>
         </div>
         <p className="text-[10px] text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
       </div>
     </Card>
-  );
+    );
+  };
 
 
   return (
