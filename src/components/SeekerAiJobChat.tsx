@@ -42,13 +42,14 @@ export function SeekerAiJobChat() {
     try {
       const r = await ask({ data: { language: lang as any, history: messages.slice(-12), message: text } });
       setMessages([...next, { role: "assistant", content: r.reply }]);
-      if (r.ready && r.criteria) {
-        // search jobs
+      const c = r.criteria ?? { industries: [], roles: [], regions: [], minWage: null };
+      const hasAny = (c.industries?.length ?? 0) > 0 || (c.roles?.length ?? 0) > 0 || (c.regions?.length ?? 0) > 0 || !!c.minWage;
+      if (r.ready || hasAny) {
         let q = supabase.from("jobs").select("*").eq("is_active", true).limit(6);
-        if (r.criteria.industries?.length) q = q.in("industry", r.criteria.industries as any);
-        if (r.criteria.roles?.length) q = q.in("job_role", r.criteria.roles as any);
-        if (r.criteria.regions?.length) q = q.in("region", r.criteria.regions);
-        if (r.criteria.minWage) q = q.gte("daily_wage", r.criteria.minWage);
+        if (c.industries?.length) q = q.in("industry", c.industries as any);
+        if (c.roles?.length) q = q.in("job_role", c.roles as any);
+        if (c.regions?.length) q = q.in("region", c.regions);
+        if (c.minWage) q = q.gte("daily_wage", c.minWage);
         const { data } = await q;
         setMatches(data ?? []);
       }

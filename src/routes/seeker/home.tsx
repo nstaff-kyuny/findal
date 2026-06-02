@@ -14,6 +14,7 @@ import { MapPin, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
 import { parseRegions } from "@/components/RegionPicker";
+import { SeekerAiJobChat } from "@/components/SeekerAiJobChat";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
 
@@ -132,6 +133,7 @@ function Page() {
       )}
 
       <div className="p-3 space-y-2">
+        <SeekerAiJobChat />
         <Link to="/guide/$role" params={{ role: "seeker" }}>
           <Card className="p-3 text-white flex items-center gap-2 border-transparent" style={{ backgroundColor: "#0047AB" }}>
             <BookOpen size={18} />
