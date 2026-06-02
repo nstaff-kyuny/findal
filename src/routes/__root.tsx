@@ -93,7 +93,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "일용직알바찾기_FInd AR" },
-      { name: "twitter:description", content: "Find AR (파인달) connects employers with temporary workers for hospitality, restaurants, and healthcare roles." },
+      { name: "naver-site-verification", content: "60e5318cb403ca655789cc5e65745162691bb141" },
     ],
     links: [
       {
