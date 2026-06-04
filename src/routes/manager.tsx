@@ -380,10 +380,23 @@ function ApplicationsPanel({ userId, onChanged }: { userId: string; onChanged: (
   };
 
   const filtered = useMemo(() => {
-    if (filter === "all") return apps;
-    if (filter === "approved") return apps.filter((a) => a.status === "approved" || a.status === "confirmed");
-    return apps.filter((a) => a.status === filter);
-  }, [apps, filter]);
+    const qq = q.trim().toLowerCase();
+    const from = dateFrom ? new Date(dateFrom).getTime() : null;
+    const to = dateTo ? new Date(dateTo + "T23:59:59").getTime() : null;
+    return apps.filter((a) => {
+      if (filter === "approved") {
+        if (a.status !== "approved" && a.status !== "confirmed") return false;
+      } else if (filter !== "all" && a.status !== filter) return false;
+      if (qq) {
+        const hay = `${a.profiles?.full_name ?? ""} ${a.profiles?.phone ?? ""} ${a.jobs?.title ?? ""} ${a.jobs?.place_name ?? ""} ${a.message ?? ""}`.toLowerCase();
+        if (!hay.includes(qq)) return false;
+      }
+      const ts = a.created_at ? new Date(a.created_at).getTime() : 0;
+      if (from && ts < from) return false;
+      if (to && ts > to) return false;
+      return true;
+    });
+  }, [apps, filter, q, dateFrom, dateTo]);
 
   const counts = {
     pending: apps.filter((a) => a.status === "pending").length,
