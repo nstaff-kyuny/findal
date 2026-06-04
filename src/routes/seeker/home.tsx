@@ -35,6 +35,7 @@ function Page() {
   const [showSearch, setShowSearch] = useState(false);
   const [prefRegions, setPrefRegions] = useState<string[]>([]);
   const [prefOnly, setPrefOnly] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
   const touchStartY = useRef<number | null>(null);
   const nav = useNavigate();
 
@@ -88,11 +89,11 @@ function Page() {
     <MobileLayout role="seeker">
       <button
         onClick={() => setShowSearch(v => !v)}
-        className="sticky top-[57px] z-30 w-full bg-background border-b flex items-center justify-center gap-1 py-1.5 text-xs text-muted-foreground"
+        className="sticky top-[57px] z-30 w-full bg-background border-b flex items-center justify-center gap-1 py-2.5 text-sm text-muted-foreground"
         aria-label="search"
       >
-        {showSearch ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        <Search size={12} />
+        {showSearch ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <Search size={14} />
         <span>{showSearch ? t("close_search") : t("pull_to_search")}</span>
       </button>
 
@@ -129,6 +130,14 @@ function Page() {
               {t("pref_region_only")}
             </Button>
           )}
+          <Button
+            size="sm"
+            variant={showCompleted ? "default" : "outline"}
+            className="text-xs h-7"
+            onClick={() => setShowCompleted(v => !v)}
+          >
+            {showCompleted ? "✓ " : ""}{t("show_completed")}
+          </Button>
         </div>
       )}
 
@@ -141,8 +150,8 @@ function Page() {
             <span>→</span>
           </Card>
         </Link>
-        {jobs.length === 0 && <div className="text-center text-sm text-muted-foreground py-12">{t("empty_jobs")}</div>}
-        {jobs.map(j => {
+        {jobs.filter(j => showCompleted || !isJobCompleted(j)).length === 0 && <div className="text-center text-sm text-muted-foreground py-12">{t("empty_jobs")}</div>}
+        {jobs.filter(j => showCompleted || !isJobCompleted(j)).map(j => {
           const done = isJobCompleted(j);
           return (
           <Card key={j.id} className={`p-3 cursor-pointer relative ${done ? "grayscale opacity-70" : ""}`} onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
