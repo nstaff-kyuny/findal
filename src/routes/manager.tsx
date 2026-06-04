@@ -336,6 +336,9 @@ function ApplicationsPanel({ userId, onChanged }: { userId: string; onChanged: (
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"pending" | "approved" | "no_show" | "all">("pending");
+  const [q, setQ] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
