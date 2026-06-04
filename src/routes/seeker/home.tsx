@@ -130,6 +130,14 @@ function Page() {
               {t("pref_region_only")}
             </Button>
           )}
+          <Button
+            size="sm"
+            variant={showCompleted ? "default" : "outline"}
+            className="text-xs h-7"
+            onClick={() => setShowCompleted(v => !v)}
+          >
+            {showCompleted ? "✓ " : ""}{t("show_completed")}
+          </Button>
         </div>
       )}
 
