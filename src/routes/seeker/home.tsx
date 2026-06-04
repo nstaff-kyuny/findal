@@ -89,11 +89,11 @@ function Page() {
     <MobileLayout role="seeker">
       <button
         onClick={() => setShowSearch(v => !v)}
-        className="sticky top-[57px] z-30 w-full bg-background border-b flex items-center justify-center gap-1 py-1.5 text-xs text-muted-foreground"
+        className="sticky top-[57px] z-30 w-full bg-background border-b flex items-center justify-center gap-1 py-2.5 text-sm text-muted-foreground"
         aria-label="search"
       >
-        {showSearch ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        <Search size={12} />
+        {showSearch ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+        <Search size={14} />
         <span>{showSearch ? t("close_search") : t("pull_to_search")}</span>
       </button>
 
