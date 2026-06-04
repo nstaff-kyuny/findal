@@ -67,6 +67,21 @@ function Page() {
         <div className="pt-4">
           <Link to="/seeker/home" search={{ preview: "1" } as any}><Button size="lg" variant="secondary" className="w-full h-14 text-base">👀 구직자 홈 미리보기</Button></Link>
         </div>
+
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2">
+              <Monitor className="text-primary" size={18} />
+              <p className="text-sm font-bold">{t("pc_admin_notice_title")}</p>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed">{t("pc_admin_notice_body")}</p>
+            <a href="/manager" target="_blank" rel="noreferrer" className="block">
+              <Button size="sm" variant="outline" className="w-full border-primary/50 text-primary">
+                <ExternalLink size={14} className="mr-1" />{t("pc_admin_open")}
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
       </div>
     </MobileLayout>
   );
