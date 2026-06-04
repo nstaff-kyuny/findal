@@ -504,6 +504,9 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
   const [emp, setEmp] = useState<any>(null);
   const [tx, setTx] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
+  const [purDateFrom, setPurDateFrom] = useState("");
+  const [purDateTo, setPurDateTo] = useState("");
+  const [purStatus, setPurStatus] = useState<"all" | "fulfilled" | "pending">("all");
 
   const load = useCallback(async () => {
     const [{ data: e }, { data: t }, { data: p }] = await Promise.all([
