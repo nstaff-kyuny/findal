@@ -150,8 +150,8 @@ function Page() {
             <span>→</span>
           </Card>
         </Link>
-        {jobs.length === 0 && <div className="text-center text-sm text-muted-foreground py-12">{t("empty_jobs")}</div>}
-        {jobs.map(j => {
+        {jobs.filter(j => showCompleted || !isJobCompleted(j)).length === 0 && <div className="text-center text-sm text-muted-foreground py-12">{t("empty_jobs")}</div>}
+        {jobs.filter(j => showCompleted || !isJobCompleted(j)).map(j => {
           const done = isJobCompleted(j);
           return (
           <Card key={j.id} className={`p-3 cursor-pointer relative ${done ? "grayscale opacity-70" : ""}`} onClick={() => nav({ to: "/seeker/jobs/$id", params: { id: j.id } })}>
