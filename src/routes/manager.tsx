@@ -175,6 +175,10 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -184,6 +188,24 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
   }, [userId]);
 
   useEffect(() => { load(); }, [load]);
+
+  const filteredJobs = useMemo(() => {
+    const qq = q.trim().toLowerCase();
+    const from = dateFrom ? new Date(dateFrom).getTime() : null;
+    const to = dateTo ? new Date(dateTo + "T23:59:59").getTime() : null;
+    return jobs.filter((j) => {
+      if (statusFilter === "active" && !j.is_active) return false;
+      if (statusFilter === "inactive" && j.is_active) return false;
+      if (qq) {
+        const hay = `${j.title ?? ""} ${j.place_name ?? ""} ${j.region ?? ""} ${j.location ?? ""}`.toLowerCase();
+        if (!hay.includes(qq)) return false;
+      }
+      const ts = j.created_at ? new Date(j.created_at).getTime() : 0;
+      if (from && ts < from) return false;
+      if (to && ts > to) return false;
+      return true;
+    });
+  }, [jobs, q, dateFrom, dateTo, statusFilter]);
 
   const toggle = async (j: any) => {
     const { error } = await supabase.from("jobs").update({ is_active: !j.is_active }).eq("id", j.id);
@@ -216,12 +238,33 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold">공고 관리</h2>
-          <p className="text-xs text-muted-foreground">전체 {jobs.length}건 · 활성 {jobs.filter(j => j.is_active).length}건</p>
+          <p className="text-xs text-muted-foreground">전체 {jobs.length}건 · 활성 {jobs.filter(j => j.is_active).length}건 · 표시 {filteredJobs.length}건</p>
         </div>
-        <Button onClick={() => { /* link to /employer/jobs/new tab via parent? simple: open iframe */ window.open("/employer/jobs/new", "_blank"); }}>
+        <Button onClick={() => { window.open("/employer/jobs/new", "_blank"); }}>
           <Plus size={16} className="mr-1" />새 공고 등록
         </Button>
       </div>
+      <Card>
+        <CardContent className="p-3 grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
+          <div>
+            <Label className="text-xs">제목/장소/지역 검색</Label>
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="검색어 입력" />
+          </div>
+          <div>
+            <Label className="text-xs">등록 시작일</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">등록 종료일</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="flex gap-1">
+            <Button size="sm" variant={statusFilter === "all" ? "default" : "outline"} onClick={() => setStatusFilter("all")}>전체</Button>
+            <Button size="sm" variant={statusFilter === "active" ? "default" : "outline"} onClick={() => setStatusFilter("active")}>활성</Button>
+            <Button size="sm" variant={statusFilter === "inactive" ? "default" : "outline"} onClick={() => setStatusFilter("inactive")}>비활성</Button>
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <Table>
           <TableHeader>
@@ -237,10 +280,13 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
           </TableHeader>
           <TableBody>
             {loading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">불러오는 중…</TableCell></TableRow>}
-            {!loading && jobs.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">등록된 공고가 없습니다</TableCell></TableRow>}
-            {jobs.map((j) => {
+            {!loading && filteredJobs.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">조건에 맞는 공고가 없습니다</TableCell></TableRow>}
+            {filteredJobs.map((j) => {
               const editCount = j.edit_count ?? 0;
               const canEdit = editCount < 2;
+              const wageText = j.contract_type === "monthly"
+                ? `월 ${Number(j.monthly_wage ?? 0).toLocaleString()}원`
+                : `${Number(j.daily_wage ?? 0).toLocaleString()}원`;
               return (
                 <TableRow key={j.id}>
                   <TableCell className="font-medium max-w-[260px] truncate">{j.title}</TableCell>
@@ -249,7 +295,7 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
                     <Badge variant="outline">{ROLE_LABEL[j.job_role] ?? j.job_role}</Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{j.place_name}<br />{j.region}</TableCell>
-                  <TableCell className="text-right tabular-nums">{Number(j.daily_wage).toLocaleString()}원</TableCell>
+                  <TableCell className="text-right tabular-nums">{wageText}</TableCell>
                   <TableCell className="text-center">
                     {j.is_active ? <Badge>활성</Badge> : <Badge variant="destructive">비활성</Badge>}
                   </TableCell>
@@ -290,6 +336,9 @@ function ApplicationsPanel({ userId, onChanged }: { userId: string; onChanged: (
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"pending" | "approved" | "no_show" | "all">("pending");
+  const [q, setQ] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -331,10 +380,23 @@ function ApplicationsPanel({ userId, onChanged }: { userId: string; onChanged: (
   };
 
   const filtered = useMemo(() => {
-    if (filter === "all") return apps;
-    if (filter === "approved") return apps.filter((a) => a.status === "approved" || a.status === "confirmed");
-    return apps.filter((a) => a.status === filter);
-  }, [apps, filter]);
+    const qq = q.trim().toLowerCase();
+    const from = dateFrom ? new Date(dateFrom).getTime() : null;
+    const to = dateTo ? new Date(dateTo + "T23:59:59").getTime() : null;
+    return apps.filter((a) => {
+      if (filter === "approved") {
+        if (a.status !== "approved" && a.status !== "confirmed") return false;
+      } else if (filter !== "all" && a.status !== filter) return false;
+      if (qq) {
+        const hay = `${a.profiles?.full_name ?? ""} ${a.profiles?.phone ?? ""} ${a.jobs?.title ?? ""} ${a.jobs?.place_name ?? ""} ${a.message ?? ""}`.toLowerCase();
+        if (!hay.includes(qq)) return false;
+      }
+      const ts = a.created_at ? new Date(a.created_at).getTime() : 0;
+      if (from && ts < from) return false;
+      if (to && ts > to) return false;
+      return true;
+    });
+  }, [apps, filter, q, dateFrom, dateTo]);
 
   const counts = {
     pending: apps.filter((a) => a.status === "pending").length,
@@ -357,6 +419,22 @@ function ApplicationsPanel({ userId, onChanged }: { userId: string; onChanged: (
           <TabsTrigger value="all">전체</TabsTrigger>
         </TabsList>
       </Tabs>
+      <Card>
+        <CardContent className="p-3 grid grid-cols-[1fr_auto_auto] gap-2 items-end">
+          <div>
+            <Label className="text-xs">지원자/공고/장소/연락처 검색</Label>
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="검색어 입력" />
+          </div>
+          <div>
+            <Label className="text-xs">신청 시작일</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">신청 종료일</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <Table>
           <TableHeader>
@@ -426,6 +504,9 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
   const [emp, setEmp] = useState<any>(null);
   const [tx, setTx] = useState<any[]>([]);
   const [purchases, setPurchases] = useState<any[]>([]);
+  const [purDateFrom, setPurDateFrom] = useState("");
+  const [purDateTo, setPurDateTo] = useState("");
+  const [purStatus, setPurStatus] = useState<"all" | "fulfilled" | "pending">("all");
 
   const load = useCallback(async () => {
     const [{ data: e }, { data: t }, { data: p }] = await Promise.all([
@@ -483,23 +564,58 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
       <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4">
-            <h3 className="font-bold text-sm mb-2">구매 내역</h3>
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>일시</TableHead><TableHead>크레딧</TableHead><TableHead>금액</TableHead><TableHead>상태</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {purchases.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">내역 없음</TableCell></TableRow>}
-                {purchases.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString("ko-KR")}</TableCell>
-                    <TableCell className="text-xs">{p.pack}</TableCell>
-                    <TableCell className="text-xs">{Number(p.amount_krw).toLocaleString()}원</TableCell>
-                    <TableCell><Badge variant={p.status === "fulfilled" ? "default" : "secondary"} className="text-[10px]">{p.status === "fulfilled" ? "완료" : "대기"}</Badge></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-sm">구매 내역</h3>
+            </div>
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end mb-3">
+              <div>
+                <Label className="text-[10px]">시작일</Label>
+                <Input type="date" value={purDateFrom} onChange={(e) => setPurDateFrom(e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div>
+                <Label className="text-[10px]">종료일</Label>
+                <Input type="date" value={purDateTo} onChange={(e) => setPurDateTo(e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div className="flex gap-1">
+                <Button size="sm" variant={purStatus === "all" ? "default" : "outline"} onClick={() => setPurStatus("all")}>전체</Button>
+                <Button size="sm" variant={purStatus === "fulfilled" ? "default" : "outline"} onClick={() => setPurStatus("fulfilled")}>완료</Button>
+                <Button size="sm" variant={purStatus === "pending" ? "default" : "outline"} onClick={() => setPurStatus("pending")}>대기</Button>
+              </div>
+            </div>
+            {(() => {
+              const from = purDateFrom ? new Date(purDateFrom).getTime() : null;
+              const to = purDateTo ? new Date(purDateTo + "T23:59:59").getTime() : null;
+              const list = purchases.filter((p) => {
+                if (purStatus !== "all" && p.status !== purStatus) return false;
+                const ts = p.created_at ? new Date(p.created_at).getTime() : 0;
+                if (from && ts < from) return false;
+                if (to && ts > to) return false;
+                return true;
+              });
+              const totalQty = list.reduce((s, p) => s + Number(p.pack ?? 0), 0);
+              const totalAmt = list.reduce((s, p) => s + Number(p.amount_krw ?? 0), 0);
+              return (
+                <>
+                  <p className="text-[11px] text-muted-foreground mb-2">표시 {list.length}건 · 총 {totalQty}크레딧 / {totalAmt.toLocaleString()}원</p>
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>일시</TableHead><TableHead>크레딧</TableHead><TableHead>금액</TableHead><TableHead>상태</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {list.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">내역 없음</TableCell></TableRow>}
+                      {list.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString("ko-KR")}</TableCell>
+                          <TableCell className="text-xs">{p.pack}</TableCell>
+                          <TableCell className="text-xs">{Number(p.amount_krw).toLocaleString()}원</TableCell>
+                          <TableCell><Badge variant={p.status === "fulfilled" ? "default" : "secondary"} className="text-[10px]">{p.status === "fulfilled" ? "완료" : "대기"}</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
         <Card>
