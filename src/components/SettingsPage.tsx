@@ -189,11 +189,21 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           <Switch checked={notifyPush} disabled={pushBusy} onCheckedChange={(v) => updateNotify(v, notifyMkt)} />
         </Row>
         {notifyPush && (
-          <div className="px-4 py-3 flex items-center justify-between gap-3 text-sm">
+          <div className="px-4 py-3 flex items-center justify-between gap-3 text-sm flex-wrap">
             <span className="text-muted-foreground">앱 알림 권한: {pushPermission === "granted" ? "허용됨" : pushPermission === "denied" ? "차단됨" : pushPermission === "unsupported" ? "미지원" : "대기"}</span>
             <Button size="sm" variant="outline" disabled={pushBusy || pushPermission === "unsupported"} onClick={activatePush}>
               {pushBusy ? "등록 중..." : "권한 등록"}
             </Button>
+          </div>
+        )}
+        {notifyPush && pushPlatform?.needsInstall && (
+          <div className="px-4 pb-3 text-[11px] text-amber-600 leading-relaxed">
+            아이폰에서 푸시 알림을 받으려면 Safari 하단의 <b>공유 → 홈 화면에 추가</b>로 앱을 설치한 뒤, 홈 화면 아이콘으로 실행해 권한을 등록해주세요.
+          </div>
+        )}
+        {notifyPush && pushPermission === "denied" && (
+          <div className="px-4 pb-3 text-[11px] text-red-600 leading-relaxed">
+            브라우저(또는 시스템 설정)에서 알림이 차단되어 있습니다. 사이트 설정에서 알림을 허용으로 변경해주세요.
           </div>
         )}
         <Row>
