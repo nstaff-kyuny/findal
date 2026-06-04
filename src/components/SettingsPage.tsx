@@ -32,6 +32,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const [editOpen, setEditOpen] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">("default");
+  const [pushPlatform, setPushPlatform] = useState<ReturnType<typeof detectPushPlatform> | null>(null);
   const [form, setForm] = useState<any>({});
   const [company, setCompany] = useState<CompanyInfo>(COMPANY_INFO);
   const table = role === "seeker" ? "seeker_profiles" : "employer_profiles";
@@ -39,6 +40,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) setPushPermission("unsupported");
     else setPushPermission(Notification.permission);
+    setPushPlatform(detectPushPlatform());
   }, []);
 
   const load = async () => {
