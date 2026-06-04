@@ -13,6 +13,7 @@ export const Route = createFileRoute("/employer/home")({ component: () => <RoleG
 
 function Page() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [emp, setEmp] = useState<any>(null);
   const [activeJobs, setActiveJobs] = useState(0);
   const [pending, setPending] = useState(0);
