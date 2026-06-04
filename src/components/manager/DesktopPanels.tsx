@@ -468,10 +468,11 @@ export function HistoryPanel({ userId }: { userId: string }) {
     if (filtered.length === 0) { toast.error("내보낼 기록이 없습니다"); return; }
     setExporting(true);
     try {
-      const [{ default: html2canvas }, jspdfMod] = await Promise.all([
-        import("html2canvas"),
+      const [h2cMod, jspdfMod] = await Promise.all([
+        import("html2canvas-pro"),
         import("jspdf"),
       ]);
+      const html2canvas = (h2cMod as any).default ?? h2cMod;
       const jsPDF = (jspdfMod as any).jsPDF ?? (jspdfMod as any).default;
       const canvas = await html2canvas(tableRef.current, { scale: 2, backgroundColor: "#ffffff" });
       const imgData = canvas.toDataURL("image/png");

@@ -21,6 +21,39 @@ function arrayBufferToBase64(buf: ArrayBuffer | null) {
   return btoa(bin);
 }
 
+export type PushPlatform = {
+  supported: boolean;
+  isIOS: boolean;
+  isStandalone: boolean;
+  needsInstall: boolean; // iOS Safari requires PWA install before push works
+  reason?: string;
+};
+
+export function detectPushPlatform(): PushPlatform {
+  if (typeof window === "undefined" || typeof navigator === "undefined") {
+    return { supported: false, isIOS: false, isStandalone: false, needsInstall: false, reason: "환경 미지원" };
+  }
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    (window.navigator as any).standalone === true;
+  const hasSW = "serviceWorker" in navigator;
+  const hasPush = "PushManager" in window;
+  const hasNotif = "Notification" in window;
+
+  if (!hasSW || !hasPush || !hasNotif) {
+    if (isIOS && !isStandalone) {
+      return { supported: false, isIOS, isStandalone, needsInstall: true, reason: "iOS는 홈 화면에 추가 후 사용 가능" };
+    }
+    return { supported: false, isIOS, isStandalone, needsInstall: false, reason: "브라우저가 푸시 알림을 지원하지 않습니다" };
+  }
+  if (isIOS && !isStandalone) {
+    return { supported: false, isIOS, isStandalone, needsInstall: true, reason: "iOS는 홈 화면에 추가 후 사용 가능" };
+  }
+  return { supported: true, isIOS, isStandalone, needsInstall: false };
+}
+
 async function getServiceWorkerRegistration() {
   const existing = await navigator.serviceWorker.getRegistration("/");
   if (existing?.active?.scriptURL.endsWith("/sw.js")) return existing;
@@ -36,9 +69,9 @@ async function getServiceWorkerRegistration() {
 
 export async function registerPushSubscription(userId: string): Promise<boolean> {
   if (typeof window === "undefined") return false;
-  if (!userId || !("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
-    return false;
-  }
+  const plat = detectPushPlatform();
+  if (!plat.supported) return false;
+  if (!userId) return false;
   if (Notification.permission !== "granted") return false;
 
   const reg = await getServiceWorkerRegistration();
@@ -69,17 +102,44 @@ export async function registerPushSubscription(userId: string): Promise<boolean>
   return true;
 }
 
-export async function requestPushPermissionAndSubscribe(userId: string): Promise<boolean> {
-  if (typeof window === "undefined" || !("Notification" in window)) return false;
-  if (Notification.permission === "default") {
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") return false;
+export async function requestPushPermissionAndSubscribe(userId: string): Promise<{ ok: boolean; reason?: string }> {
+  const plat = detectPushPlatform();
+  if (!plat.supported) return { ok: false, reason: plat.reason };
+  try {
+    if (Notification.permission === "default") {
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") return { ok: false, reason: "알림 권한이 거부되었습니다" };
+    }
+    if (Notification.permission !== "granted") {
+      return { ok: false, reason: "브라우저에서 알림이 차단되었습니다. 사이트 설정을 확인하세요." };
+    }
+    const ok = await registerPushSubscription(userId);
+    return ok ? { ok: true } : { ok: false, reason: "푸시 등록에 실패했습니다" };
+  } catch (e: any) {
+    return { ok: false, reason: e?.message ?? "알 수 없는 오류" };
   }
-  return registerPushSubscription(userId);
+}
+
+export async function unsubscribePush(userId: string): Promise<void> {
+  try {
+    if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
+    const reg = await navigator.serviceWorker.getRegistration("/");
+    const sub = reg ? await reg.pushManager.getSubscription() : null;
+    if (sub) {
+      const endpoint = sub.endpoint;
+      await sub.unsubscribe().catch(() => false);
+      await supabase.from("push_subscriptions").delete().eq("user_id", userId).eq("endpoint", endpoint);
+    }
+  } catch (e) {
+    console.warn("[push] unsubscribe failed", e);
+  }
 }
 
 export async function ensurePushSubscription(userId: string): Promise<boolean> {
   try {
+    // Silent refresh ONLY when permission is already granted — never prompts.
+    if (typeof window === "undefined" || !("Notification" in window)) return false;
+    if (Notification.permission !== "granted") return false;
     return await registerPushSubscription(userId);
   } catch (e) {
     console.warn("[push] subscribe failed", e);

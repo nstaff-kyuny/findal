@@ -16,7 +16,7 @@ import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company"
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
-import { requestPushPermissionAndSubscribe } from "@/lib/push-client";
+import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform } from "@/lib/push-client";
 import { Languages } from "lucide-react";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
@@ -32,6 +32,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const [editOpen, setEditOpen] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">("default");
+  const [pushPlatform, setPushPlatform] = useState<ReturnType<typeof detectPushPlatform> | null>(null);
   const [form, setForm] = useState<any>({});
   const [company, setCompany] = useState<CompanyInfo>(COMPANY_INFO);
   const table = role === "seeker" ? "seeker_profiles" : "employer_profiles";
@@ -39,6 +40,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) setPushPermission("unsupported");
     else setPushPermission(Notification.permission);
+    setPushPlatform(detectPushPlatform());
   }, []);
 
   const load = async () => {
@@ -59,17 +61,28 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
     await supabase.from(table).update({ notify_push: push, notify_marketing: mkt } as any).eq("user_id", user.id);
     if (push) {
       await activatePush();
+    } else {
+      await unsubscribePush(user.id);
     }
   };
 
   const activatePush = async () => {
     if (!user) return;
+    const plat = detectPushPlatform();
+    if (!plat.supported) {
+      if (plat.needsInstall) {
+        toast.info("아이폰은 홈 화면에 추가한 후 푸시 알림을 받을 수 있습니다");
+      } else {
+        toast.info(plat.reason ?? "이 기기에서는 푸시를 사용할 수 없습니다");
+      }
+      return;
+    }
     setPushBusy(true);
     try {
-      const ok = await requestPushPermissionAndSubscribe(user.id);
+      const res = await requestPushPermissionAndSubscribe(user.id);
       if (typeof window !== "undefined" && "Notification" in window) setPushPermission(Notification.permission);
-      if (ok) toast.success("푸시 알림이 등록되었습니다");
-      else toast.info("휴대폰 설정에서 알림 권한을 허용해 주세요");
+      if (res.ok) toast.success("푸시 알림이 등록되었습니다");
+      else toast.info(res.reason ?? "휴대폰 설정에서 알림 권한을 허용해 주세요");
     } catch (e: any) {
       toast.error(e?.message ?? "푸시 알림 등록에 실패했습니다");
     } finally {
@@ -176,11 +189,21 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           <Switch checked={notifyPush} disabled={pushBusy} onCheckedChange={(v) => updateNotify(v, notifyMkt)} />
         </Row>
         {notifyPush && (
-          <div className="px-4 py-3 flex items-center justify-between gap-3 text-sm">
+          <div className="px-4 py-3 flex items-center justify-between gap-3 text-sm flex-wrap">
             <span className="text-muted-foreground">앱 알림 권한: {pushPermission === "granted" ? "허용됨" : pushPermission === "denied" ? "차단됨" : pushPermission === "unsupported" ? "미지원" : "대기"}</span>
             <Button size="sm" variant="outline" disabled={pushBusy || pushPermission === "unsupported"} onClick={activatePush}>
               {pushBusy ? "등록 중..." : "권한 등록"}
             </Button>
+          </div>
+        )}
+        {notifyPush && pushPlatform?.needsInstall && (
+          <div className="px-4 pb-3 text-[11px] text-amber-600 leading-relaxed">
+            아이폰에서 푸시 알림을 받으려면 Safari 하단의 <b>공유 → 홈 화면에 추가</b>로 앱을 설치한 뒤, 홈 화면 아이콘으로 실행해 권한을 등록해주세요.
+          </div>
+        )}
+        {notifyPush && pushPermission === "denied" && (
+          <div className="px-4 pb-3 text-[11px] text-red-600 leading-relaxed">
+            브라우저(또는 시스템 설정)에서 알림이 차단되어 있습니다. 사이트 설정에서 알림을 허용으로 변경해주세요.
           </div>
         )}
         <Row>
