@@ -35,6 +35,7 @@ function Page() {
   const [showSearch, setShowSearch] = useState(false);
   const [prefRegions, setPrefRegions] = useState<string[]>([]);
   const [prefOnly, setPrefOnly] = useState(true);
+  const [showCompleted, setShowCompleted] = useState(false);
   const touchStartY = useRef<number | null>(null);
   const nav = useNavigate();
 
