@@ -16,7 +16,7 @@ import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company"
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
-import { requestPushPermissionAndSubscribe } from "@/lib/push-client";
+import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform } from "@/lib/push-client";
 import { Languages } from "lucide-react";
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
