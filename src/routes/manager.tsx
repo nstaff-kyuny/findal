@@ -564,23 +564,58 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
       <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4">
-            <h3 className="font-bold text-sm mb-2">구매 내역</h3>
-            <Table>
-              <TableHeader><TableRow>
-                <TableHead>일시</TableHead><TableHead>크레딧</TableHead><TableHead>금액</TableHead><TableHead>상태</TableHead>
-              </TableRow></TableHeader>
-              <TableBody>
-                {purchases.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">내역 없음</TableCell></TableRow>}
-                {purchases.map((p) => (
-                  <TableRow key={p.id}>
-                    <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString("ko-KR")}</TableCell>
-                    <TableCell className="text-xs">{p.pack}</TableCell>
-                    <TableCell className="text-xs">{Number(p.amount_krw).toLocaleString()}원</TableCell>
-                    <TableCell><Badge variant={p.status === "fulfilled" ? "default" : "secondary"} className="text-[10px]">{p.status === "fulfilled" ? "완료" : "대기"}</Badge></TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-bold text-sm">구매 내역</h3>
+            </div>
+            <div className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end mb-3">
+              <div>
+                <Label className="text-[10px]">시작일</Label>
+                <Input type="date" value={purDateFrom} onChange={(e) => setPurDateFrom(e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div>
+                <Label className="text-[10px]">종료일</Label>
+                <Input type="date" value={purDateTo} onChange={(e) => setPurDateTo(e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div className="flex gap-1">
+                <Button size="sm" variant={purStatus === "all" ? "default" : "outline"} onClick={() => setPurStatus("all")}>전체</Button>
+                <Button size="sm" variant={purStatus === "fulfilled" ? "default" : "outline"} onClick={() => setPurStatus("fulfilled")}>완료</Button>
+                <Button size="sm" variant={purStatus === "pending" ? "default" : "outline"} onClick={() => setPurStatus("pending")}>대기</Button>
+              </div>
+            </div>
+            {(() => {
+              const from = purDateFrom ? new Date(purDateFrom).getTime() : null;
+              const to = purDateTo ? new Date(purDateTo + "T23:59:59").getTime() : null;
+              const list = purchases.filter((p) => {
+                if (purStatus !== "all" && p.status !== purStatus) return false;
+                const ts = p.created_at ? new Date(p.created_at).getTime() : 0;
+                if (from && ts < from) return false;
+                if (to && ts > to) return false;
+                return true;
+              });
+              const totalQty = list.reduce((s, p) => s + Number(p.pack ?? 0), 0);
+              const totalAmt = list.reduce((s, p) => s + Number(p.amount_krw ?? 0), 0);
+              return (
+                <>
+                  <p className="text-[11px] text-muted-foreground mb-2">표시 {list.length}건 · 총 {totalQty}크레딧 / {totalAmt.toLocaleString()}원</p>
+                  <Table>
+                    <TableHeader><TableRow>
+                      <TableHead>일시</TableHead><TableHead>크레딧</TableHead><TableHead>금액</TableHead><TableHead>상태</TableHead>
+                    </TableRow></TableHeader>
+                    <TableBody>
+                      {list.length === 0 && <TableRow><TableCell colSpan={4} className="text-center text-xs text-muted-foreground py-6">내역 없음</TableCell></TableRow>}
+                      {list.map((p) => (
+                        <TableRow key={p.id}>
+                          <TableCell className="text-xs">{new Date(p.created_at).toLocaleDateString("ko-KR")}</TableCell>
+                          <TableCell className="text-xs">{p.pack}</TableCell>
+                          <TableCell className="text-xs">{Number(p.amount_krw).toLocaleString()}원</TableCell>
+                          <TableCell><Badge variant={p.status === "fulfilled" ? "default" : "secondary"} className="text-[10px]">{p.status === "fulfilled" ? "완료" : "대기"}</Badge></TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              );
+            })()}
           </CardContent>
         </Card>
         <Card>
