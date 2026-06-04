@@ -280,10 +280,13 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
           </TableHeader>
           <TableBody>
             {loading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">불러오는 중…</TableCell></TableRow>}
-            {!loading && jobs.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">등록된 공고가 없습니다</TableCell></TableRow>}
-            {jobs.map((j) => {
+            {!loading && filteredJobs.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">조건에 맞는 공고가 없습니다</TableCell></TableRow>}
+            {filteredJobs.map((j) => {
               const editCount = j.edit_count ?? 0;
               const canEdit = editCount < 2;
+              const wageText = j.contract_type === "monthly"
+                ? `월 ${Number(j.monthly_wage ?? 0).toLocaleString()}원`
+                : `${Number(j.daily_wage ?? 0).toLocaleString()}원`;
               return (
                 <TableRow key={j.id}>
                   <TableCell className="font-medium max-w-[260px] truncate">{j.title}</TableCell>
@@ -292,7 +295,7 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
                     <Badge variant="outline">{ROLE_LABEL[j.job_role] ?? j.job_role}</Badge>
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{j.place_name}<br />{j.region}</TableCell>
-                  <TableCell className="text-right tabular-nums">{Number(j.daily_wage).toLocaleString()}원</TableCell>
+                  <TableCell className="text-right tabular-nums">{wageText}</TableCell>
                   <TableCell className="text-center">
                     {j.is_active ? <Badge>활성</Badge> : <Badge variant="destructive">비활성</Badge>}
                   </TableCell>
