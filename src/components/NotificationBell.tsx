@@ -50,10 +50,10 @@ export function NotificationBell() {
   }, [user]);
 
   return (
-    <Link to="/notifications" className="relative p-2 -mr-2" aria-label="알림">
-      <Bell size={22} />
+    <Link to="/notifications" className="relative inline-flex items-center justify-center h-9 w-9 rounded-md hover:bg-muted transition" aria-label="알림">
+      <Bell size={20} />
       {unread > 0 && (
-        <span className="absolute top-0 right-0 min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">
+        <span className="absolute top-0.5 right-0.5 min-w-[16px] h-[16px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center leading-none">
           {unread > 99 ? "99+" : unread}
         </span>
       )}

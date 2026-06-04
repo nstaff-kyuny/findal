@@ -74,11 +74,11 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col max-w-md mx-auto shadow-xl">
       <header
-        className="sticky top-0 z-40 bg-background border-b px-4 py-3 flex items-center justify-between gap-2"
-        style={{ paddingTop: "max(0.75rem, env(safe-area-inset-top))" }}
+        className="sticky top-0 z-40 bg-background border-b px-4 py-2 flex items-center justify-between gap-2 min-h-[56px]"
+        style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
       >
-        <h1 className="font-bold text-lg truncate">{role === "seeker" ? "Find AR" : "구인자 콘솔"}</h1>
-        <div className="flex items-center gap-2 shrink-0">
+        <h1 className="font-bold text-lg truncate leading-none flex items-center">{role === "seeker" ? "Find AR" : "구인자 콘솔"}</h1>
+        <div className="flex items-center gap-1.5 shrink-0">
           {role === "seeker" && <LanguageSwitcher />}
           <NotificationBell />
         </div>
