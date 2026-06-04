@@ -420,6 +420,22 @@ function ApplicationsPanel({ userId, onChanged }: { userId: string; onChanged: (
         </TabsList>
       </Tabs>
       <Card>
+        <CardContent className="p-3 grid grid-cols-[1fr_auto_auto] gap-2 items-end">
+          <div>
+            <Label className="text-xs">지원자/공고/장소/연락처 검색</Label>
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="검색어 입력" />
+          </div>
+          <div>
+            <Label className="text-xs">신청 시작일</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">신청 종료일</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+        </CardContent>
+      </Card>
+      <Card>
         <Table>
           <TableHeader>
             <TableRow>
