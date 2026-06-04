@@ -61,17 +61,28 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
     await supabase.from(table).update({ notify_push: push, notify_marketing: mkt } as any).eq("user_id", user.id);
     if (push) {
       await activatePush();
+    } else {
+      await unsubscribePush(user.id);
     }
   };
 
   const activatePush = async () => {
     if (!user) return;
+    const plat = detectPushPlatform();
+    if (!plat.supported) {
+      if (plat.needsInstall) {
+        toast.info("아이폰은 홈 화면에 추가한 후 푸시 알림을 받을 수 있습니다");
+      } else {
+        toast.info(plat.reason ?? "이 기기에서는 푸시를 사용할 수 없습니다");
+      }
+      return;
+    }
     setPushBusy(true);
     try {
-      const ok = await requestPushPermissionAndSubscribe(user.id);
+      const res = await requestPushPermissionAndSubscribe(user.id);
       if (typeof window !== "undefined" && "Notification" in window) setPushPermission(Notification.permission);
-      if (ok) toast.success("푸시 알림이 등록되었습니다");
-      else toast.info("휴대폰 설정에서 알림 권한을 허용해 주세요");
+      if (res.ok) toast.success("푸시 알림이 등록되었습니다");
+      else toast.info(res.reason ?? "휴대폰 설정에서 알림 권한을 허용해 주세요");
     } catch (e: any) {
       toast.error(e?.message ?? "푸시 알림 등록에 실패했습니다");
     } finally {
