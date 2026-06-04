@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
@@ -16,10 +17,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { ImagePlus, Sparkles, CalendarDays } from "lucide-react";
+import { ImagePlus, Sparkles, CalendarDays, Download } from "lucide-react";
 import {
   INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS,
 } from "@/lib/constants";
+import { useI18n } from "@/lib/i18n";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
 
 const MAX_WORK_DATES = 5;
@@ -28,6 +30,7 @@ const MAX_WORK_DATES = 5;
    공고 등록 (desktop)
    ============================================================= */
 export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: () => void }) {
+  const { t, customIndustries, customRoles } = useI18n();
   const makeDraft = useServerFn(generateJobDraft);
   const makeImage = useServerFn(generateJobImage);
   const moderate = useServerFn(moderateText);
@@ -40,7 +43,14 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
   const [location, setLocation] = useState("");
   const [region, setRegion] = useState("서울");
   const [district, setDistrict] = useState("");
+
+  // contract type
+  const [contractType, setContractType] = useState<"daily" | "monthly">("daily");
   const [wage, setWage] = useState("");
+  const [monthlyWage, setMonthlyWage] = useState("");
+  const [contractMonths, setContractMonths] = useState("");
+  const [oneMonthPlus, setOneMonthPlus] = useState(false);
+
   const [payMonth, setPayMonth] = useState<"당월" | "익월">("당월");
   const [payDayNum, setPayDayNum] = useState("10");
   const [prep, setPrep] = useState("");
@@ -55,6 +65,20 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
   const [aiBusy, setAiBusy] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // merged industries/roles (built-in + admin custom)
+  const allIndustries = useMemo(() => {
+    const built = Object.entries(INDUSTRY_LABEL).map(([k, label]) => ({ key: k, label }));
+    const custom = customIndustries.map((c) => ({ key: c.key, label: c.label }));
+    const seen = new Set<string>();
+    return [...built, ...custom].filter((x) => (seen.has(x.key) ? false : (seen.add(x.key), true)));
+  }, [customIndustries]);
+  const rolesFor = (indKey: string) => {
+    const built = (ROLES_BY_INDUSTRY[indKey] ?? []).map((rk) => ({ key: rk, label: ROLE_LABEL[rk] ?? rk }));
+    const custom = customRoles.filter((r) => r.industry_key === indKey).map((r) => ({ key: r.key, label: r.label }));
+    const seen = new Set<string>();
+    return [...built, ...custom].filter((x) => (seen.has(x.key) ? false : (seen.add(x.key), true)));
+  };
+
   useEffect(() => {
     (async () => {
       const { data } = await supabase.from("employer_profiles").select("*").eq("user_id", userId).single();
@@ -64,9 +88,10 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
   }, [userId]);
 
   useEffect(() => {
-    const roles = ROLES_BY_INDUSTRY[industry];
-    if (!roles.includes(jobRole)) setJobRole(roles[0]);
-  }, [industry, jobRole]);
+    const list = rolesFor(industry);
+    if (list.length && !list.find((r) => r.key === jobRole)) setJobRole(list[0].key);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [industry, customRoles]);
 
   const isRoomCleaningHotel = ["hotel", "motel", "resort"].includes(industry) && jobRole === "room_cleaning";
 
@@ -91,7 +116,9 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
   const runAiDraft = async (tone: "default" | "friendly" | "foreigner" = "default") => {
     setAiBusy(true);
     try {
-      const draft = await makeDraft({ data: { industry: INDUSTRY_LABEL[industry], jobRole: ROLE_LABEL[jobRole], placeName, region: district ? `${region} ${district}` : region, wage, rooms, tone } });
+      const indLabel = allIndustries.find((x) => x.key === industry)?.label ?? industry;
+      const roleLabel = rolesFor(industry).find((x) => x.key === jobRole)?.label ?? jobRole;
+      const draft = await makeDraft({ data: { industry: indLabel, jobRole: roleLabel, placeName, region: district ? `${region} ${district}` : region, wage: contractType === "monthly" ? monthlyWage : wage, rooms, tone } });
       setTitle(draft.title || title);
       setPrep(draft.preparations || prep);
       toast.success("AI 공고 초안이 적용되었습니다");
@@ -102,7 +129,9 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
   const runAiImage = async () => {
     setPhotoBusy(true);
     try {
-      const { imageUrl } = await makeImage({ data: { industry: INDUSTRY_LABEL[industry], jobRole: ROLE_LABEL[jobRole], placeName } });
+      const indLabel = allIndustries.find((x) => x.key === industry)?.label ?? industry;
+      const roleLabel = rolesFor(industry).find((x) => x.key === jobRole)?.label ?? jobRole;
+      const { imageUrl } = await makeImage({ data: { industry: indLabel, jobRole: roleLabel, placeName } });
       setPhotoUrl(imageUrl);
       toast.success("AI 대표 사진이 생성되었습니다");
     } catch (e: any) { toast.error(e?.message ?? "이미지 생성 실패"); }
@@ -111,11 +140,25 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
 
   const save = async () => {
     if (!title || !placeName || !location) return toast.error("필수 항목을 입력하세요");
-    const wageNum = Number(wage);
-    if (!wageNum || wageNum <= 0) return toast.error("일당을 입력하세요");
     const headcountNum = Number(headcount);
     if (!headcountNum || headcountNum < 1) return toast.error("필요 인원수를 입력하세요");
     if (isRoomCleaningHotel && !rooms) return toast.error("객실청소 공고는 일일 객실수가 필수입니다");
+
+    let wageNum: number | null = null;
+    let monthlyWageNum: number | null = null;
+    let contractMonthsNum: number | null = null;
+    if (contractType === "monthly") {
+      monthlyWageNum = Number(monthlyWage);
+      if (!monthlyWageNum || monthlyWageNum <= 0) return toast.error(t("monthly_wage") + "을(를) 입력하세요");
+      if (!oneMonthPlus) {
+        contractMonthsNum = Number(contractMonths);
+        if (!contractMonthsNum || contractMonthsNum < 1) return toast.error(t("contract_months") + "을(를) 입력하세요");
+      }
+    } else {
+      wageNum = Number(wage);
+      if (!wageNum || wageNum <= 0) return toast.error("일당을 입력하세요");
+    }
+
     setSaving(true);
     try {
       const combined = `${title}\n${prep ?? ""}\n${placeName}`.trim();
@@ -126,8 +169,15 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
       const phoneToUse = useDefaultContact ? (emp?.contact_phone ?? "") : contact;
       const { data: inserted, error } = await supabase.from("jobs").insert({
         employer_id: userId, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
-        photo_url: photoUrl, daily_wage: wageNum, pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
-        work_dates: dates, rooms_per_day: rooms ? Number(rooms) : null, headcount: headcountNum, is_active: true,
+        photo_url: photoUrl,
+        contract_type: contractType,
+        daily_wage: wageNum,
+        monthly_wage: monthlyWageNum,
+        contract_months: contractMonthsNum,
+        pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
+        work_dates: contractType === "monthly" ? [] : dates,
+        rooms_per_day: rooms ? Number(rooms) : null,
+        headcount: headcountNum, is_active: true,
       } as any).select("id").single();
       if (error) return toast.error(error.message);
       if (inserted?.id && phoneToUse) {
@@ -135,7 +185,8 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
       }
       toast.success("공고 등록 완료");
       // reset
-      setTitle(""); setPlaceName(""); setLocation(""); setWage(""); setPrep("");
+      setTitle(""); setPlaceName(""); setLocation(""); setWage(""); setMonthlyWage("");
+      setContractMonths(""); setOneMonthPlus(false); setPrep("");
       setRooms(""); setHeadcount(""); setPhotoUrl(null); setDates([]);
       onCreated();
     } finally { setSaving(false); }
@@ -156,15 +207,24 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
                 <Label>업종</Label>
                 <Select value={industry} onValueChange={setIndustry}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{Object.entries(INDUSTRY_LABEL).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
+                  <SelectContent>{allIndustries.map((it) => <SelectItem key={it.key} value={it.key}>{it.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div>
                 <Label>직무</Label>
                 <Select value={jobRole} onValueChange={setJobRole}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{ROLES_BY_INDUSTRY[industry].map((r) => <SelectItem key={r} value={r}>{ROLE_LABEL[r]}</SelectItem>)}</SelectContent>
+                  <SelectContent>{rolesFor(industry).map((r) => <SelectItem key={r.key} value={r.key}>{r.label}</SelectItem>)}</SelectContent>
                 </Select>
+              </div>
+            </div>
+
+            {/* Contract type toggle */}
+            <div>
+              <Label>{t("contract_type")}</Label>
+              <div className="grid grid-cols-2 gap-2 mt-1">
+                <Button type="button" variant={contractType === "daily" ? "default" : "outline"} onClick={() => setContractType("daily")}>{t("contract_daily")}</Button>
+                <Button type="button" variant={contractType === "monthly" ? "default" : "outline"} onClick={() => setContractType("monthly")}>{t("contract_monthly")}</Button>
               </div>
             </div>
 
@@ -180,7 +240,7 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
 
             <div className="grid grid-cols-2 gap-3">
               <div><Label>일할 곳 이름</Label><Input value={placeName} onChange={(e) => setPlaceName(e.target.value)} /></div>
-              <div><Label>상세주소</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
+              <div><Label>{t("detail_location")}</Label><Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -195,10 +255,17 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div>
-                <Label>일당 (원)</Label>
-                <Input type="number" inputMode="numeric" value={wage} onChange={(e) => setWage(e.target.value)} placeholder="예: 120000" />
-              </div>
+              {contractType === "daily" ? (
+                <div>
+                  <Label>일당 (원)</Label>
+                  <Input type="number" inputMode="numeric" value={wage} onChange={(e) => setWage(e.target.value)} placeholder="예: 120000" />
+                </div>
+              ) : (
+                <div>
+                  <Label>{t("monthly_wage")} (원)</Label>
+                  <Input type="number" inputMode="numeric" value={monthlyWage} onChange={(e) => setMonthlyWage(e.target.value)} placeholder="예: 2500000" />
+                </div>
+              )}
               <div>
                 <Label>급여 지급일</Label>
                 <div className="grid grid-cols-2 gap-1">
@@ -232,24 +299,48 @@ export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: 
 
             <div>
               <Label>준비물 / 출근시 필요사항</Label>
-              <Textarea rows={5} value={prep} onChange={(e) => setPrep(e.target.value)} />
+              <Textarea rows={7} value={prep} onChange={(e) => setPrep(e.target.value)} />
             </div>
 
-            <div>
-              <Label>근무 일자 <span className="text-xs text-muted-foreground font-normal">(최대 {MAX_WORK_DATES}일)</span></Label>
-              <div className="flex gap-2 mt-1">
-                <div className="relative flex-1">
-                  <CalendarDays size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none" />
-                  <Input type="date" value={dateInput} onChange={(e) => setDateInput(e.target.value)} className="pl-9" />
+            {/* Date picker OR contract length */}
+            {contractType === "daily" ? (
+              <div>
+                <Label>근무 일자 <span className="text-xs text-muted-foreground font-normal">(최대 {MAX_WORK_DATES}일)</span></Label>
+                <div className="flex gap-2 mt-1">
+                  <div className="relative flex-1">
+                    <CalendarDays size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none" />
+                    <Input type="date" value={dateInput} onChange={(e) => setDateInput(e.target.value)} className="pl-9" />
+                  </div>
+                  <Button type="button" onClick={addDate} disabled={dates.length >= MAX_WORK_DATES}>추가</Button>
                 </div>
-                <Button type="button" onClick={addDate} disabled={dates.length >= MAX_WORK_DATES}>추가</Button>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {dates.map((d) => (
+                    <span key={d} className="px-2 py-1 bg-muted rounded text-xs cursor-pointer" onClick={() => setDates(dates.filter((x) => x !== d))}>{d} ✕</span>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-1 mt-2">
-                {dates.map((d) => (
-                  <span key={d} className="px-2 py-1 bg-muted rounded text-xs cursor-pointer" onClick={() => setDates(dates.filter((x) => x !== d))}>{d} ✕</span>
-                ))}
+            ) : (
+              <div className="space-y-2">
+                <Label>{t("contract_months")}</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={contractMonths}
+                    onChange={(e) => setContractMonths(e.target.value)}
+                    placeholder="예: 3"
+                    disabled={oneMonthPlus}
+                    className="flex-1"
+                  />
+                  <span className="text-sm text-muted-foreground">{t("months_unit")}</span>
+                </div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={oneMonthPlus} onCheckedChange={(v) => setOneMonthPlus(!!v)} />
+                  {t("one_month_plus")}
+                </label>
               </div>
-            </div>
+            )}
 
             <div className="flex items-center justify-between border-t pt-3">
               <Label>가입 시 기본 연락처 사용 ({emp?.contact_phone ?? "-"})</Label>
@@ -308,9 +399,13 @@ const HIST_STATUS_VARIANT = (s: string): "default" | "secondary" | "destructive"
 export function HistoryPanel({ userId }: { userId: string }) {
   const [apps, setApps] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"day" | "week" | "month" | "all">("month");
+  const [filter, setFilter] = useState<"day" | "week" | "month" | "all" | "custom">("month");
   const [status, setStatus] = useState<"all" | "approved" | "confirmed" | "no_show">("all");
   const [search, setSearch] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -325,7 +420,7 @@ export function HistoryPanel({ userId }: { userId: string }) {
     const seekerIds = Array.from(new Set(arr.map((a: any) => a.seeker_id)));
     const jobIds = Array.from(new Set(arr.map((a: any) => a.job_id)));
     const [jobsRes, profilesRes] = await Promise.all([
-      jobIds.length ? supabase.from("jobs").select("id, title, place_name, daily_wage").in("id", jobIds) : Promise.resolve({ data: [] as any[] }),
+      jobIds.length ? supabase.from("jobs").select("id, title, place_name, daily_wage, monthly_wage, contract_type").in("id", jobIds) : Promise.resolve({ data: [] as any[] }),
       seekerIds.length ? supabase.from("profiles").select("id, full_name, phone").in("id", seekerIds) : Promise.resolve({ data: [] as any[] }),
     ]);
     const jm = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
@@ -337,23 +432,82 @@ export function HistoryPanel({ userId }: { userId: string }) {
   useEffect(() => { load(); }, [load]);
 
   const filtered = useMemo(() => {
-    const cutoff = new Date();
-    if (filter === "day") cutoff.setDate(cutoff.getDate() - 1);
-    else if (filter === "week") cutoff.setDate(cutoff.getDate() - 7);
-    else if (filter === "month") cutoff.setMonth(cutoff.getMonth() - 1);
     const q = search.trim().toLowerCase();
+    let cutoff: Date | null = null;
+    if (filter === "day" || filter === "week" || filter === "month") {
+      cutoff = new Date();
+      if (filter === "day") cutoff.setDate(cutoff.getDate() - 1);
+      else if (filter === "week") cutoff.setDate(cutoff.getDate() - 7);
+      else cutoff.setMonth(cutoff.getMonth() - 1);
+    }
+    const from = filter === "custom" && dateFrom ? new Date(dateFrom).getTime() : null;
+    const to = filter === "custom" && dateTo ? new Date(dateTo + "T23:59:59").getTime() : null;
     return apps.filter((a) => {
       if (status !== "all" && a.status !== status) return false;
-      if (filter !== "all") {
-        const ts = a.approved_at ?? a.created_at;
-        if (!ts || new Date(ts) < cutoff) return false;
+      const ts = a.approved_at ?? a.created_at;
+      const tsNum = ts ? new Date(ts).getTime() : 0;
+      if (cutoff && tsNum < cutoff.getTime()) return false;
+      if (from && tsNum < from) return false;
+      if (to && tsNum > to) return false;
+      if (q) {
+        const hay = `${a.profiles?.full_name ?? ""} ${a.profiles?.phone ?? ""} ${a.jobs?.title ?? ""} ${a.jobs?.place_name ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
       }
-      if (q && !(a.profiles?.full_name ?? "").toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [apps, filter, status, search]);
+  }, [apps, filter, status, search, dateFrom, dateTo]);
 
-  const totalAmount = filtered.reduce((s, a) => s + Number(a.jobs?.daily_wage ?? 0), 0);
+  const wageOf = (a: any) =>
+    a.jobs?.contract_type === "monthly"
+      ? Number(a.jobs?.monthly_wage ?? 0)
+      : Number(a.jobs?.daily_wage ?? 0);
+  const totalAmount = filtered.reduce((s, a) => s + wageOf(a), 0);
+
+  const downloadPdf = async () => {
+    if (!tableRef.current) return;
+    if (filtered.length === 0) { toast.error("내보낼 기록이 없습니다"); return; }
+    setExporting(true);
+    try {
+      const [{ default: html2canvas }, jspdfMod] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const jsPDF = (jspdfMod as any).jsPDF ?? (jspdfMod as any).default;
+      const canvas = await html2canvas(tableRef.current, { scale: 2, backgroundColor: "#ffffff" });
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const margin = 24;
+      const imgW = pageW - margin * 2;
+      const imgH = (canvas.height * imgW) / canvas.width;
+      let y = margin;
+      if (imgH <= pageH - margin * 2) {
+        pdf.addImage(imgData, "PNG", margin, y, imgW, imgH);
+      } else {
+        // multi-page slice
+        const pageSliceH = ((pageH - margin * 2) * canvas.width) / imgW;
+        let sY = 0;
+        while (sY < canvas.height) {
+          const sH = Math.min(pageSliceH, canvas.height - sY);
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvas.width;
+          sliceCanvas.height = sH;
+          const ctx = sliceCanvas.getContext("2d");
+          ctx?.drawImage(canvas, 0, sY, canvas.width, sH, 0, 0, canvas.width, sH);
+          const sliceData = sliceCanvas.toDataURL("image/png");
+          pdf.addImage(sliceData, "PNG", margin, margin, imgW, (sH * imgW) / canvas.width);
+          sY += sH;
+          if (sY < canvas.height) pdf.addPage();
+        }
+      }
+      pdf.save(`승인기록_${new Date().toISOString().slice(0, 10)}.pdf`);
+    } catch (e: any) {
+      toast.error(e?.message ?? "PDF 생성 실패");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <div className="p-5 space-y-4">
@@ -362,16 +516,22 @@ export function HistoryPanel({ userId }: { userId: string }) {
           <h2 className="text-lg font-bold">승인 기록</h2>
           <p className="text-xs text-muted-foreground">총 {filtered.length}건 · 합계 {totalAmount.toLocaleString()}원</p>
         </div>
-        <Input className="w-64" placeholder="구직자 이름 검색" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex gap-2">
+          <Input className="w-64" placeholder="구직자/공고/장소/연락처 검색" value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Button variant="outline" disabled={exporting} onClick={downloadPdf}>
+            <Download size={14} className="mr-1" />{exporting ? "생성 중…" : "PDF 다운로드"}
+          </Button>
+        </div>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex gap-3 flex-wrap items-end">
         <Tabs value={filter} onValueChange={(v) => setFilter(v as any)}>
           <TabsList>
             <TabsTrigger value="day">최근 1일</TabsTrigger>
             <TabsTrigger value="week">최근 1주</TabsTrigger>
             <TabsTrigger value="month">최근 1개월</TabsTrigger>
             <TabsTrigger value="all">전체</TabsTrigger>
+            <TabsTrigger value="custom">기간 지정</TabsTrigger>
           </TabsList>
         </Tabs>
         <Tabs value={status} onValueChange={(v) => setStatus(v as any)}>
@@ -382,9 +542,15 @@ export function HistoryPanel({ userId }: { userId: string }) {
             <TabsTrigger value="no_show">노쇼</TabsTrigger>
           </TabsList>
         </Tabs>
+        {filter === "custom" && (
+          <div className="flex gap-2 items-end">
+            <div><Label className="text-xs">시작일</Label><Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9" /></div>
+            <div><Label className="text-xs">종료일</Label><Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9" /></div>
+          </div>
+        )}
       </div>
 
-      <Card>
+      <Card ref={tableRef as any}>
         <Table>
           <TableHeader>
             <TableRow>
@@ -393,28 +559,32 @@ export function HistoryPanel({ userId }: { userId: string }) {
               <TableHead>연락처</TableHead>
               <TableHead>공고</TableHead>
               <TableHead>장소</TableHead>
-              <TableHead className="text-right">일당</TableHead>
+              <TableHead className="text-right">급여</TableHead>
               <TableHead className="text-center">상태</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {loading && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">불러오는 중…</TableCell></TableRow>}
             {!loading && filtered.length === 0 && <TableRow><TableCell colSpan={7} className="text-center py-8 text-sm text-muted-foreground">기록이 없습니다</TableCell></TableRow>}
-            {filtered.map((a) => (
-              <TableRow key={a.id}>
-                <TableCell className="text-xs whitespace-nowrap">{new Date(a.approved_at ?? a.created_at).toLocaleString("ko-KR")}</TableCell>
-                <TableCell className="font-medium">{a.profiles?.full_name ?? "(이름미입력)"}</TableCell>
-                <TableCell className="text-xs">{a.profiles?.phone ? <a href={`tel:${a.profiles.phone}`} className="text-primary underline">{a.profiles.phone}</a> : "-"}</TableCell>
-                <TableCell className="text-xs max-w-[220px] truncate">{a.jobs?.title ?? "-"}</TableCell>
-                <TableCell className="text-xs text-muted-foreground max-w-[180px] truncate">{a.jobs?.place_name ?? "-"}</TableCell>
-                <TableCell className="text-right tabular-nums text-xs">{Number(a.jobs?.daily_wage ?? 0).toLocaleString()}원</TableCell>
-                <TableCell className="text-center">
-                  <Badge variant={HIST_STATUS_VARIANT(a.status)} className={a.status === "confirmed" ? "bg-green-600 text-white border-transparent" : ""}>
-                    {HIST_STATUS_LABEL[a.status] ?? a.status}
-                  </Badge>
-                </TableCell>
-              </TableRow>
-            ))}
+            {filtered.map((a) => {
+              const isMonthly = a.jobs?.contract_type === "monthly";
+              const amt = wageOf(a);
+              return (
+                <TableRow key={a.id}>
+                  <TableCell className="text-xs whitespace-nowrap">{new Date(a.approved_at ?? a.created_at).toLocaleString("ko-KR")}</TableCell>
+                  <TableCell className="font-medium">{a.profiles?.full_name ?? "(이름미입력)"}</TableCell>
+                  <TableCell className="text-xs">{a.profiles?.phone ? <a href={`tel:${a.profiles.phone}`} className="text-primary underline">{a.profiles.phone}</a> : "-"}</TableCell>
+                  <TableCell className="text-xs max-w-[220px] truncate">{a.jobs?.title ?? "-"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground max-w-[180px] truncate">{a.jobs?.place_name ?? "-"}</TableCell>
+                  <TableCell className="text-right tabular-nums text-xs">{isMonthly ? `월 ${amt.toLocaleString()}원` : `${amt.toLocaleString()}원`}</TableCell>
+                  <TableCell className="text-center">
+                    <Badge variant={HIST_STATUS_VARIANT(a.status)} className={a.status === "confirmed" ? "bg-green-600 text-white border-transparent" : ""}>
+                      {HIST_STATUS_LABEL[a.status] ?? a.status}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
           </TableBody>
         </Table>
       </Card>
