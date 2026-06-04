@@ -214,13 +214,13 @@ function Page() {
         </Dialog>
         <section>
           <h2 className="font-bold mb-2 flex items-center gap-1">{t("premium_section")}</h2>
-          {promoted.length === 0 ? <p className="text-xs text-muted-foreground">{t("empty_promoted")}</p>
-            : <div className="grid grid-cols-2 gap-2">{promoted.map(premiumCard)}</div>}
+          {promoted.filter(j => !isJobCompleted(j)).length === 0 ? <p className="text-xs text-muted-foreground">{t("empty_promoted")}</p>
+            : <div className="grid grid-cols-2 gap-2">{promoted.filter(j => !isJobCompleted(j)).map(premiumCard)}</div>}
         </section>
         <section>
           <h2 className="font-bold mb-2">{t("today_section")}</h2>
-          {random.length === 0 ? <p className="text-xs text-muted-foreground">{t("empty_jobs")}</p>
-            : <div className="grid grid-cols-2 gap-2">{random.map(todayCard)}</div>}
+          {random.filter(j => !isJobCompleted(j)).length === 0 ? <p className="text-xs text-muted-foreground">{t("empty_jobs")}</p>
+            : <div className="grid grid-cols-2 gap-2">{random.filter(j => !isJobCompleted(j)).map(todayCard)}</div>}
         </section>
         <section>
           <h2 className="font-bold mb-2">{t("ad_section")}</h2>
