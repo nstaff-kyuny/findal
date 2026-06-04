@@ -151,6 +151,7 @@ export const UI: Dict = {
 
   // completed badge
   completed_badge: { ko: "완료", en: "Closed", mn: "Дууссан", ru: "Завершено", zh: "已结束" },
+  show_completed: { ko: "마감 공고 보기", en: "Show closed jobs", mn: "Дууссан зар харах", ru: "Показать завершённые", zh: "显示已结束职位" },
 
   // detail location label (replaces "상세주소")
   detail_location: { ko: "상세위치", en: "Detailed location", mn: "Дэлгэрэнгүй байршил", ru: "Подробное место", zh: "详细位置" },
