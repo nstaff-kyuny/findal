@@ -175,6 +175,10 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
+  const [q, setQ] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -184,6 +188,24 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
   }, [userId]);
 
   useEffect(() => { load(); }, [load]);
+
+  const filteredJobs = useMemo(() => {
+    const qq = q.trim().toLowerCase();
+    const from = dateFrom ? new Date(dateFrom).getTime() : null;
+    const to = dateTo ? new Date(dateTo + "T23:59:59").getTime() : null;
+    return jobs.filter((j) => {
+      if (statusFilter === "active" && !j.is_active) return false;
+      if (statusFilter === "inactive" && j.is_active) return false;
+      if (qq) {
+        const hay = `${j.title ?? ""} ${j.place_name ?? ""} ${j.region ?? ""} ${j.location ?? ""}`.toLowerCase();
+        if (!hay.includes(qq)) return false;
+      }
+      const ts = j.created_at ? new Date(j.created_at).getTime() : 0;
+      if (from && ts < from) return false;
+      if (to && ts > to) return false;
+      return true;
+    });
+  }, [jobs, q, dateFrom, dateTo, statusFilter]);
 
   const toggle = async (j: any) => {
     const { error } = await supabase.from("jobs").update({ is_active: !j.is_active }).eq("id", j.id);
@@ -216,12 +238,33 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-lg font-bold">공고 관리</h2>
-          <p className="text-xs text-muted-foreground">전체 {jobs.length}건 · 활성 {jobs.filter(j => j.is_active).length}건</p>
+          <p className="text-xs text-muted-foreground">전체 {jobs.length}건 · 활성 {jobs.filter(j => j.is_active).length}건 · 표시 {filteredJobs.length}건</p>
         </div>
-        <Button onClick={() => { /* link to /employer/jobs/new tab via parent? simple: open iframe */ window.open("/employer/jobs/new", "_blank"); }}>
+        <Button onClick={() => { window.open("/employer/jobs/new", "_blank"); }}>
           <Plus size={16} className="mr-1" />새 공고 등록
         </Button>
       </div>
+      <Card>
+        <CardContent className="p-3 grid grid-cols-[1fr_auto_auto_auto] gap-2 items-end">
+          <div>
+            <Label className="text-xs">제목/장소/지역 검색</Label>
+            <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="검색어 입력" />
+          </div>
+          <div>
+            <Label className="text-xs">등록 시작일</Label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div>
+            <Label className="text-xs">등록 종료일</Label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          <div className="flex gap-1">
+            <Button size="sm" variant={statusFilter === "all" ? "default" : "outline"} onClick={() => setStatusFilter("all")}>전체</Button>
+            <Button size="sm" variant={statusFilter === "active" ? "default" : "outline"} onClick={() => setStatusFilter("active")}>활성</Button>
+            <Button size="sm" variant={statusFilter === "inactive" ? "default" : "outline"} onClick={() => setStatusFilter("inactive")}>비활성</Button>
+          </div>
+        </CardContent>
+      </Card>
       <Card>
         <Table>
           <TableHeader>
