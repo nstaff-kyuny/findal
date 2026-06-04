@@ -6,7 +6,8 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { ClipboardList, Inbox, Plus, BookOpen } from "lucide-react";
+import { useI18n } from "@/lib/i18n";
+import { ClipboardList, Inbox, Plus, BookOpen, Monitor, ExternalLink } from "lucide-react";
 
 export const Route = createFileRoute("/employer/home")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
