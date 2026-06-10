@@ -20,6 +20,7 @@ function Page() {
   const nav = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
   const load = async () => {
     if (!user) return;
     const { data } = await supabase.from("jobs").select("*").eq("employer_id", user.id).order("created_at", { ascending: false });
