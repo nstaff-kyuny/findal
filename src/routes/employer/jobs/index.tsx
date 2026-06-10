@@ -6,9 +6,10 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Megaphone } from "lucide-react";
+import { Plus, Megaphone, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS } from "@/lib/constants";
+import { isJobCompleted } from "@/lib/job-visuals";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 
@@ -19,6 +20,7 @@ function Page() {
   const nav = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
+  const [showCompleted, setShowCompleted] = useState(false);
   const load = async () => {
     if (!user) return;
     const { data } = await supabase.from("jobs").select("*").eq("employer_id", user.id).order("created_at", { ascending: false });
@@ -63,15 +65,29 @@ function Page() {
           <h2 className="font-bold text-base">내 공고 ({jobs.length})</h2>
           <Link to="/employer/jobs/new"><Button size="default" className="h-11 px-5 text-base"><Plus size={18} className="mr-1" />등록</Button></Link>
         </div>
+        <Button
+          size="sm"
+          variant={showCompleted ? "default" : "outline"}
+          className="w-full text-xs h-9"
+          onClick={() => setShowCompleted(v => !v)}
+        >
+          {showCompleted ? <Eye size={14} className="mr-1" /> : <EyeOff size={14} className="mr-1" />}
+          {showCompleted ? "마감 공고 포함 중" : "마감 공고 숨김"}
+        </Button>
         <Link to="/seeker/featured" search={{ preview: "1" } as any}>
           <Button variant="secondary" className="w-full"><Megaphone size={14} className="mr-1" />추천 페이지 노출 미리보기</Button>
         </Link>
         {jobs.length === 0 && <p className="text-center text-sm text-muted-foreground py-12">공고가 없습니다</p>}
-        {jobs.map(j => {
+        {jobs.filter(j => showCompleted || !isJobCompleted(j)).length === 0 && jobs.length > 0 && (
+          <p className="text-center text-sm text-muted-foreground py-8">진행중인 공고가 없습니다<br />마감 공고 보기를 켜면 확인할 수 있어요</p>
+        )}
+        {jobs.filter(j => showCompleted || !isJobCompleted(j)).map(j => {
           const editCount = j.edit_count ?? 0;
           const canEdit = editCount < 2;
+          const done = isJobCompleted(j);
           return (
-          <Card key={j.id} className="p-4 space-y-3">
+          <Card key={j.id} className={`p-4 space-y-3 relative ${done ? "grayscale opacity-70" : ""}`}>
+            {done && <Badge className="absolute top-2 right-2 z-10 bg-gray-600 text-white text-xs">마감된 공고</Badge>}
             <div className="flex justify-between items-start gap-2">
               <div className="min-w-0">
                 <div className="flex gap-1 flex-wrap mb-1.5">
