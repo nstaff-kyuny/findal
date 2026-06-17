@@ -131,26 +131,28 @@ function AdminClaim({ userId, onClaimed }: { userId: string; onClaimed: () => vo
 
 function AdminPanel() {
   return (
-    <Tabs defaultValue="all-users" orientation="vertical" className="flex flex-row gap-6">
-      <TabsList className="flex-col h-auto w-48 shrink-0 items-start">
-        <TabsTrigger value="all-users">전체 사용자</TabsTrigger>
-        <TabsTrigger value="users">사용자</TabsTrigger>
-        <TabsTrigger value="credits">크레딧</TabsTrigger>
-        <TabsTrigger value="referrers">추천인</TabsTrigger>
-        <TabsTrigger value="banners">광고 배너</TabsTrigger>
-        <TabsTrigger value="purchases">크레딧 구매현황</TabsTrigger>
-        <TabsTrigger value="payment">결제 연동</TabsTrigger>
-        <TabsTrigger value="notices">공지사항</TabsTrigger>
-        <TabsTrigger value="events">이벤트</TabsTrigger>
-        <TabsTrigger value="faqs">FAQ</TabsTrigger>
-        <TabsTrigger value="partners">협력업체</TabsTrigger>
-        <TabsTrigger value="ai-insights">AI 인사이트</TabsTrigger>
-        <TabsTrigger value="company">사업자정보</TabsTrigger>
-        <TabsTrigger value="legal">약관/정책</TabsTrigger>
-        <TabsTrigger value="version">앱 버전</TabsTrigger>
-        <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
-        <TabsTrigger value="taxonomy">업종/직무</TabsTrigger>
-      </TabsList>
+    <Tabs defaultValue="all-users" orientation="vertical" className="flex flex-row gap-8 items-start">
+      <aside className="w-52 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-auto">
+        <TabsList className="flex-col h-auto w-full items-stretch bg-background border rounded-lg p-2 gap-1">
+          <TabsTrigger value="all-users" className="justify-start w-full">전체 사용자</TabsTrigger>
+          <TabsTrigger value="users" className="justify-start w-full">사용자</TabsTrigger>
+          <TabsTrigger value="credits" className="justify-start w-full">크레딧</TabsTrigger>
+          <TabsTrigger value="referrers" className="justify-start w-full">추천인</TabsTrigger>
+          <TabsTrigger value="banners" className="justify-start w-full">광고 배너</TabsTrigger>
+          <TabsTrigger value="purchases" className="justify-start w-full">크레딧 구매현황</TabsTrigger>
+          <TabsTrigger value="payment" className="justify-start w-full">결제 연동</TabsTrigger>
+          <TabsTrigger value="notices" className="justify-start w-full">공지사항</TabsTrigger>
+          <TabsTrigger value="events" className="justify-start w-full">이벤트</TabsTrigger>
+          <TabsTrigger value="faqs" className="justify-start w-full">FAQ</TabsTrigger>
+          <TabsTrigger value="partners" className="justify-start w-full">협력업체</TabsTrigger>
+          <TabsTrigger value="ai-insights" className="justify-start w-full">AI 인사이트</TabsTrigger>
+          <TabsTrigger value="company" className="justify-start w-full">사업자정보</TabsTrigger>
+          <TabsTrigger value="legal" className="justify-start w-full">약관/정책</TabsTrigger>
+          <TabsTrigger value="version" className="justify-start w-full">앱 버전</TabsTrigger>
+          <TabsTrigger value="icons" className="justify-start w-full">앱 아이콘</TabsTrigger>
+          <TabsTrigger value="taxonomy" className="justify-start w-full">업종/직무</TabsTrigger>
+        </TabsList>
+      </aside>
       <div className="flex-1 min-w-0">
         <TabsContent value="all-users"><AllUsersTab /></TabsContent>
         <TabsContent value="users"><UsersTab /></TabsContent>
