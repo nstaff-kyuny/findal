@@ -74,7 +74,7 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col md:flex-row">
       {/* PC sidebar */}
-      <aside className="hidden md:flex flex-col w-56 bg-background border-r shrink-0">
+      <aside className="hidden md:flex md:flex-col md:sticky md:top-0 md:h-screen w-56 bg-background border-r shrink-0 z-30">
         <div className="px-4 py-3 border-b flex items-center justify-between min-h-[56px]">
           <h1 className="font-bold text-lg truncate leading-none">{role === "seeker" ? "Find AR" : "구인자 콘솔"}</h1>
         </div>
@@ -111,7 +111,8 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
         </div>
       </header>
 
-      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+      <main className="flex-1 min-w-0 pb-20 md:pb-0 md:px-8 md:py-6 md:max-w-[1500px] md:mx-auto md:w-full">{children}</main>
+
 
       {/* Mobile bottom nav */}
       <nav
