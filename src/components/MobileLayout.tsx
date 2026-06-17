@@ -111,7 +111,7 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
         </div>
       </header>
 
-      <main className="flex-1 min-w-0 pb-20 md:pb-0 md:px-8 md:py-6 md:max-w-[1500px] md:mx-auto md:w-full">{children}</main>
+      <main className={`flex-1 min-w-0 pb-20 md:pb-0 md:px-8 md:py-6 md:w-full ${role === "employer" ? "md:max-w-[960px]" : "md:max-w-[1500px] md:mx-auto"}`}>{children}</main>
 
 
       {/* Mobile bottom nav */}
