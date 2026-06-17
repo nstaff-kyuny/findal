@@ -70,15 +70,15 @@ function Admin() {
   }
   const isAdmin = roles.includes("admin");
   return (
-    <div className="min-h-screen bg-muted/30">
-      <header className="bg-background border-b px-6 py-3 flex justify-between items-center">
+    <div className="min-h-screen bg-muted/30 flex flex-col">
+      <header className="bg-background border-b px-8 py-3 flex justify-between items-center sticky top-0 z-30">
         <h1 className="font-bold text-xl text-primary">Find AR (파인달) · 관리자</h1>
         <div className="flex items-center gap-3 text-sm">
           <span className="text-muted-foreground">{user.email}</span>
           <Button size="sm" variant="outline" onClick={signOut}>로그아웃</Button>
         </div>
       </header>
-      <main className="max-w-7xl p-6">
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-8 py-6">
         {!isAdmin ? <AdminClaim onClaimed={() => location.reload()} userId={user.id} /> : <AdminPanel />}
       </main>
     </div>
