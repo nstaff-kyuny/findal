@@ -78,7 +78,7 @@ function Admin() {
           <Button size="sm" variant="outline" onClick={signOut}>로그아웃</Button>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="max-w-7xl p-6">
         {!isAdmin ? <AdminClaim onClaimed={() => location.reload()} userId={user.id} /> : <AdminPanel />}
       </main>
     </div>
@@ -131,8 +131,8 @@ function AdminClaim({ userId, onClaimed }: { userId: string; onClaimed: () => vo
 
 function AdminPanel() {
   return (
-    <Tabs defaultValue="all-users">
-      <TabsList className="flex-wrap h-auto">
+    <Tabs defaultValue="all-users" orientation="vertical" className="flex flex-row gap-6">
+      <TabsList className="flex-col h-auto w-48 shrink-0 items-start">
         <TabsTrigger value="all-users">전체 사용자</TabsTrigger>
         <TabsTrigger value="users">사용자</TabsTrigger>
         <TabsTrigger value="credits">크레딧</TabsTrigger>
@@ -151,23 +151,25 @@ function AdminPanel() {
         <TabsTrigger value="icons">앱 아이콘</TabsTrigger>
         <TabsTrigger value="taxonomy">업종/직무</TabsTrigger>
       </TabsList>
-      <TabsContent value="all-users"><AllUsersTab /></TabsContent>
-      <TabsContent value="users"><UsersTab /></TabsContent>
-      <TabsContent value="credits"><CreditsTab /></TabsContent>
-      <TabsContent value="referrers"><ReferrersTab /></TabsContent>
-      <TabsContent value="banners"><BannersTab /></TabsContent>
-      <TabsContent value="purchases"><PurchasesTab /></TabsContent>
-      <TabsContent value="payment"><PaymentTab /></TabsContent>
-      <TabsContent value="notices"><NoticesTab /></TabsContent>
-      <TabsContent value="events"><EventsTab /></TabsContent>
-      <TabsContent value="faqs"><FaqsTab /></TabsContent>
-      <TabsContent value="partners"><PartnersTab /></TabsContent>
-      <TabsContent value="ai-insights"><AiInsightsTab /></TabsContent>
-      <TabsContent value="company"><CompanyInfoTab /></TabsContent>
-      <TabsContent value="legal"><LegalDocsTab /></TabsContent>
-      <TabsContent value="version"><VersionTab /></TabsContent>
-      <TabsContent value="icons"><IconsTab /></TabsContent>
-      <TabsContent value="taxonomy"><TaxonomyTab /></TabsContent>
+      <div className="flex-1 min-w-0">
+        <TabsContent value="all-users"><AllUsersTab /></TabsContent>
+        <TabsContent value="users"><UsersTab /></TabsContent>
+        <TabsContent value="credits"><CreditsTab /></TabsContent>
+        <TabsContent value="referrers"><ReferrersTab /></TabsContent>
+        <TabsContent value="banners"><BannersTab /></TabsContent>
+        <TabsContent value="purchases"><PurchasesTab /></TabsContent>
+        <TabsContent value="payment"><PaymentTab /></TabsContent>
+        <TabsContent value="notices"><NoticesTab /></TabsContent>
+        <TabsContent value="events"><EventsTab /></TabsContent>
+        <TabsContent value="faqs"><FaqsTab /></TabsContent>
+        <TabsContent value="partners"><PartnersTab /></TabsContent>
+        <TabsContent value="ai-insights"><AiInsightsTab /></TabsContent>
+        <TabsContent value="company"><CompanyInfoTab /></TabsContent>
+        <TabsContent value="legal"><LegalDocsTab /></TabsContent>
+        <TabsContent value="version"><VersionTab /></TabsContent>
+        <TabsContent value="icons"><IconsTab /></TabsContent>
+        <TabsContent value="taxonomy"><TaxonomyTab /></TabsContent>
+      </div>
     </Tabs>
   );
 }
