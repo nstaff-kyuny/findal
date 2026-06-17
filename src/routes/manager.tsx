@@ -132,38 +132,38 @@ function ManagerPage() {
         </Button>
       </header>
 
-      <div className="flex-1 flex justify-center min-h-0">
-        <div className="w-full max-w-5xl bg-background border-x flex flex-col min-h-0">
-          <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} className="flex-1 flex flex-col min-h-0">
-            <div className="px-4 pt-3 border-b">
-              <TabsList className="flex-wrap h-auto">
+      <div className="flex-1 flex min-h-0">
+        <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} orientation="vertical" className="flex-1 flex flex-row min-h-0">
+          <aside className="w-48 shrink-0 bg-background border-r">
+            <div className="p-3">
+              <TabsList className="flex-col h-auto w-full items-start">
                 {(Object.keys(TAB_META) as TabValue[]).map((v) => (
                   <TabsTrigger key={v} value={v}>{TAB_META[v].label}</TabsTrigger>
                 ))}
               </TabsList>
             </div>
-            <div className="flex-1 overflow-auto">
-              <TabsContent value="new" className="m-0">
-                <NewJobPanel userId={user.id} onCreated={() => setPhoneKey((k) => k + 1)} />
-              </TabsContent>
-              <TabsContent value="jobs" className="m-0">
-                <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
-              </TabsContent>
-              <TabsContent value="apps" className="m-0">
-                <ApplicationsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
-              </TabsContent>
-              <TabsContent value="credits" className="m-0">
-                <CreditsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
-              </TabsContent>
-              <TabsContent value="history" className="m-0">
-                <HistoryPanel userId={user.id} />
-              </TabsContent>
-              <TabsContent value="profile" className="m-0">
-                <ProfilePanel userId={user.id} userEmail={user.email ?? ""} onSignOut={signOut} />
-              </TabsContent>
-            </div>
-          </Tabs>
-        </div>
+          </aside>
+          <div className="flex-1 overflow-auto bg-background">
+            <TabsContent value="new" className="m-0">
+              <NewJobPanel userId={user.id} onCreated={() => setPhoneKey((k) => k + 1)} />
+            </TabsContent>
+            <TabsContent value="jobs" className="m-0">
+              <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
+            </TabsContent>
+            <TabsContent value="apps" className="m-0">
+              <ApplicationsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
+            </TabsContent>
+            <TabsContent value="credits" className="m-0">
+              <CreditsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
+            </TabsContent>
+            <TabsContent value="history" className="m-0">
+              <HistoryPanel userId={user.id} />
+            </TabsContent>
+            <TabsContent value="profile" className="m-0">
+              <ProfilePanel userId={user.id} userEmail={user.email ?? ""} onSignOut={signOut} />
+            </TabsContent>
+          </div>
+        </Tabs>
       </div>
     </div>
   );
