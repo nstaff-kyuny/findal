@@ -61,7 +61,6 @@ function LanguageSwitcher() {
 export function MobileLayout({ children, role }: { children: ReactNode; role: "seeker" | "employer" }) {
   const tabs = role === "seeker" ? seekerTabs : employerTabs;
   const loc = useLocation();
-  const cols = tabs.length === 5 ? "grid-cols-5" : "grid-cols-4";
   const { t } = useI18n();
   const { user } = useAuth();
   const label = (tab: Tab) => role === "seeker" && tab.key ? t(tab.key) : tab.fallback;
@@ -71,10 +70,38 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
     // Register service worker + subscribe to web push (mobile/PWA notifications)
     ensurePushSubscription(user.id).catch(() => {});
   }, [user]);
+
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col max-w-md mx-auto shadow-xl">
+    <div className="min-h-screen bg-muted/30 flex flex-col md:flex-row">
+      {/* PC sidebar */}
+      <aside className="hidden md:flex flex-col w-56 bg-background border-r shrink-0">
+        <div className="px-4 py-3 border-b flex items-center justify-between min-h-[56px]">
+          <h1 className="font-bold text-lg truncate leading-none">{role === "seeker" ? "Find AR" : "구인자 콘솔"}</h1>
+        </div>
+        <nav className="flex-1 p-3 space-y-1 overflow-auto">
+          {tabs.map(t => {
+            const active = loc.pathname.startsWith(t.to);
+            const Icon = t.icon;
+            return (
+              <Link
+                key={t.to}
+                to={t.to}
+                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${active ? "bg-primary text-primary-foreground font-medium" : "text-muted-foreground hover:bg-muted"}`}
+              >
+                <Icon size={18} />
+                <span>{label(t)}</span>
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="p-3 border-t">
+          {role === "seeker" && <LanguageSwitcher />}
+        </div>
+      </aside>
+
+      {/* Mobile header */}
       <header
-        className="sticky top-0 z-40 bg-background border-b px-4 py-2 flex items-center justify-between gap-2 min-h-[56px]"
+        className="md:hidden sticky top-0 z-40 bg-background border-b px-4 py-2 flex items-center justify-between gap-2 min-h-[56px]"
         style={{ paddingTop: "max(0.5rem, env(safe-area-inset-top))" }}
       >
         <h1 className="font-bold text-lg truncate leading-none flex items-center">{role === "seeker" ? "Find AR" : "구인자 콘솔"}</h1>
@@ -83,9 +110,12 @@ export function MobileLayout({ children, role }: { children: ReactNode; role: "s
           <NotificationBell />
         </div>
       </header>
-      <main className="flex-1 pb-20">{children}</main>
+
+      <main className="flex-1 pb-20 md:pb-0">{children}</main>
+
+      {/* Mobile bottom nav */}
       <nav
-        className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-background border-t grid ${cols}`}
+        className={`md:hidden fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-background border-t grid ${tabs.length === 5 ? "grid-cols-5" : "grid-cols-4"}`}
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         {tabs.map(t => {
