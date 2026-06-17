@@ -78,7 +78,7 @@ function Admin() {
           <Button size="sm" variant="outline" onClick={signOut}>로그아웃</Button>
         </div>
       </header>
-      <main className="max-w-7xl mx-auto p-6">
+      <main className="max-w-7xl p-6">
         {!isAdmin ? <AdminClaim onClaimed={() => location.reload()} userId={user.id} /> : <AdminPanel />}
       </main>
     </div>
