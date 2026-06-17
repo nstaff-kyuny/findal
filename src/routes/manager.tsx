@@ -121,7 +121,7 @@ function ManagerPage() {
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
-      <header className="bg-background border-b px-6 py-3 flex items-center justify-between">
+      <header className="bg-background border-b px-8 py-3 flex items-center justify-between sticky top-0 z-30">
         <div className="flex items-center gap-2">
           <Monitor size={20} />
           <h1 className="font-bold text-lg">구인자 PC 관리자</h1>
@@ -132,18 +132,16 @@ function ManagerPage() {
         </Button>
       </header>
 
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex min-h-0 w-full max-w-[1600px] mx-auto">
         <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} orientation="vertical" className="flex-1 flex flex-row min-h-0">
-          <aside className="w-48 shrink-0 bg-background border-r">
-            <div className="p-3">
-              <TabsList className="flex-col h-auto w-full items-start">
-                {(Object.keys(TAB_META) as TabValue[]).map((v) => (
-                  <TabsTrigger key={v} value={v}>{TAB_META[v].label}</TabsTrigger>
-                ))}
-              </TabsList>
-            </div>
+          <aside className="w-52 shrink-0 sticky top-[60px] self-start max-h-[calc(100vh-60px)] overflow-auto p-4">
+            <TabsList className="flex-col h-auto w-full items-stretch bg-background border rounded-lg p-2 gap-1">
+              {(Object.keys(TAB_META) as TabValue[]).map((v) => (
+                <TabsTrigger key={v} value={v} className="justify-start w-full">{TAB_META[v].label}</TabsTrigger>
+              ))}
+            </TabsList>
           </aside>
-          <div className="flex-1 overflow-auto bg-background">
+          <div className="flex-1 min-w-0 bg-background border-l">
             <TabsContent value="new" className="m-0">
               <NewJobPanel userId={user.id} onCreated={() => setPhoneKey((k) => k + 1)} />
             </TabsContent>
