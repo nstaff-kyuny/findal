@@ -71,6 +71,42 @@ export type Database = {
         }
         Relationships: []
       }
+      backup_jobs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error: string | null
+          file_path: string | null
+          id: string
+          kind: string
+          row_counts: Json | null
+          size_bytes: number | null
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          file_path?: string | null
+          id?: string
+          kind?: string
+          row_counts?: Json | null
+          size_bytes?: number | null
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error?: string | null
+          file_path?: string | null
+          id?: string
+          kind?: string
+          row_counts?: Json | null
+          size_bytes?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       company_info: {
         Row: {
           address: string
