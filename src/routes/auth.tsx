@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Search, Building2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeReferrerCode } from "@/lib/utils";
+import { checkEmailDuplicate } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
@@ -85,6 +87,8 @@ function AuthPage() {
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
   const [docOpen, setDocOpen] = useState<keyof typeof TERMS_DOCS | null>(null);
+  const [emailCheckStatus, setEmailCheckStatus] = useState<"idle" | "checking" | "exists" | "available">("idle");
+  const checkEmail = useServerFn(checkEmailDuplicate);
   const allRequired = agreeAge && agreeIntegrated && agreeService && agreePrivacy;
   const allChecked = allRequired && agreeMarketing;
   const setAll = (v: boolean) => {
@@ -220,7 +224,43 @@ function AuthPage() {
             </div>
             <div><Label className="text-base">이름 (Full Name)</Label><Input className="h-14 text-base mt-1" value={name} onChange={e => setName(e.target.value)} /></div>
             <div><Label className="text-base">연락처 (Mobile)</Label><Input className="h-14 text-base mt-1" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
-            <div><Label className="text-base">이메일 (E-mail)</Label><Input className="h-14 text-base mt-1" type="email" value={email} onChange={e => setEmail(e.target.value)} /></div>
+            <div>
+              <Label className="text-base">이메일 (아이디) (E-mail)</Label>
+              <p className="text-xs text-muted-foreground mt-1">이메일 주소가 아이디로 사용됩니다.</p>
+              <div className="flex gap-2 mt-1">
+                <Input className="h-14 text-base flex-1" type="email" value={email} onChange={e => { setEmail(e.target.value); setEmailCheckStatus("idle"); }} />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-14 shrink-0 px-4"
+                  disabled={emailCheckStatus === "checking" || !/^\S+@\S+\.\S+$/.test(email)}
+                  onClick={async () => {
+                    setEmailCheckStatus("checking");
+                    try {
+                      const res = await checkEmail({ data: { email } });
+                      if (res.exists) {
+                        setEmailCheckStatus("exists");
+                        toast.error("이미 가입된 이메일입니다.");
+                      } else {
+                        setEmailCheckStatus("available");
+                        toast.success("사용 가능한 이메일입니다.");
+                      }
+                    } catch {
+                      setEmailCheckStatus("idle");
+                      toast.error("확인 중 오류가 발생했습니다.");
+                    }
+                  }}
+                >
+                  {emailCheckStatus === "checking" ? "확인 중..." : "중복 확인"}
+                </Button>
+              </div>
+              {emailCheckStatus === "exists" && (
+                <p className="text-xs text-destructive mt-1">이미 가입된 이메일입니다.</p>
+              )}
+              {emailCheckStatus === "available" && (
+                <p className="text-xs text-green-600 mt-1">사용 가능한 이메일입니다.</p>
+              )}
+            </div>
             <div>
               <Label className="text-base">비밀번호 (Password)</Label>
               <PasswordInput value={password} onChange={setPassword} show={showPw} setShow={setShowPw} placeholder="6자 이상" minLength={6} />
