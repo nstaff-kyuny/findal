@@ -43,6 +43,7 @@ import { Route as EmployerCreditsHistoryRouteImport } from './routes/employer/cr
 import { Route as EmployerCreditsFailRouteImport } from './routes/employer/credits_.fail'
 import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
 import { Route as EmployerJobsEditIdRouteImport } from './routes/employer/jobs/edit.$id'
+import { Route as ApiPublicHooksBackupDailyRouteImport } from './routes/api/public/hooks/backup-daily'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -214,6 +215,12 @@ const EmployerJobsEditIdRoute = EmployerJobsEditIdRouteImport.update({
   path: '/employer/jobs/edit/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksBackupDailyRoute =
+  ApiPublicHooksBackupDailyRouteImport.update({
+    id: '/api/public/hooks/backup-daily',
+    path: '/api/public/hooks/backup-daily',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -249,6 +256,7 @@ export interface FileRoutesByFullPath {
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs/': typeof EmployerJobsIndexRoute
+  '/api/public/hooks/backup-daily': typeof ApiPublicHooksBackupDailyRoute
   '/employer/jobs/edit/$id': typeof EmployerJobsEditIdRoute
 }
 export interface FileRoutesByTo {
@@ -285,6 +293,7 @@ export interface FileRoutesByTo {
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs': typeof EmployerJobsIndexRoute
+  '/api/public/hooks/backup-daily': typeof ApiPublicHooksBackupDailyRoute
   '/employer/jobs/edit/$id': typeof EmployerJobsEditIdRoute
 }
 export interface FileRoutesById {
@@ -322,6 +331,7 @@ export interface FileRoutesById {
   '/employer/jobs/new': typeof EmployerJobsNewRoute
   '/seeker/jobs/$id': typeof SeekerJobsIdRoute
   '/employer/jobs/': typeof EmployerJobsIndexRoute
+  '/api/public/hooks/backup-daily': typeof ApiPublicHooksBackupDailyRoute
   '/employer/jobs/edit/$id': typeof EmployerJobsEditIdRoute
 }
 export interface FileRouteTypes {
@@ -360,6 +370,7 @@ export interface FileRouteTypes {
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs/'
+    | '/api/public/hooks/backup-daily'
     | '/employer/jobs/edit/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -396,6 +407,7 @@ export interface FileRouteTypes {
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs'
+    | '/api/public/hooks/backup-daily'
     | '/employer/jobs/edit/$id'
   id:
     | '__root__'
@@ -432,6 +444,7 @@ export interface FileRouteTypes {
     | '/employer/jobs/new'
     | '/seeker/jobs/$id'
     | '/employer/jobs/'
+    | '/api/public/hooks/backup-daily'
     | '/employer/jobs/edit/$id'
   fileRoutesById: FileRoutesById
 }
@@ -468,6 +481,7 @@ export interface RootRouteChildren {
   EmployerJobsNewRoute: typeof EmployerJobsNewRoute
   SeekerJobsIdRoute: typeof SeekerJobsIdRoute
   EmployerJobsIndexRoute: typeof EmployerJobsIndexRoute
+  ApiPublicHooksBackupDailyRoute: typeof ApiPublicHooksBackupDailyRoute
   EmployerJobsEditIdRoute: typeof EmployerJobsEditIdRoute
 }
 
@@ -711,6 +725,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EmployerJobsEditIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/backup-daily': {
+      id: '/api/public/hooks/backup-daily'
+      path: '/api/public/hooks/backup-daily'
+      fullPath: '/api/public/hooks/backup-daily'
+      preLoaderRoute: typeof ApiPublicHooksBackupDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -759,6 +780,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmployerJobsNewRoute: EmployerJobsNewRoute,
   SeekerJobsIdRoute: SeekerJobsIdRoute,
   EmployerJobsIndexRoute: EmployerJobsIndexRoute,
+  ApiPublicHooksBackupDailyRoute: ApiPublicHooksBackupDailyRoute,
   EmployerJobsEditIdRoute: EmployerJobsEditIdRoute,
 }
 export const routeTree = rootRouteImport
