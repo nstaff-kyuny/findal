@@ -359,7 +359,7 @@ function PurchasesView() {
               <td>{r.pack}</td>
               <td>{r.amount_krw?.toLocaleString()}</td>
               <td>{r.payment_method ?? "-"}</td>
-              <td><Badge variant="outline">{r.status}</Badge></td>
+              <td><Badge variant="outline">{purchaseStatusLabel(r.status)}</Badge></td>
             </tr>
           ))}
         </tbody>
