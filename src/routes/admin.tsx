@@ -1533,8 +1533,48 @@ function BannersTab() {
   );
 }
 
+const SUPER_ADMIN_EMAIL = "nstaff@findar.app";
+type PeriodKey = "day" | "week" | "month" | "quarter" | "half" | "year" | "all";
+const PERIOD_OPTIONS: { value: PeriodKey; label: string }[] = [
+  { value: "day", label: "일" },
+  { value: "week", label: "주" },
+  { value: "month", label: "월" },
+  { value: "quarter", label: "분기" },
+  { value: "half", label: "반기" },
+  { value: "year", label: "연" },
+  { value: "all", label: "전체" },
+];
+
+function getPeriodStart(p: PeriodKey): Date | null {
+  if (p === "all") return null;
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (p === "day") return d;
+  if (p === "week") {
+    const day = d.getDay();
+    const diff = day === 0 ? 6 : day - 1; // 월요일 시작
+    d.setDate(d.getDate() - diff);
+    return d;
+  }
+  if (p === "month") return new Date(now.getFullYear(), now.getMonth(), 1);
+  if (p === "quarter") {
+    const q = Math.floor(now.getMonth() / 3);
+    return new Date(now.getFullYear(), q * 3, 1);
+  }
+  if (p === "half") {
+    const h = now.getMonth() < 6 ? 0 : 6;
+    return new Date(now.getFullYear(), h, 1);
+  }
+  if (p === "year") return new Date(now.getFullYear(), 0, 1);
+  return null;
+}
+
 function PurchasesTab() {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
   const [list, setList] = useState<any[]>([]);
+  const [period, setPeriod] = useState<PeriodKey>("month");
+
   const load = async () => {
     const { data } = await supabase.from("credit_purchase_requests")
       .select("*")
@@ -1548,14 +1588,46 @@ function PurchasesTab() {
     setList((data ?? []).map((r: any) => ({ ...r, employer_profiles: emap[r.employer_id] })));
   };
   useEffect(() => { load(); }, []);
-  const totalSales = list.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.amount_krw), 0);
-  const totalCredits = list.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.pack), 0);
+
+  const periodStart = getPeriodStart(period);
+  const filtered = list.filter(r => !periodStart || new Date(r.created_at) >= periodStart);
+  const totalSales = filtered.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.amount_krw), 0);
+  const totalCredits = filtered.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.pack), 0);
+  const fulfilledCount = filtered.filter(r => r.status === "fulfilled").length;
+
+  const remove = async (id: string) => {
+    if (!isSuperAdmin) return toast.error("최상위 관리자만 삭제할 수 있습니다");
+    if (!confirm("이 구매 기록을 삭제할까요? 되돌릴 수 없습니다.")) return;
+    const { error } = await supabase.from("credit_purchase_requests").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("삭제됨");
+    setList(prev => prev.filter(r => r.id !== id));
+  };
+
   return (
     <div className="mt-4 space-y-4">
+      <Card><CardContent className="p-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold">기간</span>
+            <div className="flex flex-wrap gap-1">
+              {PERIOD_OPTIONS.map(o => (
+                <Button key={o.value} size="sm" variant={period === o.value ? "default" : "outline"} className="h-7 px-2" onClick={() => setPeriod(o.value)}>
+                  {o.label}
+                </Button>
+              ))}
+            </div>
+          </div>
+          <span className="text-xs text-muted-foreground">
+            {periodStart ? `${periodStart.toLocaleDateString("ko-KR")} ~ 현재` : "전체 기간"}
+          </span>
+        </div>
+      </CardContent></Card>
+
       <div className="grid grid-cols-3 gap-3">
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">총 결제건수</p>
-          <p className="text-2xl font-bold">{list.filter(r => r.status === "fulfilled").length}건</p>
+          <p className="text-2xl font-bold">{fulfilledCount}건</p>
         </CardContent></Card>
         <Card><CardContent className="p-4">
           <p className="text-xs text-muted-foreground">총 매출액</p>
@@ -1567,14 +1639,20 @@ function PurchasesTab() {
         </CardContent></Card>
       </div>
       <Card><CardContent className="p-4">
-        <h3 className="font-bold mb-3">크레딧 구매 현황</h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-bold">크레딧 구매 현황</h3>
+          {!isSuperAdmin && (
+            <span className="text-[11px] text-muted-foreground">삭제는 최상위 관리자({SUPER_ADMIN_EMAIL})만 가능</span>
+          )}
+        </div>
         <table className="w-full text-sm">
           <thead><tr className="text-left border-b">
             <th className="py-2">결제일시</th><th>회사</th><th>수량</th><th>금액</th>
             <th>결제수단</th><th>결제번호</th><th>상태</th>
+            {isSuperAdmin && <th className="text-right">관리</th>}
           </tr></thead>
           <tbody>
-            {list.map(r => (
+            {filtered.map(r => (
               <tr key={r.id} className="border-b">
                 <td className="py-2 text-xs">{new Date(r.created_at).toLocaleString("ko-KR")}</td>
                 <td>{r.employer_profiles?.company_name}</td>
@@ -1583,8 +1661,18 @@ function PurchasesTab() {
                 <td className="text-xs">{r.payment_method ?? "-"}</td>
                 <td className="text-xs font-mono">{r.payment_ref ?? "-"}</td>
                 <td><Badge variant={r.status === "fulfilled" ? "default" : "secondary"}>{r.status === "fulfilled" ? "결제완료" : r.status}</Badge></td>
+                {isSuperAdmin && (
+                  <td className="text-right">
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => remove(r.id)} title="삭제">
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </td>
+                )}
               </tr>
             ))}
+            {filtered.length === 0 && (
+              <tr><td colSpan={isSuperAdmin ? 8 : 7} className="py-6 text-center text-xs text-muted-foreground">선택한 기간에 기록이 없습니다</td></tr>
+            )}
           </tbody>
         </table>
       </CardContent></Card>
