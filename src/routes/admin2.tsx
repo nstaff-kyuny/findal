@@ -161,7 +161,18 @@ function AllUsersView() {
             <tr key={r.id} className="border-b">
               <td className="py-2">{r.full_name ?? "-"}</td>
               <td>{r.phone ?? "-"}</td>
-              <td><div className="flex gap-1 flex-wrap">{(r.roles ?? "").split(",").filter(Boolean).map((x: string) => <Badge key={x} variant="outline">{roleLabel(x)}</Badge>)}</div></td>
+              <td><div className="flex gap-1 flex-wrap">{(r.roles ?? "").split(",").filter(Boolean).map((x: string) => {
+                const label = roleLabel(x);
+                if (x.trim() === "employer") {
+                  return (
+                    <span key={x} className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-xs font-medium border border-blue-100">
+                      <Briefcase size={12} />
+                      {label}
+                    </span>
+                  );
+                }
+                return <Badge key={x} variant="outline">{label}</Badge>;
+              })}</div></td>
               <td>{r.company_name}</td>
               <td>{r.credits}</td>
               <td className="font-mono text-xs">{r.referrer_code || "-"}</td>
