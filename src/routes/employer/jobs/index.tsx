@@ -123,43 +123,6 @@ function Page() {
           const editCount = j.edit_count ?? 0;
           const canEdit = editCount < 2;
           const done = isJobCompleted(j);
-          return (
-          <Card key={j.id} className={`p-4 space-y-3 relative ${done ? "grayscale opacity-70" : ""}`}>
-            {done && <Badge className="absolute top-2 right-2 z-10 bg-gray-600 text-white text-xs">마감된 공고</Badge>}
-            <div className="flex justify-between items-start gap-2">
-              <div className="min-w-0">
-                <div className="flex gap-1 flex-wrap mb-1.5">
-                  <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
-                  <Badge variant="outline" className="text-xs">{ROLE_LABEL[j.job_role]}</Badge>
-                  {j.contract_type === "monthly"
-                    ? <Badge className="text-xs bg-blue-600 text-white">단기</Badge>
-                    : <Badge className="text-xs bg-emerald-600 text-white">일용직</Badge>}
-                  {!j.is_active && <Badge variant="destructive" className="text-xs">비활성</Badge>}
-                  <Badge variant="outline" className="text-xs">수정 {editCount}/2</Badge>
-                </div>
-                <h4 className="font-semibold text-base truncate">{j.title}</h4>
-                {(() => {
-                  const isMonthly = j.contract_type === "monthly";
-                  const wage = isMonthly ? Number(j.monthly_wage ?? 0) : Number(j.daily_wage ?? 0);
-                  const wageLabel = isMonthly ? "월급" : "일당";
-                  const dates: string[] = Array.isArray(j.work_dates) ? j.work_dates : [];
-                  const sorted = [...dates].sort();
-                  const period = isMonthly
-                    ? (j.contract_months ? `계약기간 ${j.contract_months}개월` : "1개월 이상")
-                    : (sorted.length === 0 ? "" : sorted.length === 1 ? sorted[0] : `${sorted[0]} ~ ${sorted[sorted.length - 1]} (${sorted.length}일)`);
-                  return (
-                    <>
-                      <p className="text-sm text-muted-foreground">{j.place_name} · {wageLabel} {wage.toLocaleString()}원</p>
-                      {period && <p className="text-sm text-muted-foreground">{period}</p>}
-                    </>
-                  );
-                })()}
-                <p className="text-xs text-muted-foreground mt-0.5">※ 공고 수정은 최대 2회까지 가능합니다</p>
-              </div>
-            </div>
-          const editCount = j.edit_count ?? 0;
-          const canEdit = editCount < 2;
-          const done = isJobCompleted(j);
           const promoEnd = promoMap[j.id] ? new Date(promoMap[j.id]) : null;
           const isPremium = !!promoEnd && promoEnd.getTime() > Date.now();
           const exposureEnd = jobExposureEnd(j);
@@ -191,6 +154,43 @@ function Page() {
                   {!j.is_active && <Badge variant="destructive" className="text-xs">비활성</Badge>}
                   <Badge variant="outline" className="text-xs">수정 {editCount}/2</Badge>
                 </div>
+                <h4 className="font-semibold text-base truncate">{j.title}</h4>
+                {(() => {
+                  const isMonthly = j.contract_type === "monthly";
+                  const wage = isMonthly ? Number(j.monthly_wage ?? 0) : Number(j.daily_wage ?? 0);
+                  const wageLabel = isMonthly ? "월급" : "일당";
+                  const dates: string[] = Array.isArray(j.work_dates) ? j.work_dates : [];
+                  const sorted = [...dates].sort();
+                  const period = isMonthly
+                    ? (j.contract_months ? `계약기간 ${j.contract_months}개월` : "1개월 이상")
+                    : (sorted.length === 0 ? "" : sorted.length === 1 ? sorted[0] : `${sorted[0]} ~ ${sorted[sorted.length - 1]} (${sorted.length}일)`);
+                  return (
+                    <>
+                      <p className="text-sm text-muted-foreground">{j.place_name} · {wageLabel} {wage.toLocaleString()}원</p>
+                      {period && <p className="text-sm text-muted-foreground">{period}</p>}
+                    </>
+                  );
+                })()}
+                <p className="text-xs text-muted-foreground mt-0.5">※ 공고 수정은 최대 2회까지 가능합니다</p>
+              </div>
+            </div>
+            <div className="flex gap-1.5 flex-wrap">
+              <Link to="/employer/jobs/edit/$id" params={{ id: j.id }} className={!canEdit ? "pointer-events-none opacity-50" : ""}>
+                <Button size="sm" variant="secondary" disabled={!canEdit}>수정</Button>
+              </Link>
+              <Button size="sm" variant="outline" className="flex-1" onClick={() => toggle(j)}>{j.is_active ? "비활성" : "활성"}</Button>
+              <Dialog open={promoOpenId === j.id} onOpenChange={(o) => setPromoOpenId(o ? j.id : null)}>
+                <DialogTrigger asChild><Button size="sm" variant="outline" className="flex-1"><Megaphone size={14} className="mr-1" />광고</Button></DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>추천 배너 광고</DialogTitle></DialogHeader>
+                  <p className="text-sm text-muted-foreground">크레딧이 차감됩니다.</p>
+                  {PROMOTION_OPTIONS.map(p => (
+                    <Button key={p.value} variant="outline" className="w-full" onClick={() => promote(j.id, p.value)}>{p.label}</Button>
+                  ))}
+                </DialogContent>
+              </Dialog>
+              <Button size="sm" variant="destructive" onClick={() => remove(j.id)}>삭제</Button>
+            </div>
           </Card>
           );
         })}
