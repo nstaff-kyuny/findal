@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/public/hooks/backup-daily")({
         const provided = request.headers.get("x-backup-secret") ?? "";
         try {
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-          const { data: cfg } = await supabaseAdmin
+          const { data: cfg } = await (supabaseAdmin as any)
             .from("cron_config")
             .select("value")
             .eq("key", "backup_secret")
