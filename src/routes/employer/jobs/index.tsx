@@ -6,7 +6,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Megaphone, Eye, EyeOff } from "lucide-react";
+import { Plus, Megaphone, Eye, EyeOff, Sparkles, Clock } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS } from "@/lib/constants";
 import { isJobCompleted } from "@/lib/job-visuals";
