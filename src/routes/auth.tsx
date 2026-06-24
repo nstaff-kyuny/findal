@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Search, Building2, CheckCircle2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { normalizeReferrerCode } from "@/lib/utils";
+import { checkEmailDuplicate } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/auth")({
   component: AuthPage,
