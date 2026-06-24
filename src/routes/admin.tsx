@@ -864,25 +864,21 @@ function UsersTab() {
             <h3 className="font-bold">구인자 ({employers.length})</h3>
             <Button size="sm" variant="outline" onClick={exportEmployers}><Download size={14} className="mr-1" />엑셀 다운로드</Button>
           </div>
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+          <div className="space-y-1 max-h-[60vh] overflow-y-auto">
             {employers.map(e => (
-              <div key={e.user_id} className="p-2 border rounded text-sm flex justify-between items-start gap-2">
+              <div key={e.user_id} className="py-1 px-2 border rounded flex items-center gap-2 text-xs">
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold truncate">{e.company_name}</p>
-                  <p className="text-xs text-primary truncate">📧 {emails[e.user_id] ?? "..."}</p>
-                  <p className="text-xs text-muted-foreground truncate">{e.profiles?.full_name} · {e.contact_phone}</p>
-                  <p className="text-xs">📍 {e.location} · 💰 {e.credits} 크레딧</p>
+                  <div className="flex flex-wrap gap-x-2 gap-y-0.5 items-center">
+                    <span className="font-semibold text-sm">{e.company_name}</span>
+                    <span className="text-primary">{emails[e.user_id] ?? "..."}</span>
+                    <span className="text-muted-foreground">{e.profiles?.full_name} · {e.contact_phone}</span>
+                    <span>📍 {e.location} · 💰 {e.credits} 크레딧</span>
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1">
-                  <Button size="sm" variant="ghost" title="정보 수정" onClick={() => setEditUserId(e.user_id)}>
-                    <Pencil size={14} />
-                  </Button>
-                  <Button size="sm" variant="ghost" title="비밀번호 재설정" onClick={() => handleReset(e.user_id, e.company_name)}>
-                    <KeyRound size={14} />
-                  </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(e.user_id, e.company_name)}>
-                    <Trash2 size={14} className="text-destructive" />
-                  </Button>
+                <div className="flex gap-0.5 shrink-0">
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="정보 수정" onClick={() => setEditUserId(e.user_id)}><Pencil size={14} /></Button>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" title="비밀번호 재설정" onClick={() => handleReset(e.user_id, e.company_name)}><KeyRound size={14} /></Button>
+                  <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleDelete(e.user_id, e.company_name)}><Trash2 size={14} className="text-destructive" /></Button>
                 </div>
               </div>
             ))}
