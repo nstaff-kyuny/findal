@@ -183,12 +183,16 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
 ];
 
 function AdminPanel() {
+  const [tab, setTab] = useState("all-users");
+  const groupOf = (val: string) => MENU_GROUPS.find(g => g.items.some(i => i.value === val))?.id ?? MENU_GROUPS[0].id;
+  const [openGroup, setOpenGroup] = useState<string>(groupOf("all-users"));
+  useEffect(() => { setOpenGroup(groupOf(tab)); }, [tab]);
   return (
-    <Tabs defaultValue="all-users" orientation="vertical" className="flex flex-row gap-8 items-start">
+    <Tabs value={tab} onValueChange={setTab} orientation="vertical" className="flex flex-row gap-8 items-start">
       <aside className="w-56 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-auto">
         <div className="bg-background border rounded-lg p-2">
           <TabsList className="contents">
-            <Accordion type="multiple" defaultValue={MENU_GROUPS.map(g => g.id)} className="w-full">
+            <Accordion type="single" collapsible value={openGroup} onValueChange={(v) => setOpenGroup(v)} className="w-full">
               {MENU_GROUPS.map((g) => (
                 <AccordionItem key={g.id} value={g.id} className="border-b last:border-b-0">
                   <AccordionTrigger className="py-2 px-2 text-sm font-semibold">{g.label}</AccordionTrigger>
