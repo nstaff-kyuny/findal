@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 
 import ExcelJS from "exceljs";
-import { Download } from "lucide-react";
+import { Download, Briefcase } from "lucide-react";
 
 const ROLE_LABEL: Record<string, string> = {
   employer: "구인자",
