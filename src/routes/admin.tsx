@@ -131,29 +131,81 @@ function AdminClaim({ userId, onClaimed }: { userId: string; onClaimed: () => vo
   );
 }
 
+const MENU_GROUPS: { id: string; label: string; items: { value: string; label: string }[] }[] = [
+  {
+    id: "users",
+    label: "사용자/권한",
+    items: [
+      { value: "all-users", label: "전체 사용자" },
+      { value: "users", label: "사용자 추가" },
+      { value: "referrers", label: "추천인" },
+      { value: "partners", label: "협력업체" },
+    ],
+  },
+  {
+    id: "content",
+    label: "콘텐츠/소식",
+    items: [
+      { value: "notices", label: "공지사항" },
+      { value: "events", label: "이벤트" },
+      { value: "faqs", label: "FAQ" },
+      { value: "banners", label: "광고 배너" },
+    ],
+  },
+  {
+    id: "billing",
+    label: "결제/크레딧",
+    items: [
+      { value: "credits", label: "크레딧" },
+      { value: "purchases", label: "크레딧 구매현황" },
+      { value: "payment", label: "결제 연동" },
+    ],
+  },
+  {
+    id: "settings",
+    label: "앱 설정",
+    items: [
+      { value: "company", label: "사업자정보" },
+      { value: "legal", label: "약관/정책" },
+      { value: "version", label: "앱 버전" },
+      { value: "icons", label: "앱 아이콘" },
+      { value: "taxonomy", label: "업종/직무" },
+    ],
+  },
+  {
+    id: "ops",
+    label: "분석/백업",
+    items: [
+      { value: "ai-insights", label: "AI 인사이트" },
+      { value: "backups", label: "데이터 백업" },
+    ],
+  },
+];
+
 function AdminPanel() {
   return (
     <Tabs defaultValue="all-users" orientation="vertical" className="flex flex-row gap-8 items-start">
-      <aside className="w-52 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-auto">
-        <TabsList className="flex-col h-auto w-full items-stretch bg-background border rounded-lg p-2 gap-1">
-          <TabsTrigger value="all-users" className="justify-start w-full">전체 사용자</TabsTrigger>
-          <TabsTrigger value="users" className="justify-start w-full">사용자</TabsTrigger>
-          <TabsTrigger value="credits" className="justify-start w-full">크레딧</TabsTrigger>
-          <TabsTrigger value="referrers" className="justify-start w-full">추천인</TabsTrigger>
-          <TabsTrigger value="banners" className="justify-start w-full">광고 배너</TabsTrigger>
-          <TabsTrigger value="purchases" className="justify-start w-full">크레딧 구매현황</TabsTrigger>
-          <TabsTrigger value="payment" className="justify-start w-full">결제 연동</TabsTrigger>
-          <TabsTrigger value="notices" className="justify-start w-full">공지사항</TabsTrigger>
-          <TabsTrigger value="events" className="justify-start w-full">이벤트</TabsTrigger>
-          <TabsTrigger value="faqs" className="justify-start w-full">FAQ</TabsTrigger>
-          <TabsTrigger value="partners" className="justify-start w-full">협력업체</TabsTrigger>
-          <TabsTrigger value="ai-insights" className="justify-start w-full">AI 인사이트</TabsTrigger>
-          <TabsTrigger value="company" className="justify-start w-full">사업자정보</TabsTrigger>
-          <TabsTrigger value="legal" className="justify-start w-full">약관/정책</TabsTrigger>
-          <TabsTrigger value="version" className="justify-start w-full">앱 버전</TabsTrigger>
-          <TabsTrigger value="icons" className="justify-start w-full">앱 아이콘</TabsTrigger>
-          <TabsTrigger value="taxonomy" className="justify-start w-full">업종/직무</TabsTrigger>
-        </TabsList>
+      <aside className="w-56 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-auto">
+        <div className="bg-background border rounded-lg p-2">
+          <TabsList className="contents">
+            <Accordion type="multiple" defaultValue={MENU_GROUPS.map(g => g.id)} className="w-full">
+              {MENU_GROUPS.map((g) => (
+                <AccordionItem key={g.id} value={g.id} className="border-b last:border-b-0">
+                  <AccordionTrigger className="py-2 px-2 text-sm font-semibold">{g.label}</AccordionTrigger>
+                  <AccordionContent className="pb-1 pt-0">
+                    <div className="flex flex-col gap-0.5 pl-2">
+                      {g.items.map((it) => (
+                        <TabsTrigger key={it.value} value={it.value} className="justify-start w-full">
+                          {it.label}
+                        </TabsTrigger>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          </TabsList>
+        </div>
       </aside>
       <div className="flex-1 min-w-0">
         <TabsContent value="all-users"><AllUsersTab /></TabsContent>
@@ -173,8 +225,120 @@ function AdminPanel() {
         <TabsContent value="version"><VersionTab /></TabsContent>
         <TabsContent value="icons"><IconsTab /></TabsContent>
         <TabsContent value="taxonomy"><TaxonomyTab /></TabsContent>
+        <TabsContent value="backups"><BackupsTab /></TabsContent>
       </div>
     </Tabs>
+  );
+}
+
+function BackupsTab() {
+  const [items, setItems] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const list = useServerFn(listBackups);
+  const create = useServerFn(createBackup);
+  const getUrl = useServerFn(getBackupDownloadUrl);
+  const del = useServerFn(deleteBackup);
+
+  const refresh = async () => {
+    setLoading(true);
+    try {
+      const r: any = await list();
+      setItems(r.backups ?? []);
+    } catch (e: any) {
+      toast.error(e?.message ?? "불러오기 실패");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const run = async () => {
+    setBusy(true);
+    try {
+      await create();
+      toast.success("백업 생성 완료");
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message ?? "백업 실패");
+    } finally { setBusy(false); }
+  };
+
+  const download = async (path: string) => {
+    try {
+      const r: any = await getUrl({ data: { path } });
+      const a = document.createElement("a");
+      a.href = r.url;
+      a.download = path;
+      a.target = "_blank";
+      a.click();
+    } catch (e: any) { toast.error(e?.message ?? "다운로드 실패"); }
+  };
+
+  const remove = async (id: string, path: string | null) => {
+    if (!confirm("이 백업을 삭제할까요?")) return;
+    try {
+      await del({ data: { id, path } });
+      toast.success("삭제됨");
+      await refresh();
+    } catch (e: any) { toast.error(e?.message ?? "삭제 실패"); }
+  };
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <h3 className="font-bold">데이터 백업</h3>
+              <p className="text-xs text-muted-foreground">전체 데이터(근로자/구인자/공고 등)와 앱 구조 정보를 JSON으로 저장합니다. 매일 새벽 3시에 자동으로 백업됩니다.</p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={refresh} disabled={loading}>새로고침</Button>
+              <Button onClick={run} disabled={busy}>{busy ? "백업 중..." : "지금 백업하기"}</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-4 space-y-2">
+          <h4 className="font-semibold text-sm">백업 목록</h4>
+          {loading ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">불러오는 중...</div>
+          ) : items.length === 0 ? (
+            <div className="text-sm text-muted-foreground py-6 text-center">아직 백업이 없습니다.</div>
+          ) : (
+            <div className="space-y-1">
+              {items.map((b) => (
+                <div key={b.id} className="flex flex-wrap items-center justify-between gap-2 border rounded-md px-3 py-2 text-xs">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0">
+                    <Badge variant={b.status === "completed" ? "default" : b.status === "failed" ? "destructive" : "secondary"}>
+                      {b.status === "completed" ? "완료" : b.status === "failed" ? "실패" : b.status === "running" ? "진행 중" : b.status}
+                    </Badge>
+                    <Badge variant="outline">{b.kind === "scheduled" ? "자동" : "수동"}</Badge>
+                    <span className="text-muted-foreground">{new Date(b.created_at).toLocaleString("ko-KR")}</span>
+                    {b.size_bytes ? <span className="text-muted-foreground">{(b.size_bytes / 1024).toFixed(1)} KB</span> : null}
+                    {b.file_path ? <span className="truncate font-mono text-[11px] text-muted-foreground">{b.file_path}</span> : null}
+                    {b.error ? <span className="text-destructive truncate">{b.error}</span> : null}
+                  </div>
+                  <div className="flex gap-1">
+                    {b.file_path && b.status === "completed" ? (
+                      <Button size="sm" variant="outline" className="h-7" onClick={() => download(b.file_path)}>
+                        <Download className="h-3 w-3 mr-1" />다운로드
+                      </Button>
+                    ) : null}
+                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => remove(b.id, b.file_path)}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 
