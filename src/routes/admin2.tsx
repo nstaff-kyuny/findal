@@ -7,9 +7,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
 
 import ExcelJS from "exceljs";
 import { Download } from "lucide-react";
+
+const ROLE_LABEL: Record<string, string> = {
+  employer: "구인자",
+  seeker: "구직자",
+  manager: "보조관리자",
+  admin: "관리자",
+};
+const roleLabel = (r: string) => ROLE_LABEL[r] ?? r;
+
+const PURCHASE_STATUS_LABEL: Record<string, string> = {
+  pending: "대기중",
+  paid: "결제완료",
+  fulfilled: "지급완료",
+  cancelled: "취소",
+  canceled: "취소",
+  failed: "실패",
+  refunded: "환불",
+  rejected: "거절",
+  approved: "승인",
+};
+const purchaseStatusLabel = (s: string) => PURCHASE_STATUS_LABEL[s] ?? s;
 
 export const Route = createFileRoute("/admin2")({ component: Admin2 });
 
