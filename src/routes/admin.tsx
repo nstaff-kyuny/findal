@@ -18,7 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import ExcelJS from "exceljs";
-import { Download, Trash2, UserPlus, KeyRound, Pencil } from "lucide-react";
+import { Download, Trash2, UserPlus, KeyRound, Pencil, Briefcase } from "lucide-react";
 import { VISA_LABEL, NATIONALITY_LABEL } from "@/lib/constants";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
@@ -639,9 +639,16 @@ function AllUsersTab() {
                         ? r.roles.split(",").map((raw: string, idx: number) => {
                             const role = raw.trim();
                             const label = role === "seeker" ? "구직자" : role === "employer" ? "구인자" : role === "admin" ? "관리자" : role === "manager" ? "매니저" : role;
-                            const cls = role === "employer" ? "text-blue-600 font-semibold" : "";
+                            if (role === "employer") {
+                              return (
+                                <span key={idx} className="inline-flex items-center gap-1 rounded-full bg-blue-50 text-blue-700 px-2 py-0.5 text-xs font-medium border border-blue-100">
+                                  <Briefcase size={12} />
+                                  {label}
+                                </span>
+                              );
+                            }
                             return (
-                              <span key={idx} className={cls}>
+                              <span key={idx}>
                                 {idx > 0 ? ", " : ""}{label}
                               </span>
                             );
