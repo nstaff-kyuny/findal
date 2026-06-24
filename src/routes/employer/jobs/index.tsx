@@ -6,7 +6,7 @@ import { RoleGate } from "@/components/RoleGate";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Megaphone, Eye, EyeOff } from "lucide-react";
+import { Plus, Megaphone, Eye, EyeOff, Sparkles, Clock } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS } from "@/lib/constants";
 import { isJobCompleted } from "@/lib/job-visuals";
@@ -19,14 +19,52 @@ function Page() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
+  const [promoMap, setPromoMap] = useState<Record<string, string>>({});
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
   const load = async () => {
     if (!user) return;
     const { data } = await supabase.from("jobs").select("*").eq("employer_id", user.id).order("created_at", { ascending: false });
     setJobs(data ?? []);
+    const nowIso = new Date().toISOString();
+    const { data: promos } = await supabase
+      .from("promoted_jobs")
+      .select("job_id, ends_at")
+      .eq("employer_id", user.id)
+      .gt("ends_at", nowIso);
+    const m: Record<string, string> = {};
+    (promos ?? []).forEach((p: any) => {
+      if (!m[p.job_id] || p.ends_at > m[p.job_id]) m[p.job_id] = p.ends_at;
+    });
+    setPromoMap(m);
   };
   useEffect(() => { load(); }, [user]);
+
+  const jobExposureEnd = (j: any): Date | null => {
+    if (j.contract_type === "monthly") {
+      if (!j.contract_months || !j.created_at) return null;
+      const end = new Date(j.created_at);
+      end.setMonth(end.getMonth() + Number(j.contract_months));
+      end.setHours(23, 59, 59, 999);
+      return end;
+    }
+    const dates: string[] = Array.isArray(j.work_dates) ? j.work_dates : [];
+    if (dates.length === 0) return null;
+    const max = [...dates].sort().pop()!;
+    const parts = max.split("-");
+    if (parts.length !== 3) return null;
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+  };
+  const daysLeftLabel = (end: Date | null): { text: string; today: boolean } | null => {
+    if (!end) return null;
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const diff = Math.round((startOfEnd.getTime() - startOfToday.getTime()) / 86400000);
+    if (diff < 0) return null;
+    if (diff === 0) return { text: "금일마감", today: true };
+    return { text: `${diff}일 남음`, today: false };
+  };
 
   const toggle = async (j: any) => {
     const { error } = await supabase.from("jobs").update({ is_active: !j.is_active }).eq("id", j.id);
@@ -85,12 +123,29 @@ function Page() {
           const editCount = j.edit_count ?? 0;
           const canEdit = editCount < 2;
           const done = isJobCompleted(j);
+          const promoEnd = promoMap[j.id] ? new Date(promoMap[j.id]) : null;
+          const isPremium = !!promoEnd && promoEnd.getTime() > Date.now();
+          const exposureEnd = jobExposureEnd(j);
+          const dLeft = done ? null : daysLeftLabel(exposureEnd);
+          const promoDLeft = isPremium ? daysLeftLabel(promoEnd) : null;
           return (
           <Card key={j.id} className={`p-4 space-y-3 relative ${done ? "grayscale opacity-70" : ""}`}>
             {done && <Badge className="absolute top-2 right-2 z-10 bg-gray-600 text-white text-xs">마감된 공고</Badge>}
+            {!done && dLeft && (
+              <Badge className={`absolute top-2 right-2 z-10 text-xs ${dLeft.today ? "bg-red-600 text-white animate-pulse" : "bg-slate-100 text-slate-700 border border-slate-200"}`}>
+                <Clock size={11} className="mr-1" />{dLeft.text}
+              </Badge>
+            )}
             <div className="flex justify-between items-start gap-2">
               <div className="min-w-0">
                 <div className="flex gap-1 flex-wrap mb-1.5">
+                  {isPremium ? (
+                    <Badge className="text-xs bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0">
+                      <Sparkles size={11} className="mr-0.5" />프리미엄 공고{promoDLeft ? ` · ${promoDLeft.text}` : ""}
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="text-xs bg-sky-50 text-sky-700 border-sky-200">일반 공고</Badge>
+                  )}
                   <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
                   <Badge variant="outline" className="text-xs">{ROLE_LABEL[j.job_role]}</Badge>
                   {j.contract_type === "monthly"
