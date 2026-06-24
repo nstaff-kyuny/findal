@@ -148,8 +148,8 @@ function Page() {
                   ) : (
                     <Badge variant="outline" className="text-xs bg-sky-50 text-sky-700 border-sky-200">일반 공고</Badge>
                   )}
-                  <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
-                  <Badge variant="outline" className="text-xs">{ROLE_LABEL[j.job_role]}</Badge>
+                  <Badge variant="secondary" className="text-xs">{tIndustry(j.industry)}</Badge>
+                  <Badge variant="outline" className="text-xs">{tRole(j.job_role)}</Badge>
                   {j.contract_type === "monthly"
                     ? <Badge className="text-xs bg-blue-600 text-white">단기</Badge>
                     : <Badge className="text-xs bg-emerald-600 text-white">일용직</Badge>}
