@@ -17,7 +17,6 @@ import { toast } from "sonner";
 export const Route = createFileRoute("/employer/jobs/")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
 function Page() {
-function Page() {
   const { user } = useAuth();
   const { tIndustry, tRole } = useI18n();
   const nav = useNavigate();
