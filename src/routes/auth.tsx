@@ -87,6 +87,8 @@ function AuthPage() {
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
   const [docOpen, setDocOpen] = useState<keyof typeof TERMS_DOCS | null>(null);
+  const [emailCheckStatus, setEmailCheckStatus] = useState<"idle" | "checking" | "exists" | "available">("idle");
+  const checkEmail = useServerFn(checkEmailDuplicate);
   const allRequired = agreeAge && agreeIntegrated && agreeService && agreePrivacy;
   const allChecked = allRequired && agreeMarketing;
   const setAll = (v: boolean) => {
