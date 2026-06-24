@@ -371,35 +371,84 @@ function PurchasesView() {
 function FaqsView() {
   const [rows, setRows] = useState<any[]>([]);
   const [q, setQ] = useState("");
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from("faqs").select("*").order("sort_order");
-      setRows(data ?? []);
-    })();
-  }, []);
+  const [nq, setNq] = useState(""); const [na, setNa] = useState(""); const [ncat, setNcat] = useState("");
+  const [editId, setEditId] = useState<string | null>(null);
+  const [eq, setEq] = useState(""); const [ea, setEa] = useState(""); const [ecat, setEcat] = useState("");
+  const load = async () => {
+    const { data } = await supabase.from("faqs").select("*").order("sort_order").order("created_at");
+    setRows(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const add = async () => {
+    if (!nq || !na) return toast.error("질문과 답변은 필수입니다");
+    const { error } = await supabase.from("faqs").insert({ question: nq, answer: na, category: ncat || null } as any);
+    if (error) return toast.error(error.message);
+    setNq(""); setNa(""); setNcat(""); toast.success("등록되었습니다"); load();
+  };
+  const startEdit = (f: any) => { setEditId(f.id); setEq(f.question ?? ""); setEa(f.answer ?? ""); setEcat(f.category ?? ""); };
+  const saveEdit = async () => {
+    if (!editId) return;
+    if (!eq || !ea) return toast.error("질문과 답변은 필수입니다");
+    const { error } = await supabase.from("faqs").update({ question: eq, answer: ea, category: ecat || null }).eq("id", editId);
+    if (error) return toast.error(error.message);
+    setEditId(null); toast.success("수정되었습니다"); load();
+  };
+  const toggle = async (f: any) => { const { error } = await supabase.from("faqs").update({ active: !f.active }).eq("id", f.id); if (error) return toast.error(error.message); load(); };
+  const del = async (id: string) => {
+    if (!confirm("삭제하시겠습니까?")) return;
+    const { error } = await supabase.from("faqs").delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    load();
+  };
   const filtered = rows.filter(r => {
     if (!q) return true;
     const s = q.toLowerCase();
     return (r.question ?? "").toLowerCase().includes(s) || (r.answer ?? "").toLowerCase().includes(s) || (r.category ?? "").toLowerCase().includes(s);
   });
   return (
-    <Card className="mt-4"><CardContent className="p-4">
-      <div className="flex items-center justify-between gap-2 mb-3 flex-wrap">
+    <Card className="mt-4"><CardContent className="p-4 space-y-4">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <h3 className="font-bold">FAQ ({filtered.length}/{rows.length})</h3>
         <div className="flex gap-2">
           <Input placeholder="질문/답변/분류 검색" value={q} onChange={e => setQ(e.target.value)} className="max-w-xs" />
           <Button size="sm" variant="outline" onClick={() => downloadXlsx(filtered.map(r => ({ category: r.category, question: r.question, answer: r.answer, active: r.active ? "Y":"N", sort_order: r.sort_order })), "FAQ", `FAQ_${new Date().toISOString().slice(0,10)}.xlsx`)}><Download size={14} className="mr-1" />엑셀</Button>
         </div>
       </div>
+      <div className="border rounded p-3 space-y-2 bg-muted/30">
+        <div className="font-semibold text-sm">신규 FAQ 등록</div>
+        <Input placeholder="질문" value={nq} onChange={e => setNq(e.target.value)} />
+        <Textarea placeholder="답변" rows={3} value={na} onChange={e => setNa(e.target.value)} />
+        <Input placeholder="카테고리 (선택)" value={ncat} onChange={e => setNcat(e.target.value)} />
+        <Button size="sm" onClick={add}>등록</Button>
+      </div>
       <div className="space-y-2">
         {filtered.map(r => (
           <div key={r.id} className="border rounded p-3">
-            <div className="flex items-center gap-2 mb-1">
-              {r.category && <Badge variant="outline">{r.category}</Badge>}
-              {!r.active && <Badge variant="secondary">비활성</Badge>}
-            </div>
-            <div className="font-semibold text-sm">Q. {r.question}</div>
-            <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">A. {r.answer}</div>
+            {editId === r.id ? (
+              <div className="space-y-2">
+                <Input placeholder="질문" value={eq} onChange={e => setEq(e.target.value)} />
+                <Textarea placeholder="답변" rows={3} value={ea} onChange={e => setEa(e.target.value)} />
+                <Input placeholder="카테고리 (선택)" value={ecat} onChange={e => setEcat(e.target.value)} />
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={saveEdit}>저장</Button>
+                  <Button size="sm" variant="outline" onClick={() => setEditId(null)}>취소</Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  {r.category && <Badge variant="outline">{r.category}</Badge>}
+                  {!r.active && <Badge variant="secondary">비활성</Badge>}
+                  <div className="ml-auto flex gap-1">
+                    <Button size="sm" variant="outline" onClick={() => startEdit(r)}>수정</Button>
+                    <Button size="sm" variant="outline" onClick={() => toggle(r)}>{r.active ? "비활성" : "활성"}</Button>
+                    <Button size="sm" variant="destructive" onClick={() => del(r.id)}>삭제</Button>
+                  </div>
+                </div>
+                <div className="font-semibold text-sm">Q. {r.question}</div>
+                <div className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">A. {r.answer}</div>
+              </>
+            )}
           </div>
         ))}
       </div>
