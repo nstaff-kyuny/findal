@@ -464,7 +464,20 @@ function AllUsersTab() {
                     <td className="p-2">{r.email}</td>
                     <td className="p-2">{r.full_name || r.company_name || "-"}</td>
                     <td className="p-2">{r.phone || "-"}</td>
-                    <td className="p-2">{r.roles || "-"}</td>
+                    <td className="p-2">
+                      {r.roles
+                        ? r.roles.split(",").map((raw: string, idx: number) => {
+                            const role = raw.trim();
+                            const label = role === "seeker" ? "구직자" : role === "employer" ? "구인자" : role === "admin" ? "관리자" : role === "manager" ? "매니저" : role;
+                            const cls = role === "employer" ? "text-blue-600 font-semibold" : "";
+                            return (
+                              <span key={idx} className={cls}>
+                                {idx > 0 ? ", " : ""}{label}
+                              </span>
+                            );
+                          })
+                        : "-"}
+                    </td>
                     <td className="p-2">{r.referrer_code || "-"}</td>
                     <td className="p-2 whitespace-nowrap">{new Date(r.created_at).toLocaleDateString("ko-KR")}</td>
                     <td className="p-2 whitespace-nowrap">{r.last_sign_in_at ? new Date(r.last_sign_in_at).toLocaleString("ko-KR") : "-"}</td>

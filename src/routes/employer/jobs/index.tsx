@@ -93,11 +93,29 @@ function Page() {
                 <div className="flex gap-1 flex-wrap mb-1.5">
                   <Badge variant="secondary" className="text-xs">{INDUSTRY_LABEL[j.industry]}</Badge>
                   <Badge variant="outline" className="text-xs">{ROLE_LABEL[j.job_role]}</Badge>
+                  {j.contract_type === "monthly"
+                    ? <Badge className="text-xs bg-blue-600 text-white">단기</Badge>
+                    : <Badge className="text-xs bg-emerald-600 text-white">일용직</Badge>}
                   {!j.is_active && <Badge variant="destructive" className="text-xs">비활성</Badge>}
                   <Badge variant="outline" className="text-xs">수정 {editCount}/2</Badge>
                 </div>
                 <h4 className="font-semibold text-base truncate">{j.title}</h4>
-                <p className="text-sm text-muted-foreground">{j.place_name} · {Number(j.daily_wage).toLocaleString()}원</p>
+                {(() => {
+                  const isMonthly = j.contract_type === "monthly";
+                  const wage = isMonthly ? Number(j.monthly_wage ?? 0) : Number(j.daily_wage ?? 0);
+                  const wageLabel = isMonthly ? "월급" : "일당";
+                  const dates: string[] = Array.isArray(j.work_dates) ? j.work_dates : [];
+                  const sorted = [...dates].sort();
+                  const period = isMonthly
+                    ? (j.contract_months ? `계약기간 ${j.contract_months}개월` : "1개월 이상")
+                    : (sorted.length === 0 ? "" : sorted.length === 1 ? sorted[0] : `${sorted[0]} ~ ${sorted[sorted.length - 1]} (${sorted.length}일)`);
+                  return (
+                    <>
+                      <p className="text-sm text-muted-foreground">{j.place_name} · {wageLabel} {wage.toLocaleString()}원</p>
+                      {period && <p className="text-sm text-muted-foreground">{period}</p>}
+                    </>
+                  );
+                })()}
                 <p className="text-xs text-muted-foreground mt-0.5">※ 공고 수정은 최대 2회까지 가능합니다</p>
               </div>
             </div>
