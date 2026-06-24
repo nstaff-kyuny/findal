@@ -133,16 +133,11 @@ function Page() {
           return (
           <Card key={j.id} className={`p-4 space-y-3 relative ${done ? "grayscale opacity-70" : ""}`}>
             {done && <Badge className="absolute top-2 right-2 z-10 bg-gray-600 text-white text-xs">마감된 공고</Badge>}
-            {!done && dLeft && (
-              <Badge className={`absolute top-2 right-2 z-10 text-xs ${dLeft.today ? "bg-red-600 text-white animate-pulse" : "bg-slate-100 text-slate-700 border border-slate-200"}`}>
-                <Clock size={11} className="mr-1" />{dLeft.text}
-              </Badge>
-            )}
             <div className="flex justify-between items-start gap-2">
               <div className="min-w-0">
                 <div className="flex gap-1 flex-wrap mb-1.5">
                   {isPremium ? (
-                    <Badge className="text-xs bg-gradient-to-r from-amber-400 to-orange-500 text-white border-0">
+                    <Badge className="text-xs bg-gradient-to-r from-indigo-500 to-violet-600 text-white border-0">
                       <Sparkles size={11} className="mr-0.5" />프리미엄 공고{promoDLeft ? ` · ${promoDLeft.text}` : ""}
                     </Badge>
                   ) : (
@@ -151,9 +146,14 @@ function Page() {
                   <Badge variant="secondary" className="text-xs">{tIndustry(j.industry)}</Badge>
                   <Badge variant="outline" className="text-xs">{tRole(j.job_role)}</Badge>
                   {j.contract_type === "monthly"
-                    ? <Badge className="text-xs bg-blue-600 text-white">단기</Badge>
+                    ? <Badge className="text-xs bg-sky-100 text-sky-700 border border-sky-200">단기</Badge>
                     : <Badge className="text-xs bg-emerald-600 text-white">일용직</Badge>}
                   {!j.is_active && <Badge variant="destructive" className="text-xs">비활성</Badge>}
+                  {!done && dLeft && (
+                    <Badge className={`text-xs ${dLeft.today ? "bg-red-600 text-white animate-pulse" : "bg-slate-100 text-slate-700 border border-slate-200"}`}>
+                      <Clock size={11} className="mr-1" />{dLeft.text}
+                    </Badge>
+                  )}
                   <Badge variant="outline" className="text-xs">수정 {editCount}/2</Badge>
                 </div>
                 <h4 className="font-semibold text-base truncate">{j.title}</h4>
