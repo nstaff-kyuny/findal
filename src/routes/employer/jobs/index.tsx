@@ -19,14 +19,52 @@ function Page() {
   const { user } = useAuth();
   const nav = useNavigate();
   const [jobs, setJobs] = useState<any[]>([]);
+  const [promoMap, setPromoMap] = useState<Record<string, string>>({});
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
   const [showCompleted, setShowCompleted] = useState(false);
   const load = async () => {
     if (!user) return;
     const { data } = await supabase.from("jobs").select("*").eq("employer_id", user.id).order("created_at", { ascending: false });
     setJobs(data ?? []);
+    const nowIso = new Date().toISOString();
+    const { data: promos } = await supabase
+      .from("promoted_jobs")
+      .select("job_id, ends_at")
+      .eq("employer_id", user.id)
+      .gt("ends_at", nowIso);
+    const m: Record<string, string> = {};
+    (promos ?? []).forEach((p: any) => {
+      if (!m[p.job_id] || p.ends_at > m[p.job_id]) m[p.job_id] = p.ends_at;
+    });
+    setPromoMap(m);
   };
   useEffect(() => { load(); }, [user]);
+
+  const jobExposureEnd = (j: any): Date | null => {
+    if (j.contract_type === "monthly") {
+      if (!j.contract_months || !j.created_at) return null;
+      const end = new Date(j.created_at);
+      end.setMonth(end.getMonth() + Number(j.contract_months));
+      end.setHours(23, 59, 59, 999);
+      return end;
+    }
+    const dates: string[] = Array.isArray(j.work_dates) ? j.work_dates : [];
+    if (dates.length === 0) return null;
+    const max = [...dates].sort().pop()!;
+    const parts = max.split("-");
+    if (parts.length !== 3) return null;
+    return new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]), 23, 59, 59, 999);
+  };
+  const daysLeftLabel = (end: Date | null): { text: string; today: boolean } | null => {
+    if (!end) return null;
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfEnd = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+    const diff = Math.round((startOfEnd.getTime() - startOfToday.getTime()) / 86400000);
+    if (diff < 0) return null;
+    if (diff === 0) return { text: "금일마감", today: true };
+    return { text: `${diff}일 남음`, today: false };
+  };
 
   const toggle = async (j: any) => {
     const { error } = await supabase.from("jobs").update({ is_active: !j.is_active }).eq("id", j.id);
