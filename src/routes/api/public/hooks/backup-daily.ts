@@ -9,8 +9,8 @@ export const Route = createFileRoute("/api/public/hooks/backup-daily")({
           return new Response("unauthorized", { status: 401 });
         }
         try {
-          const { runScheduledBackup } = await import("@/lib/backups.functions");
-          const r = await runScheduledBackup();
+          const { runBackup } = await import("@/lib/backups.server");
+          const r = await runBackup("scheduled");
           return Response.json(r);
         } catch (e: any) {
           return Response.json({ error: String(e?.message ?? e) }, { status: 500 });
