@@ -161,7 +161,7 @@ function AllUsersView() {
             <tr key={r.id} className="border-b">
               <td className="py-2">{r.full_name ?? "-"}</td>
               <td>{r.phone ?? "-"}</td>
-              <td><div className="flex gap-1 flex-wrap">{(r.roles ?? "").split(",").filter(Boolean).map((x: string) => <Badge key={x} variant="outline">{x}</Badge>)}</div></td>
+              <td><div className="flex gap-1 flex-wrap">{(r.roles ?? "").split(",").filter(Boolean).map((x: string) => <Badge key={x} variant="outline">{roleLabel(x)}</Badge>)}</div></td>
               <td>{r.company_name}</td>
               <td>{r.credits}</td>
               <td className="font-mono text-xs">{r.referrer_code || "-"}</td>
