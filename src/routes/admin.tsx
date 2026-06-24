@@ -183,12 +183,16 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
 ];
 
 function AdminPanel() {
+  const [tab, setTab] = useState("all-users");
+  const groupOf = (val: string) => MENU_GROUPS.find(g => g.items.some(i => i.value === val))?.id ?? MENU_GROUPS[0].id;
+  const [openGroup, setOpenGroup] = useState<string>(groupOf("all-users"));
+  useEffect(() => { setOpenGroup(groupOf(tab)); }, [tab]);
   return (
-    <Tabs defaultValue="all-users" orientation="vertical" className="flex flex-row gap-8 items-start">
+    <Tabs value={tab} onValueChange={setTab} orientation="vertical" className="flex flex-row gap-8 items-start">
       <aside className="w-56 shrink-0 sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-auto">
         <div className="bg-background border rounded-lg p-2">
           <TabsList className="contents">
-            <Accordion type="multiple" defaultValue={MENU_GROUPS.map(g => g.id)} className="w-full">
+            <Accordion type="single" collapsible value={openGroup} onValueChange={(v) => setOpenGroup(v)} className="w-full">
               {MENU_GROUPS.map((g) => (
                 <AccordionItem key={g.id} value={g.id} className="border-b last:border-b-0">
                   <AccordionTrigger className="py-2 px-2 text-sm font-semibold">{g.label}</AccordionTrigger>
@@ -1574,6 +1578,8 @@ function PurchasesTab() {
   const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
   const [list, setList] = useState<any[]>([]);
   const [period, setPeriod] = useState<PeriodKey>("month");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
   const load = async () => {
     const { data } = await supabase.from("credit_purchase_requests")
@@ -1589,8 +1595,19 @@ function PurchasesTab() {
   };
   useEffect(() => { load(); }, []);
 
-  const periodStart = getPeriodStart(period);
-  const filtered = list.filter(r => !periodStart || new Date(r.created_at) >= periodStart);
+  const useCustom = !!(customFrom || customTo);
+  const fromDate = customFrom ? new Date(customFrom + "T00:00:00") : null;
+  const toDate = customTo ? new Date(customTo + "T23:59:59") : null;
+  const periodStart = useCustom ? null : getPeriodStart(period);
+  const filtered = list.filter(r => {
+    const d = new Date(r.created_at);
+    if (useCustom) {
+      if (fromDate && d < fromDate) return false;
+      if (toDate && d > toDate) return false;
+      return true;
+    }
+    return !periodStart || d >= periodStart;
+  });
   const totalSales = filtered.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.amount_krw), 0);
   const totalCredits = filtered.filter(r => r.status === "fulfilled").reduce((s, r) => s + Number(r.pack), 0);
   const fulfilledCount = filtered.filter(r => r.status === "fulfilled").length;
@@ -1604,25 +1621,39 @@ function PurchasesTab() {
     setList(prev => prev.filter(r => r.id !== id));
   };
 
+  const rangeLabel = useCustom
+    ? `${customFrom || "처음"} ~ ${customTo || "현재"}`
+    : (periodStart ? `${periodStart.toLocaleDateString("ko-KR")} ~ 현재` : "전체 기간");
+
   return (
     <div className="mt-4 space-y-4">
-      <Card><CardContent className="p-3">
+      <Card><CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold">기간</span>
             <div className="flex flex-wrap gap-1">
               {PERIOD_OPTIONS.map(o => (
-                <Button key={o.value} size="sm" variant={period === o.value ? "default" : "outline"} className="h-7 px-2" onClick={() => setPeriod(o.value)}>
+                <Button key={o.value} size="sm" variant={!useCustom && period === o.value ? "default" : "outline"} className="h-7 px-2" onClick={() => { setPeriod(o.value); setCustomFrom(""); setCustomTo(""); }}>
                   {o.label}
                 </Button>
               ))}
             </div>
           </div>
-          <span className="text-xs text-muted-foreground">
-            {periodStart ? `${periodStart.toLocaleDateString("ko-KR")} ~ 현재` : "전체 기간"}
-          </span>
+          <span className="text-xs text-muted-foreground">{rangeLabel}</span>
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold">직접 선택</span>
+          <Input type="date" value={customFrom} onChange={e => setCustomFrom(e.target.value)} className="h-7 w-auto text-xs" />
+          <span className="text-xs text-muted-foreground">~</span>
+          <Input type="date" value={customTo} onChange={e => setCustomTo(e.target.value)} className="h-7 w-auto text-xs" />
+          {useCustom && (
+            <Button size="sm" variant="ghost" className="h-7" onClick={() => { setCustomFrom(""); setCustomTo(""); }}>
+              초기화
+            </Button>
+          )}
         </div>
       </CardContent></Card>
+
 
       <div className="grid grid-cols-3 gap-3">
         <Card><CardContent className="p-4">
