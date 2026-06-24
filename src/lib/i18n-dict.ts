@@ -146,7 +146,7 @@ export const UI: Dict = {
   monthly_wage: { ko: "월급여", en: "Monthly wage", mn: "Сарын цалин", ru: "Месячная зарплата", zh: "月薪" },
   contract_months: { ko: "계약 기간 (개월)", en: "Contract length (months)", mn: "Гэрээний хугацаа (сар)", ru: "Срок контракта (мес.)", zh: "合同期（月）" },
   one_month_plus: { ko: "1개월 이상", en: "1 month or more", mn: "1 сараас дээш", ru: "1 месяц и более", zh: "1个月以上" },
-  per_month: { ko: "월", en: "/mo", mn: "/сар", ru: "/мес", zh: "/月" },
+  per_month: { ko: "/월", en: "/mo", mn: "/сар", ru: "/мес", zh: "/月" },
   months_unit: { ko: "개월", en: "months", mn: "сар", ru: "мес.", zh: "个月" },
 
   // completed badge
