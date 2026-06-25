@@ -75,7 +75,7 @@ function Page() {
       setCounts(map);
       try {
         const picked = [...promotedJobs.slice(0, 6), ...randomJobs.slice(0, 6)].map((j: any) => ({ id: j.id, title: j.title, region: j.region, industry: j.industry, daily_wage: j.daily_wage }));
-        setMatches(await getReasons({ data: { jobs: picked } }));
+        setMatches(await getReasons({ data: { jobs: picked, language: lang } }));
       } catch {}
     }
   })(); }, [user]);
