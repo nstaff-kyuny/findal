@@ -21,7 +21,7 @@ export const Route = createFileRoute("/seeker/featured")({ component: () => <Rol
 
 function Page() {
   const { user } = useAuth();
-  const { t, tIndustry, tRegion } = useI18n();
+  const { t, lang, tIndustry, tRegion } = useI18n();
   const [promoted, setPromoted] = useState<any[]>([]);
   const [random, setRandom] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
