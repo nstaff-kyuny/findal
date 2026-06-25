@@ -21,7 +21,7 @@ export const Route = createFileRoute("/seeker/featured")({ component: () => <Rol
 
 function Page() {
   const { user } = useAuth();
-  const { t, tIndustry, tRegion } = useI18n();
+  const { t, lang, tIndustry, tRegion } = useI18n();
   const [promoted, setPromoted] = useState<any[]>([]);
   const [random, setRandom] = useState<any[]>([]);
   const [ads, setAds] = useState<any[]>([]);
@@ -75,10 +75,10 @@ function Page() {
       setCounts(map);
       try {
         const picked = [...promotedJobs.slice(0, 6), ...randomJobs.slice(0, 6)].map((j: any) => ({ id: j.id, title: j.title, region: j.region, industry: j.industry, daily_wage: j.daily_wage }));
-        setMatches(await getReasons({ data: { jobs: picked } }));
+        setMatches(await getReasons({ data: { jobs: picked, language: lang } }));
       } catch {}
     }
-  })(); }, [user]);
+  })(); }, [user, lang]);
 
   const industryIcon = (ind: string) => {
     switch (ind) {
