@@ -78,7 +78,7 @@ function Page() {
         setMatches(await getReasons({ data: { jobs: picked, language: lang } }));
       } catch {}
     }
-  })(); }, [user]);
+  })(); }, [user, lang]);
 
   const industryIcon = (ind: string) => {
     switch (ind) {
