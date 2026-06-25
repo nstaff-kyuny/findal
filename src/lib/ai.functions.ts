@@ -161,13 +161,24 @@ export const generateScreeningQuestions = createServerFn({ method: "POST" })
 
 export const generateSeekerMatchReasons = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ jobs: z.array(z.object({ id: z.string(), title: z.string().optional(), region: z.string().optional().nullable(), industry: z.string().optional(), daily_wage: z.number().optional().nullable() })).max(12) }).parse(input))
+  .inputValidator((input) => z.object({
+    jobs: z.array(z.object({ id: z.string(), title: z.string().optional(), region: z.string().optional().nullable(), industry: z.string().optional(), daily_wage: z.number().optional().nullable() })).max(12),
+    language: z.enum(["ko", "en", "mn", "ru", "zh"]).optional().default("ko"),
+  }).parse(input))
   .handler(async ({ data, context }) => {
     const { data: sp } = await context.supabase.from("seeker_profiles").select("preferred_region, experience, korean_ok, nationality").eq("user_id", context.userId).maybeSingle();
+    const langName = { ko: "Korean (한국어)", en: "English", mn: "Mongolian (Монгол)", ru: "Russian (Русский)", zh: "Simplified Chinese (简体中文)" }[data.language];
+    const fallback = {
+      ko: (r: string | null | undefined) => r ? `${r} 선호지역 공고` : "조건 확인 추천",
+      en: (r: string | null | undefined) => r ? `Job in your preferred area ${r}` : "Recommended — check details",
+      mn: (r: string | null | undefined) => r ? `Дуртай бүс ${r}-ийн ажил` : "Нөхцөл шалгаж зөвлөмж",
+      ru: (r: string | null | undefined) => r ? `Вакансия в вашем районе ${r}` : "Рекомендуется — проверьте детали",
+      zh: (r: string | null | undefined) => r ? `您偏好地区 ${r} 的职位` : "推荐 — 请查看详情",
+    }[data.language];
     return callAiJson<Record<string, { score: number; reason: string }>>([
-      { role: "system", content: "구직자 프로필과 공고를 비교해 매칭 점수(0-100)와 18자 내외 한국어 추천 이유를 JSON 객체로 반환하세요. 키는 공고 id입니다." },
+      { role: "system", content: `Compare the seeker profile with each job and return a JSON object keyed by job id with {score:0-100, reason:"..."}. Write the "reason" in ${langName}, about 18 characters/short phrase. Do NOT use Korean unless the target language is Korean.` },
       { role: "user", content: JSON.stringify({ profile: sp, jobs: data.jobs }) },
-    ], Object.fromEntries(data.jobs.map((j) => [j.id, { score: 70, reason: j.region ? `${j.region} 선호지역 공고` : "조건 확인 추천" }]))) ;
+    ], Object.fromEntries(data.jobs.map((j) => [j.id, { score: 70, reason: fallback(j.region) }]))) ;
   });
 
 export const analyzeApplications = createServerFn({ method: "POST" })
