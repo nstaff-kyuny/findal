@@ -11,12 +11,20 @@ import { CREDIT_PACKS } from "@/lib/constants";
 import { createCreditOrder } from "@/lib/toss.functions";
 import { toast } from "sonner";
 
-export const Route = createFileRoute("/employer/credits")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
+export const Route = createFileRoute("/employer/credits")({
+  component: () => (
+    <RoleGate role="employer">
+      <Page />
+    </RoleGate>
+  ),
+});
 
 const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY || "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 
 declare global {
-  interface Window { TossPayments?: any }
+  interface Window {
+    TossPayments?: any;
+  }
 }
 
 function loadTossSdk(): Promise<any> {
@@ -51,10 +59,14 @@ function Page() {
     const { data: e } = await supabase.from("employer_profiles").select("*").eq("user_id", user.id).single();
     setEmp(e);
   };
-  useEffect(() => { load(); }, [user]);
+  useEffect(() => {
+    load();
+  }, [user]);
 
   // Preload SDK
-  useEffect(() => { loadTossSdk().catch(() => {}); }, []);
+  useEffect(() => {
+    loadTossSdk().catch(() => {});
+  }, []);
 
   const purchase = async (qty: number) => {
     if (!user) return;
@@ -95,27 +107,35 @@ function Page() {
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-3">
-        <Card className="bg-primary text-primary-foreground"><CardContent className="p-5">
-          <p className="text-xs opacity-80">보유 크레딧</p>
-          <p className="text-4xl font-bold">{emp?.credits ?? 0}</p>
-        </CardContent></Card>
+        <Card className="bg-primary text-primary-foreground">
+          <CardContent className="p-5">
+            <p className="text-xs opacity-80">보유 크레딧</p>
+            <p className="text-4xl font-bold">{emp?.credits ?? 0}</p>
+          </CardContent>
+        </Card>
         <h3 className="font-bold mt-3">크레딧 구매 (1크레딧 = 1,000원)</h3>
-        <p className="text-xs text-muted-foreground">결제는 토스페이먼츠를 통해 안전하게 진행됩니다.</p>
+        <p className="text-xs text-muted-foreground">
+          결제는 토스페이먼츠를 통해 안전하게 진행됩니다. 크레딧의 유효기간은 없습니다.
+        </p>
         <div className="space-y-2">
-          {CREDIT_PACKS.map(p => (
-            <Card key={p.qty}><CardContent className="p-3 flex justify-between items-center">
-              <div>
-                <p className="font-bold">{p.qty} 크레딧</p>
-                <p className="text-xs text-muted-foreground">{p.price.toLocaleString()}원</p>
-              </div>
-              <Button onClick={() => purchase(p.qty)} disabled={busy !== null}>
-                {busy === p.qty ? "결제창 여는 중…" : "결제하기"}
-              </Button>
-            </CardContent></Card>
+          {CREDIT_PACKS.map((p) => (
+            <Card key={p.qty}>
+              <CardContent className="p-3 flex justify-between items-center">
+                <div>
+                  <p className="font-bold">{p.qty} 크레딧</p>
+                  <p className="text-xs text-muted-foreground">{p.price.toLocaleString()}원</p>
+                </div>
+                <Button onClick={() => purchase(p.qty)} disabled={busy !== null}>
+                  {busy === p.qty ? "결제창 여는 중…" : "결제하기"}
+                </Button>
+              </CardContent>
+            </Card>
           ))}
         </div>
         <Link to="/employer/credits/history" className="block pt-4">
-          <Button variant="outline" className="w-full h-12 text-base">구매 및 사용 내역 →</Button>
+          <Button variant="outline" className="w-full h-12 text-base">
+            구매 및 사용 내역 →
+          </Button>
         </Link>
       </div>
     </MobileLayout>
