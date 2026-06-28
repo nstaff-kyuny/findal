@@ -115,7 +115,7 @@ function Page() {
         </Card>
         <h3 className="font-bold mt-3">크레딧 구매 (1크레딧 = 1,000원)</h3>
         <p className="text-xs text-muted-foreground">
-          결제는 토스페이먼츠를 통해 안전하게 진행됩니다. 크레딧의 유효기간은 없습니다.
+          결제는 토스페이먼츠를 통해 안전하게 진행됩니다. 크레딧의 유효기간 구매일로 부터 1년입니다.
         </p>
         <div className="space-y-2">
           {CREDIT_PACKS.map((p) => (
