@@ -151,22 +151,24 @@ function Page() {
       <div className="absolute right-1 bottom-1 text-6xl opacity-10 pointer-events-none select-none">{industryIcon(j.industry)}</div>
       <div className="relative">
         <div className="flex items-center justify-between gap-1">
-          <Badge variant="secondary" className="text-xs">{tIndustry(j.industry)}</Badge>
+          <Badge variant="secondary" className="text-sm">{tIndustry(j.industry)}</Badge>
           {matches[j.id] && (
-            <Badge className="text-xs border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
+            <Badge className="text-sm border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
               AI {matches[j.id].score}
             </Badge>
           )}
         </div>
-        <h3 className="text-sm font-semibold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
-        {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
-        <p className="text-xs text-muted-foreground truncate mt-0.5">🏨 {tx[j.place_name] ?? j.place_name}</p>
-        <p className="text-sm text-primary font-bold mt-1">{renderWage(j)}</p>
+        <h3 className="text-base font-semibold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
+        {matches[j.id]?.reason && <p className="text-[13px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
+        <p className="text-sm text-muted-foreground truncate mt-0.5">🏨 {tx[j.place_name] ?? j.place_name}</p>
+        <p className="text-base text-primary font-bold mt-1">{renderWage(j)}</p>
+        {j.rooms_per_day && <p className="text-xs text-muted-foreground mt-0.5">🛏️ {j.rooms_per_day}/{(j as any).rooms_unit === "실" ? "실" : "unit"}</p>}
         <div className="mt-0.5">
-          <span className="text-[10px] text-muted-foreground mr-1">{t("work_dates")}</span>
-          <span className="text-[11px] font-semibold">{renderDates(j)}</span>
+          <span className="text-xs text-muted-foreground mr-1">{t("work_dates")}</span>
+          <span className="text-[13px] font-semibold">{renderDates(j)}</span>
         </div>
-        <p className="text-[10px] text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
+        <p className="text-xs text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
+
       </div>
     </Card>
     );
