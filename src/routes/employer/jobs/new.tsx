@@ -61,11 +61,13 @@ function Page() {
   const [contractMonths, setContractMonths] = useState<string>("");
   const [oneMonthPlus, setOneMonthPlus] = useState<boolean>(false);
 
-  const [payMonth, setPayMonth] = useState<"당월" | "익월">("당월");
+  const [payMonth, setPayMonth] = useState<"당월" | "익월">("익월");
   const [payDayNum, setPayDayNum] = useState<string>("10");
   const [prep, setPrep] = useState("");
   const [rooms, setRooms] = useState<string>("");
+  const [roomsUnit, setRoomsUnit] = useState<"unit" | "실">("unit");
   const [headcount, setHeadcount] = useState<string>("");
+
   const [useDefaultContact, setUseDefaultContact] = useState(true);
   const [contact, setContact] = useState("");
   const [dates, setDates] = useState<string[]>([]);
