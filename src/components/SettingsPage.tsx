@@ -131,7 +131,13 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
 
     const updates: any = role === "employer"
       ? { company_name: form.company_name, manager_name: form.manager_name, location: form.location, contact_phone: form.contact_phone }
-      : { preferred_region: serializeRegions(form.preferred_regions ?? []) };
+      : {
+          preferred_region: serializeRegions(form.preferred_regions ?? []),
+          nationality: form.nationality,
+          experience: form.experience,
+          korean_ok: !!form.korean_ok,
+          visa: form.visa || null,
+        };
     const { error: e2 } = await supabase.from(table).update(updates).eq("user_id", user.id);
     if (e2) return toast.error(e2.message);
     toast.success("저장되었습니다");
