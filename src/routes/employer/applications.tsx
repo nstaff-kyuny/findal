@@ -354,7 +354,12 @@ function Page() {
               ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
               : groups.no_show.map(renderCard)}
           </TabsContent>
+
+          <TabsContent value="calendar" className="space-y-3 mt-2">
+            <CalendarView apps={apps} renderCard={renderCard} />
+          </TabsContent>
         </Tabs>
+
       </div>
 
       {/* 오프스크린 PDF 렌더 영역 */}
