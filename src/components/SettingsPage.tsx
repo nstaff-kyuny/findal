@@ -18,6 +18,10 @@ import { toast } from "sonner";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
 import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform } from "@/lib/push-client";
 import { Languages } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { NATIONALITY_LABEL, VISA_LABEL } from "@/lib/constants";
+
+const EXPERIENCE_LABEL: Record<string, string> = { lt5: "경력 5회 미만", gte5: "경력 5회 이상" };
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const { user, signOut } = useAuth();
