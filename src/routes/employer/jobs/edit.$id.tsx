@@ -286,10 +286,10 @@ function Page() {
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("friendly")}>친근하게</Button>
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("foreigner")}>외국인 친화</Button>
           </div>
-          <div><Label>일할 곳 이름</Label><Input value={placeName} onChange={e => setPlaceName(e.target.value)} /></div>
-          <div><Label>{t("detail_location")}</Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
+          <div><Label>일할 곳 이름 <span className="text-red-500">*</span></Label><Input value={placeName} onChange={e => setPlaceName(e.target.value)} /></div>
+          <div><Label>{t("detail_location")} <span className="text-red-500">*</span></Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
           <div className="grid grid-cols-2 gap-2">
-            <div><Label>지역 (시/도)</Label>
+            <div><Label>지역 (시/도) <span className="text-red-500">*</span></Label>
               <Select value={region} onValueChange={setRegion}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
