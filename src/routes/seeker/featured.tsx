@@ -121,22 +121,24 @@ function Page() {
         </div>
       )}
       <div className="flex items-center justify-between gap-1">
-        <Badge variant="secondary" className="text-sm">{tIndustry(j.industry)}</Badge>
+        <Badge variant="secondary" className="text-base">{tIndustry(j.industry)}</Badge>
         {matches[j.id] && (
-          <Badge className="text-xs border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
+          <Badge className="text-sm border-transparent text-white" style={{ backgroundColor: "#6495ED" }}>
             AI {matches[j.id].score}
           </Badge>
         )}
       </div>
-      <h3 className="text-base font-bold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
-      {matches[j.id]?.reason && <p className="text-[11px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
-      <p className="text-sm text-muted-foreground truncate">🏨 {tx[j.place_name] ?? j.place_name}</p>
-      <p className="text-base text-primary font-bold mt-1">{renderWage(j)}</p>
+      <h3 className="text-lg font-bold mt-1 truncate">{tx[j.title] ?? j.title}</h3>
+      {matches[j.id]?.reason && <p className="text-[13px] text-primary font-semibold mt-0.5 truncate">{matches[j.id].reason}</p>}
+      <p className="text-base text-muted-foreground truncate">🏨 {tx[j.place_name] ?? j.place_name}</p>
+      <p className="text-lg text-primary font-bold mt-1">{renderWage(j)}</p>
+      {j.rooms_per_day && <p className="text-sm text-muted-foreground mt-0.5">🛏️ {j.rooms_per_day}/{(j as any).rooms_unit === "실" ? "실" : "unit"}</p>}
       <div className="mt-0.5">
-        <span className="text-[10px] text-muted-foreground mr-1">{t("work_dates")}</span>
-        <span className="text-[12px] font-semibold">{renderDates(j)}</span>
+        <span className="text-xs text-muted-foreground mr-1">{t("work_dates")}</span>
+        <span className="text-sm font-semibold">{renderDates(j)}</span>
       </div>
-      <p className="text-xs text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
+      <p className="text-sm text-muted-foreground mt-1">👥 {t("applicants")} {counts[j.id] ?? 0} / {t("needed")} {j.headcount ?? 1}{t("people")}</p>
+
     </Card>
     );
   };
