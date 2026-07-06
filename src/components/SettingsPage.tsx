@@ -167,6 +167,10 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         )}
         {role === "seeker" && roleData && (
           <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
+            <p>국적: {NATIONALITY_LABEL[roleData.nationality] ?? roleData.nationality ?? "-"}</p>
+            <p>경력: {EXPERIENCE_LABEL[roleData.experience] ?? roleData.experience ?? "-"}</p>
+            <p>한국어 가능: {roleData.korean_ok ? "예" : "아니오"}</p>
+            {roleData.visa && <p>비자: {VISA_LABEL[roleData.visa] ?? roleData.visa}</p>}
             <p>선호 지역: {parseRegions(roleData.preferred_region).join(", ") || "-"}</p>
           </div>
         )}
