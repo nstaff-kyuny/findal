@@ -276,8 +276,12 @@ function Page() {
             </div>
           </div>
 
-          <div><Label>공고 제목</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <p className="text-[11px] text-muted-foreground">
+            <span className="text-red-500">*</span> 표시는 필수 입력 항목입니다.
+          </p>
+          <div><Label>공고 제목 <span className="text-red-500">*</span></Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
           <div className="grid grid-cols-3 gap-1.5">
+
             <Button type="button" size="sm" variant="secondary" disabled={aiBusy} onClick={() => runAiDraft("default")}><Sparkles size={14} className="mr-1" />AI 초안</Button>
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("friendly")}>친근하게</Button>
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("foreigner")}>외국인 친화</Button>
