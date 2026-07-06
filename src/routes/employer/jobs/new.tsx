@@ -178,7 +178,9 @@ function Page() {
         pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
         work_dates: contractType === "monthly" ? [] : dates,
         rooms_per_day: rooms ? Number(rooms) : null,
+        rooms_unit: roomsUnit,
         headcount: headcountNum, is_active: true,
+
       } as any).select("id").single();
       if (error) return toast.error(error.message);
       if (inserted?.id && phoneToUse) {
