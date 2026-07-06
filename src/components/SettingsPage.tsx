@@ -113,6 +113,10 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         contact_phone: roleData?.contact_phone ?? "",
       } : {
         preferred_regions: parseRegions(roleData?.preferred_region),
+        nationality: roleData?.nationality ?? "foreigner",
+        experience: roleData?.experience ?? "lt5",
+        korean_ok: !!roleData?.korean_ok,
+        visa: roleData?.visa ?? "",
       }),
     });
     setEditOpen(true);
