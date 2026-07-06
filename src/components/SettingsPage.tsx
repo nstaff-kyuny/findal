@@ -316,9 +316,46 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
                 <div><Label>대표 연락처</Label><Input value={form.contact_phone ?? ""} onChange={e => setForm({ ...form, contact_phone: e.target.value })} /></div>
               </>
             ) : (
-              <div><Label>선호 지역 (최대 3개)</Label>
-                <div className="mt-2"><RegionPicker value={form.preferred_regions ?? []} onChange={(v) => setForm({ ...form, preferred_regions: v })} /></div>
-              </div>
+              <>
+                <div><Label>국적</Label>
+                  <Select value={form.nationality ?? "foreigner"} onValueChange={(v) => setForm({ ...form, nationality: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="foreigner">외국인</SelectItem>
+                      <SelectItem value="korean">내국인</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>경력</Label>
+                  <Select value={form.experience ?? "lt5"} onValueChange={(v) => setForm({ ...form, experience: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lt5">경력 5회 미만</SelectItem>
+                      <SelectItem value="gte5">경력 5회 이상</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={!!form.korean_ok} onChange={(e) => setForm({ ...form, korean_ok: e.target.checked })} />
+                  한국어 가능
+                </label>
+                {form.nationality === "foreigner" && (
+                  <div><Label>비자 상태</Label>
+                    <Select value={form.visa ?? ""} onValueChange={(v) => setForm({ ...form, visa: v })}>
+                      <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">학생(D-2/D-4)</SelectItem>
+                        <SelectItem value="jobseeker">구직(D-10)</SelectItem>
+                        <SelectItem value="resident">거주(F-2/F-5/F-6)</SelectItem>
+                        <SelectItem value="other">기타</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div><Label>선호 지역 (최대 3개)</Label>
+                  <div className="mt-2"><RegionPicker value={form.preferred_regions ?? []} onChange={(v) => setForm({ ...form, preferred_regions: v })} /></div>
+                </div>
+              </>
             )}
           </div>
           <DialogFooter>
