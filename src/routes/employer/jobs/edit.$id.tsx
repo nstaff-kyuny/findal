@@ -421,7 +421,19 @@ function Page() {
             <Label>가입 시 기본 연락처 사용 ({emp?.contact_phone})</Label>
             <Switch checked={useDefaultContact} onCheckedChange={setUseDefaultContact} />
           </div>
-          {!useDefaultContact && <div><Label>담당자 연락처 (구직자에게 비공개)</Label><Input value={contact} onChange={e => setContact(e.target.value)} /></div>}
+          {!useDefaultContact && <div><Label>담당자 연락처 (구직자에게 비공개)</Label>
+            <Input
+              type="tel"
+              inputMode="tel"
+              value={contact}
+              onChange={e => {
+                const d = e.target.value.replace(/\D/g, "").slice(0, 11);
+                const f = d.length < 4 ? d : d.length < 8 ? `${d.slice(0,3)}-${d.slice(3)}` : `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
+                setContact(f);
+              }}
+              placeholder="010-1234-5678"
+            />
+          </div>}
 
           <Button className="w-full mt-2" onClick={save} disabled={saving || reached}>
             {reached ? "수정 불가" : `수정 저장 (${editCount}/${MAX_EDITS})`}
