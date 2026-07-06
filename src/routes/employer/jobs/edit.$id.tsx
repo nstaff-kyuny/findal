@@ -112,6 +112,7 @@ function Page() {
 
     setPrep(job.preparations ?? "");
     setRooms(job.rooms_per_day ? String(job.rooms_per_day) : "");
+    setRoomsUnit(((job as any).rooms_unit === "실" ? "실" : "unit"));
     setHeadcount(String(job.headcount ?? 1));
     setDates(job.work_dates ?? []);
     setPhotoUrl(job.photo_url ?? null);
