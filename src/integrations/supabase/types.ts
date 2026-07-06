@@ -541,6 +541,7 @@ export type Database = {
           preparations: string | null
           region: string | null
           rooms_per_day: number | null
+          rooms_unit: string
           title: string
           updated_at: string
           work_dates: string[]
@@ -565,6 +566,7 @@ export type Database = {
           preparations?: string | null
           region?: string | null
           rooms_per_day?: number | null
+          rooms_unit?: string
           title: string
           updated_at?: string
           work_dates?: string[]
@@ -589,6 +591,7 @@ export type Database = {
           preparations?: string | null
           region?: string | null
           rooms_per_day?: number | null
+          rooms_unit?: string
           title?: string
           updated_at?: string
           work_dates?: string[]
