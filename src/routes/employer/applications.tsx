@@ -401,7 +401,7 @@ function Page() {
   );
 }
 
-function CalendarView({ apps, renderCard }: { apps: any[]; renderCard: (a: any) => React.ReactNode }) {
+function CalendarView({ apps, renderCard }: { apps: any[]; renderCard: (a: any) => ReactNode }) {
   const [selected, setSelected] = useState<Date | undefined>(new Date());
 
   const dateMap = useMemo(() => {
