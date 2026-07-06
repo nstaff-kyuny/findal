@@ -18,6 +18,10 @@ import { toast } from "sonner";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
 import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform } from "@/lib/push-client";
 import { Languages } from "lucide-react";
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
+import { NATIONALITY_LABEL, VISA_LABEL } from "@/lib/constants";
+
+const EXPERIENCE_LABEL: Record<string, string> = { lt5: "경력 5회 미만", gte5: "경력 5회 이상" };
 
 export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const { user, signOut } = useAuth();
@@ -109,6 +113,10 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         contact_phone: roleData?.contact_phone ?? "",
       } : {
         preferred_regions: parseRegions(roleData?.preferred_region),
+        nationality: roleData?.nationality ?? "foreigner",
+        experience: roleData?.experience ?? "lt5",
+        korean_ok: !!roleData?.korean_ok,
+        visa: roleData?.visa ?? "",
       }),
     });
     setEditOpen(true);
@@ -123,7 +131,13 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
 
     const updates: any = role === "employer"
       ? { company_name: form.company_name, manager_name: form.manager_name, location: form.location, contact_phone: form.contact_phone }
-      : { preferred_region: serializeRegions(form.preferred_regions ?? []) };
+      : {
+          preferred_region: serializeRegions(form.preferred_regions ?? []),
+          nationality: form.nationality,
+          experience: form.experience,
+          korean_ok: !!form.korean_ok,
+          visa: form.visa || null,
+        };
     const { error: e2 } = await supabase.from(table).update(updates).eq("user_id", user.id);
     if (e2) return toast.error(e2.message);
     toast.success("저장되었습니다");
@@ -153,6 +167,10 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
         )}
         {role === "seeker" && roleData && (
           <div className="text-sm text-muted-foreground border-t pt-2 space-y-0.5">
+            <p>국적: {NATIONALITY_LABEL[roleData.nationality] ?? roleData.nationality ?? "-"}</p>
+            <p>경력: {EXPERIENCE_LABEL[roleData.experience] ?? roleData.experience ?? "-"}</p>
+            <p>한국어 가능: {roleData.korean_ok ? "예" : "아니오"}</p>
+            {roleData.visa && <p>비자: {VISA_LABEL[roleData.visa] ?? roleData.visa}</p>}
             <p>선호 지역: {parseRegions(roleData.preferred_region).join(", ") || "-"}</p>
           </div>
         )}
@@ -298,9 +316,46 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
                 <div><Label>대표 연락처</Label><Input value={form.contact_phone ?? ""} onChange={e => setForm({ ...form, contact_phone: e.target.value })} /></div>
               </>
             ) : (
-              <div><Label>선호 지역 (최대 3개)</Label>
-                <div className="mt-2"><RegionPicker value={form.preferred_regions ?? []} onChange={(v) => setForm({ ...form, preferred_regions: v })} /></div>
-              </div>
+              <>
+                <div><Label>국적</Label>
+                  <Select value={form.nationality ?? "foreigner"} onValueChange={(v) => setForm({ ...form, nationality: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="foreigner">외국인</SelectItem>
+                      <SelectItem value="korean">내국인</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>경력</Label>
+                  <Select value={form.experience ?? "lt5"} onValueChange={(v) => setForm({ ...form, experience: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lt5">경력 5회 미만</SelectItem>
+                      <SelectItem value="gte5">경력 5회 이상</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={!!form.korean_ok} onChange={(e) => setForm({ ...form, korean_ok: e.target.checked })} />
+                  한국어 가능
+                </label>
+                {form.nationality === "foreigner" && (
+                  <div><Label>비자 상태</Label>
+                    <Select value={form.visa ?? ""} onValueChange={(v) => setForm({ ...form, visa: v })}>
+                      <SelectTrigger><SelectValue placeholder="선택" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="student">학생(D-2/D-4)</SelectItem>
+                        <SelectItem value="jobseeker">구직(D-10)</SelectItem>
+                        <SelectItem value="resident">거주(F-2/F-5/F-6)</SelectItem>
+                        <SelectItem value="other">기타</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+                <div><Label>선호 지역 (최대 3개)</Label>
+                  <div className="mt-2"><RegionPicker value={form.preferred_regions ?? []} onChange={(v) => setForm({ ...form, preferred_regions: v })} /></div>
+                </div>
+              </>
             )}
           </div>
           <DialogFooter>

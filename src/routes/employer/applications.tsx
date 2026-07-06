@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Calendar } from "@/components/ui/calendar";
 import { Search, FileDown } from "lucide-react";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas-pro";
@@ -221,31 +223,35 @@ function Page() {
     <Card key={a.id}><CardContent className="p-3 space-y-2">
       <div className="flex justify-between items-start">
         <div className="min-w-0 flex-1">
-          <p className="text-xs text-muted-foreground truncate">{a.jobs?.title}</p>
-          <p className="text-xs text-muted-foreground truncate">{a.jobs?.place_name}</p>
-          <p className="font-semibold mt-1">{a.profiles?.full_name ?? "(이름미입력)"}</p>
+          <p className="text-sm text-muted-foreground truncate">{a.jobs?.title}</p>
+          <p className="text-sm text-muted-foreground truncate">{a.jobs?.place_name}</p>
+          {Array.isArray(a.jobs?.work_dates) && a.jobs.work_dates.length > 0 && (
+            <p className="text-sm text-primary font-medium mt-0.5">📅 {a.jobs.work_dates.join(", ")}</p>
+          )}
+          <p className="text-sm text-muted-foreground">신청일: {a.created_at?.slice(0, 10)}</p>
+          <p className="font-semibold text-base mt-1">{a.profiles?.full_name ?? "(이름미입력)"}</p>
           <div className="flex gap-1 flex-wrap mt-1">
-            <Badge className="text-[10px] border-transparent text-white" style={{ backgroundColor: a.visits > 0 ? "#0047AB" : "#94a3b8" }}>
+            <Badge className="text-xs border-transparent text-white" style={{ backgroundColor: a.visits > 0 ? "#0047AB" : "#94a3b8" }}>
               같은 장소 방문 {a.visits}회
             </Badge>
-            {a.seeker_profiles?.nationality && <Badge variant="secondary" className="text-[10px]">{a.seeker_profiles.nationality === "foreigner" ? "외국인" : "내국인"}</Badge>}
-            {a.seeker_profiles?.experience && <Badge variant="outline" className="text-[10px]">{a.seeker_profiles.experience === "lt5" ? "경력 5회 미만" : "경력 5회 이상"}</Badge>}
-            {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-[10px]">한국어 가능</Badge>}
-            {a.seeker_profiles?.visa && <Badge variant="outline" className="text-[10px]">비자: {a.seeker_profiles.visa}</Badge>}
+            {a.seeker_profiles?.nationality && <Badge variant="secondary" className="text-xs">{a.seeker_profiles.nationality === "foreigner" ? "외국인" : "내국인"}</Badge>}
+            {a.seeker_profiles?.experience && <Badge variant="outline" className="text-xs">{a.seeker_profiles.experience === "lt5" ? "경력 5회 미만" : "경력 5회 이상"}</Badge>}
+            {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-xs">한국어 가능</Badge>}
+            {a.seeker_profiles?.visa && <Badge variant="outline" className="text-xs">비자: {a.seeker_profiles.visa}</Badge>}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1">※ 연락처는 승인 후에만 표시됩니다</p>
-          {a.message && <p className="text-xs italic mt-1 text-muted-foreground">"{a.message}"</p>}
+          <p className="text-xs text-muted-foreground mt-1">※ 연락처는 승인 후에만 표시됩니다</p>
+          {a.message && <p className="text-sm italic mt-1 text-muted-foreground">"{a.message}"</p>}
           {aiNotes[a.id] && (() => {
             const r = aiNotes[a.id].noShowRisk;
             const riskCls = r === "높음" ? "bg-red-50 border-red-200 text-red-700" : r === "보통" ? "bg-amber-50 border-amber-200 text-amber-700" : "bg-emerald-50 border-emerald-200 text-emerald-700";
-            return <div className={`mt-2 rounded border p-2 text-xs ${riskCls}`}>
+            return <div className={`mt-2 rounded border p-2 text-sm ${riskCls}`}>
               <p className="font-semibold">🤖 AI 요약 · 노쇼 위험 {r}</p>
               <p className="mt-0.5 text-foreground">{aiNotes[a.id].summary}</p>
               <p className="mt-0.5 text-muted-foreground">확인 질문: {aiNotes[a.id].question}</p>
             </div>;
           })()}
         </div>
-        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-sm px-3 py-1 font-semibold whitespace-nowrap shrink-0 ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
+        <Badge variant={STATUS_VARIANT[a.status] ?? "secondary"} className={`text-base px-3 py-1 font-semibold whitespace-nowrap shrink-0 ${STATUS_CLASS[a.status] ?? ""}`}>{STATUS_LABEL[a.status] ?? a.status}</Badge>
       </div>
       {a.status === "pending" && (
         <div className="flex gap-2">
@@ -271,6 +277,7 @@ function Page() {
     </CardContent></Card>
   );
 
+
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-2">
@@ -293,12 +300,14 @@ function Page() {
         </div>
 
         <Tabs defaultValue="pending">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="pending">대기 ({groups.pending.length})</TabsTrigger>
-            <TabsTrigger value="approved">승인 ({groups.approved.length})</TabsTrigger>
-            <TabsTrigger value="rejected">거절 ({groups.rejected.length})</TabsTrigger>
-            <TabsTrigger value="no_show">노쇼 ({groups.no_show.length})</TabsTrigger>
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="pending" className="text-sm">대기 ({groups.pending.length})</TabsTrigger>
+            <TabsTrigger value="approved" className="text-sm">승인 ({groups.approved.length})</TabsTrigger>
+            <TabsTrigger value="rejected" className="text-sm">거절 ({groups.rejected.length})</TabsTrigger>
+            <TabsTrigger value="no_show" className="text-sm">노쇼 ({groups.no_show.length})</TabsTrigger>
+            <TabsTrigger value="calendar" className="text-sm">📅 달력</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="pending" className="space-y-2 mt-2">
             {groups.pending.length === 0
@@ -346,7 +355,12 @@ function Page() {
               ? <p className="text-center text-sm text-muted-foreground py-12">내역이 없습니다</p>
               : groups.no_show.map(renderCard)}
           </TabsContent>
+
+          <TabsContent value="calendar" className="space-y-3 mt-2">
+            <CalendarView apps={apps} renderCard={renderCard} />
+          </TabsContent>
         </Tabs>
+
       </div>
 
       {/* 오프스크린 PDF 렌더 영역 */}
@@ -384,5 +398,47 @@ function Page() {
         </div>
       )}
     </MobileLayout>
+  );
+}
+
+function CalendarView({ apps, renderCard }: { apps: any[]; renderCard: (a: any) => ReactNode }) {
+  const [selected, setSelected] = useState<Date | undefined>(new Date());
+
+  const dateMap = useMemo(() => {
+    const m = new Map<string, any[]>();
+    apps.forEach((a) => {
+      const dates: string[] = Array.isArray(a.jobs?.work_dates) && a.jobs.work_dates.length > 0
+        ? a.jobs.work_dates
+        : (a.created_at ? [a.created_at.slice(0, 10)] : []);
+      dates.forEach((d) => {
+        if (!m.has(d)) m.set(d, []);
+        m.get(d)!.push(a);
+      });
+    });
+    return m;
+  }, [apps]);
+
+  const markedDates = useMemo(() => Array.from(dateMap.keys()).map((d) => new Date(d + "T00:00:00")), [dateMap]);
+
+  const key = selected ? `${selected.getFullYear()}-${String(selected.getMonth() + 1).padStart(2, "0")}-${String(selected.getDate()).padStart(2, "0")}` : "";
+  const dayItems = key ? (dateMap.get(key) ?? []) : [];
+
+  return (
+    <div className="space-y-3">
+      <Card><CardContent className="p-2 flex justify-center">
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={setSelected}
+          modifiers={{ hasApps: markedDates }}
+          modifiersClassNames={{ hasApps: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary" }}
+          className="p-2 pointer-events-auto"
+        />
+      </CardContent></Card>
+      <p className="text-sm text-muted-foreground">{key || "날짜를 선택하세요"} · {dayItems.length}건</p>
+      {dayItems.length === 0
+        ? <p className="text-center text-sm text-muted-foreground py-8">해당 일자의 신청이 없습니다</p>
+        : <div className="space-y-2">{dayItems.map(renderCard)}</div>}
+    </div>
   );
 }

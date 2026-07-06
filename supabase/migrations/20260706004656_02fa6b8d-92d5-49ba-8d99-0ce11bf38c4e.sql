@@ -1,0 +1,1 @@
+ALTER TABLE public.jobs ADD COLUMN IF NOT EXISTS rooms_unit text NOT NULL DEFAULT 'unit';

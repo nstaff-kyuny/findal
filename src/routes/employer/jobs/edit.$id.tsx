@@ -67,10 +67,11 @@ function Page() {
   const [contractMonths, setContractMonths] = useState<string>("");
   const [oneMonthPlus, setOneMonthPlus] = useState<boolean>(false);
 
-  const [payMonth, setPayMonth] = useState<"당월" | "익월">("당월");
+  const [payMonth, setPayMonth] = useState<"당월" | "익월">("익월");
   const [payDayNum, setPayDayNum] = useState<string>("10");
   const [prep, setPrep] = useState("");
   const [rooms, setRooms] = useState<string>("");
+  const [roomsUnit, setRoomsUnit] = useState<"unit" | "실">("unit");
   const [headcount, setHeadcount] = useState<string>("1");
   const [useDefaultContact, setUseDefaultContact] = useState(false);
   const [contact, setContact] = useState("");
@@ -111,6 +112,7 @@ function Page() {
 
     setPrep(job.preparations ?? "");
     setRooms(job.rooms_per_day ? String(job.rooms_per_day) : "");
+    setRoomsUnit(((job as any).rooms_unit === "실" ? "실" : "unit"));
     setHeadcount(String(job.headcount ?? 1));
     setDates(job.work_dates ?? []);
     setPhotoUrl(job.photo_url ?? null);
@@ -223,6 +225,7 @@ function Page() {
         preparations: prep || null,
         work_dates: contractType === "monthly" ? [] : dates,
         rooms_per_day: rooms ? Number(rooms) : null,
+        rooms_unit: roomsUnit,
         headcount: headcountNum,
         edit_count: editCount + 1,
       } as any).eq("id", id);
@@ -273,16 +276,20 @@ function Page() {
             </div>
           </div>
 
-          <div><Label>공고 제목</Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
+          <p className="text-[11px] text-muted-foreground">
+            <span className="text-red-500">*</span> 표시는 필수 입력 항목입니다.
+          </p>
+          <div><Label>공고 제목 <span className="text-red-500">*</span></Label><Input value={title} onChange={e => setTitle(e.target.value)} /></div>
           <div className="grid grid-cols-3 gap-1.5">
+
             <Button type="button" size="sm" variant="secondary" disabled={aiBusy} onClick={() => runAiDraft("default")}><Sparkles size={14} className="mr-1" />AI 초안</Button>
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("friendly")}>친근하게</Button>
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("foreigner")}>외국인 친화</Button>
           </div>
-          <div><Label>일할 곳 이름</Label><Input value={placeName} onChange={e => setPlaceName(e.target.value)} /></div>
-          <div><Label>{t("detail_location")}</Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
+          <div><Label>일할 곳 이름 <span className="text-red-500">*</span></Label><Input value={placeName} onChange={e => setPlaceName(e.target.value)} /></div>
+          <div><Label>{t("detail_location")} <span className="text-red-500">*</span></Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
           <div className="grid grid-cols-2 gap-2">
-            <div><Label>지역 (시/도)</Label>
+            <div><Label>지역 (시/도) <span className="text-red-500">*</span></Label>
               <Select value={region} onValueChange={setRegion}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
@@ -313,21 +320,33 @@ function Page() {
 
           <div className="grid grid-cols-2 gap-2">
             {contractType === "daily" ? (
-              <div><Label>일당 (원)</Label>
-                <Input type="number" inputMode="numeric" value={wage} onChange={e => setWage(e.target.value)} />
+              <div><Label>일당 (원) <span className="text-red-500">*</span></Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={wage ? Number(wage).toLocaleString() : ""}
+                  onChange={e => setWage(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder="예: 120,000"
+                />
               </div>
             ) : (
-              <div><Label>{t("monthly_wage")} (원)</Label>
-                <Input type="number" inputMode="numeric" value={monthlyWage} onChange={e => setMonthlyWage(e.target.value)} />
+              <div><Label>{t("monthly_wage")} (원) <span className="text-red-500">*</span></Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={monthlyWage ? Number(monthlyWage).toLocaleString() : ""}
+                  onChange={e => setMonthlyWage(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder="예: 2,500,000"
+                />
               </div>
             )}
-            <div><Label>급여 지급일</Label>
+            <div><Label>급여 지급일 <span className="text-red-500">*</span></Label>
               <div className="grid grid-cols-[1fr_1fr] gap-1">
                 <Select value={payMonth} onValueChange={(v) => setPayMonth(v as any)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="당월">당월</SelectItem>
                     <SelectItem value="익월">익월</SelectItem>
+                    <SelectItem value="당월">당월</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={payDayNum} onValueChange={setPayDayNum}>
@@ -342,14 +361,27 @@ function Page() {
             </div>
           </div>
 
-          <div><Label>필요 인원수 <span className="text-red-500">*</span></Label>
-            <Input type="number" inputMode="numeric" min={1} value={headcount} onChange={e => setHeadcount(e.target.value)} />
+          <div><Label>필요 인원수 (명) <span className="text-red-500">*</span></Label>
+            <div className="flex items-center gap-2">
+              <Input type="number" inputMode="numeric" min={1} value={headcount} onChange={e => setHeadcount(e.target.value)} className="flex-1" />
+              <span className="text-sm text-muted-foreground">명</span>
+            </div>
           </div>
           {isRoomCleaningHotel && <div>
-            <Label>일일 청소 객실수 <span className="text-red-500">*</span></Label>
-            <Input type="number" inputMode="numeric" value={rooms} onChange={e => setRooms(e.target.value)} />
+            <Label>일일 청소 객실수(Unit) <span className="text-red-500">*</span></Label>
+            <div className="flex items-center gap-2">
+              <Input type="number" inputMode="numeric" value={rooms} onChange={e => setRooms(e.target.value)} placeholder="예: 15" className="flex-1" />
+              <Select value={roomsUnit} onValueChange={(v) => setRoomsUnit(v as "unit" | "실")}>
+                <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unit">unit</SelectItem>
+                  <SelectItem value="실">실</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>}
-          <div><Label>준비물 / 출근시 필요사항</Label><Textarea rows={7} value={prep} onChange={e => setPrep(e.target.value)} /></div>
+          <div><Label>준비물 / 출근시 필요사항 / 기타 알림사항</Label><Textarea rows={7} value={prep} onChange={e => setPrep(e.target.value)} /></div>
+
 
           {contractType === "daily" ? (
             <div>
@@ -389,7 +421,19 @@ function Page() {
             <Label>가입 시 기본 연락처 사용 ({emp?.contact_phone})</Label>
             <Switch checked={useDefaultContact} onCheckedChange={setUseDefaultContact} />
           </div>
-          {!useDefaultContact && <div><Label>담당자 연락처 (구직자에게 비공개)</Label><Input value={contact} onChange={e => setContact(e.target.value)} /></div>}
+          {!useDefaultContact && <div><Label>담당자 연락처 (구직자에게 비공개)</Label>
+            <Input
+              type="tel"
+              inputMode="tel"
+              value={contact}
+              onChange={e => {
+                const d = e.target.value.replace(/\D/g, "").slice(0, 11);
+                const f = d.length < 4 ? d : d.length < 8 ? `${d.slice(0,3)}-${d.slice(3)}` : `${d.slice(0,3)}-${d.slice(3,7)}-${d.slice(7)}`;
+                setContact(f);
+              }}
+              placeholder="010-1234-5678"
+            />
+          </div>}
 
           <Button className="w-full mt-2" onClick={save} disabled={saving || reached}>
             {reached ? "수정 불가" : `수정 저장 (${editCount}/${MAX_EDITS})`}
