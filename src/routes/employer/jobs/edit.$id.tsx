@@ -225,6 +225,7 @@ function Page() {
         preparations: prep || null,
         work_dates: contractType === "monthly" ? [] : dates,
         rooms_per_day: rooms ? Number(rooms) : null,
+        rooms_unit: roomsUnit,
         headcount: headcountNum,
         edit_count: editCount + 1,
       } as any).eq("id", id);
