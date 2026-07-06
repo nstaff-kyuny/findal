@@ -157,7 +157,7 @@ function Page() {
                 ? <span>{t("contract_months")}: {job.contract_months ? `${job.contract_months}${t("months_unit")}` : t("one_month_plus")}</span>
                 : <span>{t("work_dates")}: {formatWorkDates(job.work_dates)}</span>}
             </div>
-            {job.rooms_per_day && <div className="flex items-center gap-2">🛏️ {t("rooms_per_day")}: {job.rooms_per_day}</div>}
+            {job.rooms_per_day && <div className="flex items-center gap-2">🛏️ {t("rooms_per_day")}: {job.rooms_per_day}/{(job as any).rooms_unit === "실" ? "실" : "unit"}</div>}
             {job.preparations && <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded p-2"><Wrench size={14} className="text-amber-700 mt-0.5" /><span className="font-semibold text-amber-900">{t("prep_label")}: <span className="font-bold">{tx[job.preparations] ?? job.preparations}</span></span></div>}
             <div className="text-xs text-muted-foreground pt-2">{t("contact_after_approval")}</div>
           </CardContent></Card>
