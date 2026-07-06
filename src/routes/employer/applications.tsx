@@ -399,3 +399,45 @@ function Page() {
     </MobileLayout>
   );
 }
+
+function CalendarView({ apps, renderCard }: { apps: any[]; renderCard: (a: any) => JSX.Element }) {
+  const [selected, setSelected] = useState<Date | undefined>(new Date());
+
+  const dateMap = useMemo(() => {
+    const m = new Map<string, any[]>();
+    apps.forEach((a) => {
+      const dates: string[] = Array.isArray(a.jobs?.work_dates) && a.jobs.work_dates.length > 0
+        ? a.jobs.work_dates
+        : (a.created_at ? [a.created_at.slice(0, 10)] : []);
+      dates.forEach((d) => {
+        if (!m.has(d)) m.set(d, []);
+        m.get(d)!.push(a);
+      });
+    });
+    return m;
+  }, [apps]);
+
+  const markedDates = useMemo(() => Array.from(dateMap.keys()).map((d) => new Date(d + "T00:00:00")), [dateMap]);
+
+  const key = selected ? `${selected.getFullYear()}-${String(selected.getMonth() + 1).padStart(2, "0")}-${String(selected.getDate()).padStart(2, "0")}` : "";
+  const dayItems = key ? (dateMap.get(key) ?? []) : [];
+
+  return (
+    <div className="space-y-3">
+      <Card><CardContent className="p-2 flex justify-center">
+        <Calendar
+          mode="single"
+          selected={selected}
+          onSelect={setSelected}
+          modifiers={{ hasApps: markedDates }}
+          modifiersClassNames={{ hasApps: "relative after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:rounded-full after:bg-primary" }}
+          className="p-2 pointer-events-auto"
+        />
+      </CardContent></Card>
+      <p className="text-sm text-muted-foreground">{key || "날짜를 선택하세요"} · {dayItems.length}건</p>
+      {dayItems.length === 0
+        ? <p className="text-center text-sm text-muted-foreground py-8">해당 일자의 신청이 없습니다</p>
+        : <div className="space-y-2">{dayItems.map(renderCard)}</div>}
+    </div>
+  );
+}
