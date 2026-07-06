@@ -298,12 +298,14 @@ function Page() {
         </div>
 
         <Tabs defaultValue="pending">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="pending">대기 ({groups.pending.length})</TabsTrigger>
-            <TabsTrigger value="approved">승인 ({groups.approved.length})</TabsTrigger>
-            <TabsTrigger value="rejected">거절 ({groups.rejected.length})</TabsTrigger>
-            <TabsTrigger value="no_show">노쇼 ({groups.no_show.length})</TabsTrigger>
+          <TabsList className="grid grid-cols-5 w-full">
+            <TabsTrigger value="pending" className="text-sm">대기 ({groups.pending.length})</TabsTrigger>
+            <TabsTrigger value="approved" className="text-sm">승인 ({groups.approved.length})</TabsTrigger>
+            <TabsTrigger value="rejected" className="text-sm">거절 ({groups.rejected.length})</TabsTrigger>
+            <TabsTrigger value="no_show" className="text-sm">노쇼 ({groups.no_show.length})</TabsTrigger>
+            <TabsTrigger value="calendar" className="text-sm">📅 달력</TabsTrigger>
           </TabsList>
+
 
           <TabsContent value="pending" className="space-y-2 mt-2">
             {groups.pending.length === 0
