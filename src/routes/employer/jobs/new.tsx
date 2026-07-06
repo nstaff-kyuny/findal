@@ -222,16 +222,21 @@ function Page() {
             </div>
           </div>
 
-          <div><Label>공고 제목</Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="예: 주말 객실청소 모집" /></div>
+          <p className="text-[11px] text-muted-foreground">
+            <span className="text-red-500">*</span> 표시는 필수 입력 항목입니다.
+          </p>
+
+          <div><Label>공고 제목 <span className="text-red-500">*</span></Label><Input value={title} onChange={e => setTitle(e.target.value)} placeholder="예: 주말 객실청소 모집" /></div>
           <div className="grid grid-cols-3 gap-1.5">
             <Button type="button" size="sm" variant="secondary" disabled={aiBusy} onClick={() => runAiDraft("default")}><Sparkles size={14} className="mr-1" />AI 초안</Button>
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("friendly")}>친근하게</Button>
             <Button type="button" size="sm" variant="outline" disabled={aiBusy} onClick={() => runAiDraft("foreigner")}>외국인 친화</Button>
           </div>
-          <div><Label>일할 곳 이름</Label><Input value={placeName} onChange={e => setPlaceName(e.target.value)} /></div>
-          <div><Label>{t("detail_location")}</Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
+          <div><Label>일할 곳 이름 <span className="text-red-500">*</span></Label><Input value={placeName} onChange={e => setPlaceName(e.target.value)} /></div>
+          <div><Label>{t("detail_location")} <span className="text-red-500">*</span></Label><Input value={location} onChange={e => setLocation(e.target.value)} placeholder="건물명/도로명 주소 등" /></div>
           <div className="grid grid-cols-2 gap-2">
-            <div><Label>지역 (시/도)</Label>
+            <div><Label>지역 (시/도) <span className="text-red-500">*</span></Label>
+
               <Select value={region} onValueChange={setRegion}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>{REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}</SelectContent>
