@@ -320,21 +320,33 @@ function Page() {
 
           <div className="grid grid-cols-2 gap-2">
             {contractType === "daily" ? (
-              <div><Label>일당 (원)</Label>
-                <Input type="number" inputMode="numeric" value={wage} onChange={e => setWage(e.target.value)} />
+              <div><Label>일당 (원) <span className="text-red-500">*</span></Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={wage ? Number(wage).toLocaleString() : ""}
+                  onChange={e => setWage(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder="예: 120,000"
+                />
               </div>
             ) : (
-              <div><Label>{t("monthly_wage")} (원)</Label>
-                <Input type="number" inputMode="numeric" value={monthlyWage} onChange={e => setMonthlyWage(e.target.value)} />
+              <div><Label>{t("monthly_wage")} (원) <span className="text-red-500">*</span></Label>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={monthlyWage ? Number(monthlyWage).toLocaleString() : ""}
+                  onChange={e => setMonthlyWage(e.target.value.replace(/[^\d]/g, ""))}
+                  placeholder="예: 2,500,000"
+                />
               </div>
             )}
-            <div><Label>급여 지급일</Label>
+            <div><Label>급여 지급일 <span className="text-red-500">*</span></Label>
               <div className="grid grid-cols-[1fr_1fr] gap-1">
                 <Select value={payMonth} onValueChange={(v) => setPayMonth(v as any)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="당월">당월</SelectItem>
                     <SelectItem value="익월">익월</SelectItem>
+                    <SelectItem value="당월">당월</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={payDayNum} onValueChange={setPayDayNum}>
@@ -349,14 +361,27 @@ function Page() {
             </div>
           </div>
 
-          <div><Label>필요 인원수 <span className="text-red-500">*</span></Label>
-            <Input type="number" inputMode="numeric" min={1} value={headcount} onChange={e => setHeadcount(e.target.value)} />
+          <div><Label>필요 인원수 (명) <span className="text-red-500">*</span></Label>
+            <div className="flex items-center gap-2">
+              <Input type="number" inputMode="numeric" min={1} value={headcount} onChange={e => setHeadcount(e.target.value)} className="flex-1" />
+              <span className="text-sm text-muted-foreground">명</span>
+            </div>
           </div>
           {isRoomCleaningHotel && <div>
-            <Label>일일 청소 객실수 <span className="text-red-500">*</span></Label>
-            <Input type="number" inputMode="numeric" value={rooms} onChange={e => setRooms(e.target.value)} />
+            <Label>일일 청소 객실수(Unit) <span className="text-red-500">*</span></Label>
+            <div className="flex items-center gap-2">
+              <Input type="number" inputMode="numeric" value={rooms} onChange={e => setRooms(e.target.value)} placeholder="예: 15" className="flex-1" />
+              <Select value={roomsUnit} onValueChange={(v) => setRoomsUnit(v as "unit" | "실")}>
+                <SelectTrigger className="w-24"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unit">unit</SelectItem>
+                  <SelectItem value="실">실</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>}
-          <div><Label>준비물 / 출근시 필요사항</Label><Textarea rows={7} value={prep} onChange={e => setPrep(e.target.value)} /></div>
+          <div><Label>준비물 / 출근시 필요사항 / 기타 알림사항</Label><Textarea rows={7} value={prep} onChange={e => setPrep(e.target.value)} /></div>
+
 
           {contractType === "daily" ? (
             <div>
