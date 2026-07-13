@@ -163,8 +163,9 @@ export const confirmCreditOrder = createServerFn({ method: "POST" })
     }).parse(data)
   )
   .handler(async ({ data, context }) => {
-    const secret = process.env.TOSS_SECRET_KEY;
-    if (!secret) throw new Error("결제 설정이 누락되었습니다");
+    const cfg = await loadTossConfig();
+    const secret = cfg.secretKey;
+    if (!secret) throw new Error("결제 설정이 누락되었습니다. 관리자 페이지에서 시크릿 키를 등록해 주세요.");
 
     // 1. 주문 검증
     const { data: order, error: orderErr } = await supabaseAdmin
