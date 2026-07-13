@@ -715,6 +715,48 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_settings: {
+        Row: {
+          client_key: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          merchant_id: string | null
+          mode: string
+          provider: string
+          secret_key: string | null
+          security_key: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          client_key?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          merchant_id?: string | null
+          mode?: string
+          provider?: string
+          secret_key?: string | null
+          security_key?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          client_key?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          merchant_id?: string | null
+          mode?: string
+          provider?: string
+          secret_key?: string | null
+          security_key?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

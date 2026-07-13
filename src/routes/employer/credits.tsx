@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { CREDIT_PACKS } from "@/lib/constants";
-import { createCreditOrder } from "@/lib/toss.functions";
+import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/employer/credits")({
@@ -19,7 +19,7 @@ export const Route = createFileRoute("/employer/credits")({
   ),
 });
 
-const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY || "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+const FALLBACK_TOSS_CLIENT_KEY = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 
 declare global {
   interface Window {
@@ -68,14 +68,23 @@ function Page() {
     loadTossSdk().catch(() => {});
   }, []);
 
+  const fetchPublicCfg = useServerFn(getTossPublicConfig);
+
   const purchase = async (qty: number) => {
     if (!user) return;
     setBusy(qty);
     try {
       const TossPayments = await loadTossSdk();
+      const cfg = await fetchPublicCfg({}).catch(() => null);
+      if (cfg && !cfg.enabled) {
+        toast.error("현재 결제가 비활성화되어 있습니다.");
+        setBusy(null);
+        return;
+      }
+      const clientKey = cfg?.clientKey || FALLBACK_TOSS_CLIENT_KEY;
       const order = await createOrder({ data: { pack: qty } });
 
-      const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+      const tossPayments = TossPayments(clientKey);
       const widgets = tossPayments.widgets({ customerKey: user.id });
       widgetsRef.current = widgets;
 
