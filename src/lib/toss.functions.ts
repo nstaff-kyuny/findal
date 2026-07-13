@@ -22,7 +22,7 @@ async function loadTossConfig() {
   return {
     enabled: row?.enabled ?? false,
     mode: (row?.mode ?? "test") as "test" | "live",
-    clientKey: row?.client_key || process.env.TOSS_CLIENT_KEY || "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm",
+    clientKey: row?.client_key || process.env.TOSS_CLIENT_KEY || "",
     secretKey: row?.secret_key || process.env.TOSS_SECRET_KEY || "",
     securityKey: row?.security_key || process.env.TOSS_SECURITY_KEY || "",
     merchantId: row?.merchant_id ?? null,
@@ -65,14 +65,16 @@ export const getPaymentSettings = createServerFn({ method: "GET" })
 export const savePaymentSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({
-      mode: z.enum(["test", "live"]),
-      enabled: z.boolean(),
-      merchantId: z.string().max(200).optional().nullable(),
-      clientKey: z.string().max(500).optional().nullable(),
-      secretKey: z.string().max(500).optional().nullable(),
-      securityKey: z.string().max(500).optional().nullable(),
-    }).parse(data)
+    z
+      .object({
+        mode: z.enum(["test", "live"]),
+        enabled: z.boolean(),
+        merchantId: z.string().max(200).optional().nullable(),
+        clientKey: z.string().max(500).optional().nullable(),
+        secretKey: z.string().max(500).optional().nullable(),
+        securityKey: z.string().max(500).optional().nullable(),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     const { data: isAdmin } = await context.supabase.rpc("has_role", {
@@ -87,14 +89,18 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
       const ck = data.clientKey;
       const isWidget = ck.startsWith("test_gck_") || ck.startsWith("live_gck_");
       if (!isWidget) {
-        throw new Error("클라이언트 키는 '결제위젯 연동 키'여야 합니다. test_gck_ 또는 live_gck_ 로 시작하는 키를 입력해 주세요. (API 개별 연동 키 test_ck_ 는 지원되지 않습니다)");
+        throw new Error(
+          "클라이언트 키는 '결제위젯 연동 키'여야 합니다. test_gck_ 또는 live_gck_ 로 시작하는 키를 입력해 주세요. (API 개별 연동 키 test_ck_ 는 지원되지 않습니다)",
+        );
       }
     }
     if (data.secretKey) {
       const sk = data.secretKey;
       const isWidget = sk.startsWith("test_gsk_") || sk.startsWith("live_gsk_");
       if (!isWidget) {
-        throw new Error("시크릿 키는 '결제위젯 연동 키'여야 합니다. test_gsk_ 또는 live_gsk_ 로 시작하는 키를 입력해 주세요.");
+        throw new Error(
+          "시크릿 키는 '결제위젯 연동 키'여야 합니다. test_gsk_ 또는 live_gsk_ 로 시작하는 키를 입력해 주세요.",
+        );
       }
     }
     if (data.enabled && data.mode === "live") {
@@ -132,9 +138,7 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
         .eq("id", (existing as any).id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabaseAdmin
-        .from("payment_settings" as any)
-        .insert(payload);
+      const { error } = await supabaseAdmin.from("payment_settings" as any).insert(payload);
       if (error) throw new Error(error.message);
     }
     return { ok: true };
@@ -143,9 +147,7 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
 // 결제 전: 서버에서 주문 생성(orderId + 금액 확정)
 export const createCreditOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data) =>
-    z.object({ pack: z.number().int().positive() }).parse(data)
-  )
+  .inputValidator((data) => z.object({ pack: z.number().int().positive() }).parse(data))
   .handler(async ({ data, context }) => {
     const cfg = await loadTossConfig();
     if (!cfg.enabled) throw new Error("현재 결제가 비활성화되어 있습니다. 관리자에게 문의하세요.");
@@ -173,11 +175,13 @@ export const createCreditOrder = createServerFn({ method: "POST" })
 export const confirmCreditOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({
-      paymentKey: z.string().min(1).max(200),
-      orderId: z.string().min(1).max(64),
-      amount: z.number().int().positive(),
-    }).parse(data)
+    z
+      .object({
+        paymentKey: z.string().min(1).max(200),
+        orderId: z.string().min(1).max(64),
+        amount: z.number().int().positive(),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     const cfg = await loadTossConfig();
@@ -215,21 +219,27 @@ export const confirmCreditOrder = createServerFn({ method: "POST" })
     });
     const body = await res.json();
     if (!res.ok) {
-      await supabaseAdmin.from("credit_orders" as any).update({
-        status: "failed",
-        raw: body,
-      }).eq("id", data.orderId);
+      await supabaseAdmin
+        .from("credit_orders" as any)
+        .update({
+          status: "failed",
+          raw: body,
+        })
+        .eq("id", data.orderId);
       throw new Error(body?.message || "결제 승인 실패");
     }
 
     // 3. 주문 확정 + 크레딧 적립
-    await supabaseAdmin.from("credit_orders" as any).update({
-      status: "confirmed",
-      payment_key: data.paymentKey,
-      method: body?.method ?? null,
-      approved_at: body?.approvedAt ?? new Date().toISOString(),
-      raw: body,
-    }).eq("id", data.orderId);
+    await supabaseAdmin
+      .from("credit_orders" as any)
+      .update({
+        status: "confirmed",
+        payment_key: data.paymentKey,
+        method: body?.method ?? null,
+        approved_at: body?.approvedAt ?? new Date().toISOString(),
+        raw: body,
+      })
+      .eq("id", data.orderId);
 
     const { data: emp } = await supabaseAdmin
       .from("employer_profiles")
