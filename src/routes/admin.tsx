@@ -1719,68 +1719,157 @@ function PurchasesTab() {
   );
 }
 
-const PAYMENT_KEY = "findar.payment_config";
-
 function PaymentTab() {
-  const [provider, setProvider] = useState("none");
-  const [merchantId, setMerchantId] = useState("");
-  const [apiKey, setApiKey] = useState("");
+  const [mode, setMode] = useState<"test" | "live">("test");
   const [enabled, setEnabled] = useState(false);
+  const [merchantId, setMerchantId] = useState("");
+  const [clientKey, setClientKey] = useState("");
+  const [secretKey, setSecretKey] = useState("");
+  const [securityKey, setSecurityKey] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
+  const load = useServerFn(getPaymentSettings);
+  const save = useServerFn(savePaymentSettings);
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(PAYMENT_KEY);
-      if (raw) {
-        const cfg = JSON.parse(raw);
-        setProvider(cfg.provider ?? "none"); setMerchantId(cfg.merchantId ?? "");
-        setApiKey(cfg.apiKey ?? ""); setEnabled(cfg.enabled ?? false);
+    (async () => {
+      try {
+        const cfg = await load({});
+        setMode(cfg.mode);
+        setEnabled(cfg.enabled);
+        setMerchantId(cfg.merchantId ?? "");
+        setClientKey(cfg.clientKey ?? "");
+        setSecretKey(cfg.secretKey ?? "");
+        setSecurityKey(cfg.securityKey ?? "");
+      } catch (e: any) {
+        toast.error(e?.message || "설정을 불러오지 못했습니다");
+      } finally {
+        setLoading(false);
       }
-    } catch {}
+    })();
   }, []);
 
-  const save = () => {
-    localStorage.setItem(PAYMENT_KEY, JSON.stringify({ provider, merchantId, apiKey, enabled }));
-    toast.success("결제 설정이 저장되었습니다");
+  const doSave = async () => {
+    setSaving(true);
+    try {
+      await save({ data: { mode, enabled, merchantId, clientKey, secretKey, securityKey } });
+      toast.success("결제 설정이 저장되었습니다. 즉시 반영됩니다.");
+    } catch (e: any) {
+      toast.error(e?.message || "저장 실패");
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const detectedMode: "test" | "live" | "unknown" = clientKey.startsWith("live_")
+    ? "live"
+    : clientKey.startsWith("test_")
+    ? "test"
+    : "unknown";
 
   return (
     <div className="mt-4 grid md:grid-cols-2 gap-4">
       <Card><CardContent className="p-4 space-y-3">
-        <h3 className="font-bold">온라인 결제 플랫폼 연동</h3>
-        <p className="text-xs text-muted-foreground">구인자의 크레딧 온라인 구매를 처리할 결제 PG 사를 연결합니다.</p>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold">토스페이먼츠 연동</h3>
+          <Badge variant={enabled ? "default" : "secondary"}>{enabled ? "활성" : "비활성"}</Badge>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          클라이언트/시크릿 키를 저장하면 즉시 결제 시스템에 반영됩니다. 심사 완료 후 실 운영 키(live_)로 교체하고 모드를 '실 운영'으로 전환하세요.
+        </p>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <Label>운영 모드</Label>
+            <select
+              className="w-full border rounded h-9 px-2 mt-1 bg-background"
+              value={mode}
+              onChange={(e) => setMode(e.target.value as any)}
+              disabled={loading}
+            >
+              <option value="test">테스트</option>
+              <option value="live">실 운영</option>
+            </select>
+          </div>
+          <div>
+            <Label>가맹점 ID (MID)</Label>
+            <Input value={merchantId} onChange={(e) => setMerchantId(e.target.value)} placeholder="예: nstaff" disabled={loading} />
+          </div>
+        </div>
 
         <div>
-          <Label>결제 제공사</Label>
-          <select className="w-full border rounded h-9 px-2 mt-1 bg-background"
-            value={provider} onChange={e => setProvider(e.target.value)}>
-            <option value="none">선택 안함</option>
-            <option value="toss">토스페이먼츠 (Toss Payments)</option>
-            <option value="iamport">아임포트 (PortOne)</option>
-            <option value="nicepay">나이스페이</option>
-            <option value="kg_inicis">KG이니시스</option>
-            <option value="stripe">Stripe (해외)</option>
-          </select>
+          <Label>클라이언트 키 (Client Key)</Label>
+          <Input value={clientKey} onChange={(e) => setClientKey(e.target.value)} placeholder="test_ck_… 또는 live_ck_…" disabled={loading} />
+          {clientKey && (
+            <p className="text-[11px] mt-1 text-muted-foreground">
+              감지된 형식: <b>{detectedMode === "unknown" ? "알 수 없음" : detectedMode === "live" ? "실 운영(live)" : "테스트(test)"}</b>
+              {detectedMode !== "unknown" && detectedMode !== mode && (
+                <span className="text-amber-600"> · 선택한 모드({mode})와 일치하지 않습니다</span>
+              )}
+            </p>
+          )}
         </div>
-        <div><Label>가맹점 ID / Merchant ID</Label><Input value={merchantId} onChange={e => setMerchantId(e.target.value)} /></div>
-        <div><Label>API 키 / Secret Key</Label><Input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} /></div>
-        <div className="flex items-center justify-between">
+
+        <div>
+          <div className="flex items-center justify-between">
+            <Label>시크릿 키 (Secret Key)</Label>
+            <button type="button" className="text-xs text-primary" onClick={() => setShowSecret(v => !v)}>
+              {showSecret ? "숨기기" : "표시"}
+            </button>
+          </div>
+          <Input
+            type={showSecret ? "text" : "password"}
+            value={secretKey}
+            onChange={(e) => setSecretKey(e.target.value)}
+            placeholder="test_sk_… 또는 live_sk_…"
+            disabled={loading}
+            autoComplete="off"
+          />
+          <p className="text-[11px] mt-1 text-amber-600">서버에서만 사용되며 브라우저에 노출되지 않습니다.</p>
+        </div>
+
+        <div>
+          <Label>보안 키 (Webhook Security Key)</Label>
+          <Input
+            type="password"
+            value={securityKey}
+            onChange={(e) => setSecurityKey(e.target.value)}
+            placeholder="웹훅 서명 검증용 (선택)"
+            disabled={loading}
+            autoComplete="off"
+          />
+        </div>
+
+        <div className="flex items-center justify-between pt-1">
           <Label>결제 활성화</Label>
-          <Switch checked={enabled} onCheckedChange={setEnabled} />
+          <Switch checked={enabled} onCheckedChange={setEnabled} disabled={loading} />
         </div>
-        <Button onClick={save} className="w-full">설정 저장</Button>
+
+        <Button onClick={doSave} className="w-full" disabled={loading || saving}>
+          {saving ? "저장 중…" : "설정 저장"}
+        </Button>
       </CardContent></Card>
 
       <Card><CardContent className="p-4 space-y-3 text-sm">
-        <h3 className="font-bold">연동 가이드</h3>
-        <p className="text-muted-foreground">
-          현재는 결제 설정만 저장됩니다. 실 결제 처리를 위해서는 선택한 PG사의 SDK 연동과 서버 측 결제 검증 로직 구현이 추가로 필요합니다.
-        </p>
-        <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground">
-          <li>토스페이먼츠: <a className="text-primary underline" href="https://docs.tosspayments.com" target="_blank" rel="noreferrer">docs.tosspayments.com</a></li>
-          <li>PortOne(아임포트): <a className="text-primary underline" href="https://portone.io/korea/ko" target="_blank" rel="noreferrer">portone.io</a></li>
-          <li>Stripe: <a className="text-primary underline" href="https://stripe.com/docs" target="_blank" rel="noreferrer">stripe.com/docs</a></li>
+        <h3 className="font-bold">연동 가이드 · 토스페이먼츠</h3>
+        <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
+          <li>토스페이먼츠 개발자센터에서 <b>클라이언트 키</b>, <b>시크릿 키</b>를 발급받습니다.</li>
+          <li>테스트 키(test_ck_/test_sk_)로 결제 흐름을 검증합니다.</li>
+          <li>심사 완료 후 <b>실 운영 키(live_)</b>를 발급받아 위 폼에 붙여넣고 모드를 <b>실 운영</b>으로 변경 → 저장.</li>
+          <li>저장 즉시 크레딧 구매 결제창은 새 키로 동작합니다. 서버 재배포 불필요.</li>
+        </ol>
+        <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground pt-1">
+          <li>개발자센터: <a className="text-primary underline" href="https://developers.tosspayments.com" target="_blank" rel="noreferrer">developers.tosspayments.com</a></li>
+          <li>연동 문서: <a className="text-primary underline" href="https://docs.tosspayments.com" target="_blank" rel="noreferrer">docs.tosspayments.com</a></li>
         </ul>
-        <p className="text-xs text-amber-600 mt-2">⚠ 보안: 실제 API 시크릿 키는 클라이언트가 아닌 서버 환경 변수로 관리하는 것을 권장합니다.</p>
+        <div className="rounded-md border p-2 text-[11px] bg-muted/40">
+          <p className="font-semibold mb-1">현재 사용 흐름</p>
+          <p className="text-muted-foreground">
+            구인자 → 크레딧 구매 → 결제창(Toss v2 위젯, 클라이언트 키 사용) → 결제 승인 서버 함수(시크릿 키로 <code>/v1/payments/confirm</code> 호출) → 크레딧 적립.
+          </p>
+        </div>
+        <p className="text-xs text-amber-600">⚠ 시크릿 키는 데이터베이스에 저장되며 서버에서만 사용됩니다. 절대 프론트엔드 코드에 붙여넣지 마세요.</p>
       </CardContent></Card>
     </div>
   );
