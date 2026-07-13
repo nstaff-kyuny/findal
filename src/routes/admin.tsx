@@ -1799,13 +1799,16 @@ function PaymentTab() {
         </div>
 
         <div>
-          <Label>클라이언트 키 (Client Key)</Label>
-          <Input value={clientKey} onChange={(e) => setClientKey(e.target.value)} placeholder="test_ck_… 또는 live_ck_…" disabled={loading} />
+          <Label>클라이언트 키 (결제위젯 연동 키)</Label>
+          <Input value={clientKey} onChange={(e) => setClientKey(e.target.value)} placeholder="test_gck_… 또는 live_gck_…" disabled={loading} />
           {clientKey && (
             <p className="text-[11px] mt-1 text-muted-foreground">
               감지된 형식: <b>{detectedMode === "unknown" ? "알 수 없음" : detectedMode === "live" ? "실 운영(live)" : "테스트(test)"}</b>
               {detectedMode !== "unknown" && detectedMode !== mode && (
                 <span className="text-amber-600"> · 선택한 모드({mode})와 일치하지 않습니다</span>
+              )}
+              {clientKey && !clientKey.startsWith("test_gck_") && !clientKey.startsWith("live_gck_") && (
+                <span className="block text-red-600 mt-0.5">⚠ '결제위젯 연동 키'(test_gck_/live_gck_)가 아닙니다. API 개별 연동 키는 사용할 수 없습니다.</span>
               )}
             </p>
           )}
@@ -1813,7 +1816,7 @@ function PaymentTab() {
 
         <div>
           <div className="flex items-center justify-between">
-            <Label>시크릿 키 (Secret Key)</Label>
+            <Label>시크릿 키 (결제위젯 연동 키)</Label>
             <button type="button" className="text-xs text-primary" onClick={() => setShowSecret(v => !v)}>
               {showSecret ? "숨기기" : "표시"}
             </button>
@@ -1822,7 +1825,7 @@ function PaymentTab() {
             type={showSecret ? "text" : "password"}
             value={secretKey}
             onChange={(e) => setSecretKey(e.target.value)}
-            placeholder="test_sk_… 또는 live_sk_…"
+            placeholder="test_gsk_… 또는 live_gsk_…"
             disabled={loading}
             autoComplete="off"
           />
