@@ -22,7 +22,7 @@ async function loadTossConfig() {
   return {
     enabled: row?.enabled ?? false,
     mode: (row?.mode ?? "test") as "test" | "live",
-    clientKey: row?.client_key || process.env.TOSS_CLIENT_KEY || "",
+    clientKey: row?.client_key || process.env.TOSS_CLIENT_KEY || "test_ck_ORzdMaqN3wPEOkkapbygV5AkYXQG",
     secretKey: row?.secret_key || process.env.TOSS_SECRET_KEY || "",
     securityKey: row?.security_key || process.env.TOSS_SECURITY_KEY || "",
     merchantId: row?.merchant_id ?? null,
