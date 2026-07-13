@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { CREDIT_PACKS } from "@/lib/constants";
-import { createCreditOrder } from "@/lib/toss.functions";
+import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/employer/credits")({
