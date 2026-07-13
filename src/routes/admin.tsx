@@ -1857,9 +1857,9 @@ function PaymentTab() {
       <Card><CardContent className="p-4 space-y-3 text-sm">
         <h3 className="font-bold">연동 가이드 · 토스페이먼츠</h3>
         <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
-          <li>토스페이먼츠 개발자센터에서 <b>클라이언트 키</b>, <b>시크릿 키</b>를 발급받습니다.</li>
-          <li>테스트 키(test_ck_/test_sk_)로 결제 흐름을 검증합니다.</li>
-          <li>심사 완료 후 <b>실 운영 키(live_)</b>를 발급받아 위 폼에 붙여넣고 모드를 <b>실 운영</b>으로 변경 → 저장.</li>
+          <li>토스페이먼츠 개발자센터 → <b>내 개발정보</b> → <b>결제위젯 연동 키</b> 탭에서 키를 발급/복사합니다. (API 개별 연동 키 탭이 아닙니다)</li>
+          <li>테스트 키(test_gck_/test_gsk_)로 결제 흐름을 검증합니다.</li>
+          <li>심사 완료 후 <b>실 운영 결제위젯 키(live_gck_/live_gsk_)</b>를 위 폼에 붙여넣고 모드를 <b>실 운영</b>으로 변경 → 저장.</li>
           <li>저장 즉시 크레딧 구매 결제창은 새 키로 동작합니다. 서버 재배포 불필요.</li>
         </ol>
         <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground pt-1">
