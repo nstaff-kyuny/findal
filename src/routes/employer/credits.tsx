@@ -68,14 +68,23 @@ function Page() {
     loadTossSdk().catch(() => {});
   }, []);
 
+  const fetchPublicCfg = useServerFn(getTossPublicConfig);
+
   const purchase = async (qty: number) => {
     if (!user) return;
     setBusy(qty);
     try {
       const TossPayments = await loadTossSdk();
+      const cfg = await fetchPublicCfg({}).catch(() => null);
+      if (cfg && !cfg.enabled) {
+        toast.error("현재 결제가 비활성화되어 있습니다.");
+        setBusy(null);
+        return;
+      }
+      const clientKey = cfg?.clientKey || FALLBACK_TOSS_CLIENT_KEY;
       const order = await createOrder({ data: { pack: qty } });
 
-      const tossPayments = TossPayments(TOSS_CLIENT_KEY);
+      const tossPayments = TossPayments(clientKey);
       const widgets = tossPayments.widgets({ customerKey: user.id });
       widgetsRef.current = widgets;
 
