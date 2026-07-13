@@ -1776,7 +1776,7 @@ function PaymentTab() {
           <Badge variant={enabled ? "default" : "secondary"}>{enabled ? "활성" : "비활성"}</Badge>
         </div>
         <p className="text-xs text-muted-foreground">
-          클라이언트/시크릿 키를 저장하면 즉시 결제 시스템에 반영됩니다. 심사 완료 후 실 운영 키(live_)로 교체하고 모드를 '실 운영'으로 전환하세요.
+          <b>결제위젯 연동 키</b>(test_gck_/test_gsk_ 또는 live_gck_/live_gsk_)만 지원합니다. API 개별 연동 키(test_ck_)는 SDK에서 사용할 수 없습니다. 심사 완료 후 live_ 키로 교체하고 모드를 '실 운영'으로 전환하세요.
         </p>
 
         <div className="grid grid-cols-2 gap-2">
