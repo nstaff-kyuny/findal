@@ -132,6 +132,8 @@ export const createCreditOrder = createServerFn({ method: "POST" })
     z.object({ pack: z.number().int().positive() }).parse(data)
   )
   .handler(async ({ data, context }) => {
+    const cfg = await loadTossConfig();
+    if (!cfg.enabled) throw new Error("현재 결제가 비활성화되어 있습니다. 관리자에게 문의하세요.");
     const pack = PACKS.find((p) => p.qty === data.pack);
     if (!pack) throw new Error("유효하지 않은 상품입니다");
 
