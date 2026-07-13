@@ -1776,7 +1776,7 @@ function PaymentTab() {
           <Badge variant={enabled ? "default" : "secondary"}>{enabled ? "활성" : "비활성"}</Badge>
         </div>
         <p className="text-xs text-muted-foreground">
-          클라이언트/시크릿 키를 저장하면 즉시 결제 시스템에 반영됩니다. 심사 완료 후 실 운영 키(live_)로 교체하고 모드를 '실 운영'으로 전환하세요.
+          <b>결제위젯 연동 키</b>(test_gck_/test_gsk_ 또는 live_gck_/live_gsk_)만 지원합니다. API 개별 연동 키(test_ck_)는 SDK에서 사용할 수 없습니다. 심사 완료 후 live_ 키로 교체하고 모드를 '실 운영'으로 전환하세요.
         </p>
 
         <div className="grid grid-cols-2 gap-2">
@@ -1799,13 +1799,16 @@ function PaymentTab() {
         </div>
 
         <div>
-          <Label>클라이언트 키 (Client Key)</Label>
-          <Input value={clientKey} onChange={(e) => setClientKey(e.target.value)} placeholder="test_ck_… 또는 live_ck_…" disabled={loading} />
+          <Label>클라이언트 키 (결제위젯 연동 키)</Label>
+          <Input value={clientKey} onChange={(e) => setClientKey(e.target.value)} placeholder="test_gck_… 또는 live_gck_…" disabled={loading} />
           {clientKey && (
             <p className="text-[11px] mt-1 text-muted-foreground">
               감지된 형식: <b>{detectedMode === "unknown" ? "알 수 없음" : detectedMode === "live" ? "실 운영(live)" : "테스트(test)"}</b>
               {detectedMode !== "unknown" && detectedMode !== mode && (
                 <span className="text-amber-600"> · 선택한 모드({mode})와 일치하지 않습니다</span>
+              )}
+              {clientKey && !clientKey.startsWith("test_gck_") && !clientKey.startsWith("live_gck_") && (
+                <span className="block text-red-600 mt-0.5">⚠ '결제위젯 연동 키'(test_gck_/live_gck_)가 아닙니다. API 개별 연동 키는 사용할 수 없습니다.</span>
               )}
             </p>
           )}
@@ -1813,7 +1816,7 @@ function PaymentTab() {
 
         <div>
           <div className="flex items-center justify-between">
-            <Label>시크릿 키 (Secret Key)</Label>
+            <Label>시크릿 키 (결제위젯 연동 키)</Label>
             <button type="button" className="text-xs text-primary" onClick={() => setShowSecret(v => !v)}>
               {showSecret ? "숨기기" : "표시"}
             </button>
@@ -1822,7 +1825,7 @@ function PaymentTab() {
             type={showSecret ? "text" : "password"}
             value={secretKey}
             onChange={(e) => setSecretKey(e.target.value)}
-            placeholder="test_sk_… 또는 live_sk_…"
+            placeholder="test_gsk_… 또는 live_gsk_…"
             disabled={loading}
             autoComplete="off"
           />
@@ -1854,9 +1857,9 @@ function PaymentTab() {
       <Card><CardContent className="p-4 space-y-3 text-sm">
         <h3 className="font-bold">연동 가이드 · 토스페이먼츠</h3>
         <ol className="text-xs space-y-1 list-decimal list-inside text-muted-foreground">
-          <li>토스페이먼츠 개발자센터에서 <b>클라이언트 키</b>, <b>시크릿 키</b>를 발급받습니다.</li>
-          <li>테스트 키(test_ck_/test_sk_)로 결제 흐름을 검증합니다.</li>
-          <li>심사 완료 후 <b>실 운영 키(live_)</b>를 발급받아 위 폼에 붙여넣고 모드를 <b>실 운영</b>으로 변경 → 저장.</li>
+          <li>토스페이먼츠 개발자센터 → <b>내 개발정보</b> → <b>결제위젯 연동 키</b> 탭에서 키를 발급/복사합니다. (API 개별 연동 키 탭이 아닙니다)</li>
+          <li>테스트 키(test_gck_/test_gsk_)로 결제 흐름을 검증합니다.</li>
+          <li>심사 완료 후 <b>실 운영 결제위젯 키(live_gck_/live_gsk_)</b>를 위 폼에 붙여넣고 모드를 <b>실 운영</b>으로 변경 → 저장.</li>
           <li>저장 즉시 크레딧 구매 결제창은 새 키로 동작합니다. 서버 재배포 불필요.</li>
         </ol>
         <ul className="text-xs space-y-1 list-disc list-inside text-muted-foreground pt-1">
