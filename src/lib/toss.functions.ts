@@ -81,13 +81,28 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
     });
     if (!isAdmin) throw new Error("권한 없음");
 
-    // 키 형식 검증(테스트/실운영 접두어 자동 판별)
-    if (data.enabled && data.mode === "live") {
-      if (data.clientKey && !data.clientKey.startsWith("live_")) {
-        throw new Error("실운영 모드에는 live_ 로 시작하는 클라이언트 키가 필요합니다");
+    // 키 형식 검증: 결제위젯 연동 키만 지원 (test_gck_/test_gsk_ 또는 live_gck_/live_gsk_)
+    // API 개별 연동 키(test_ck_/test_sk_)는 위젯 SDK에서 지원되지 않음
+    if (data.clientKey) {
+      const ck = data.clientKey;
+      const isWidget = ck.startsWith("test_gck_") || ck.startsWith("live_gck_");
+      if (!isWidget) {
+        throw new Error("클라이언트 키는 '결제위젯 연동 키'여야 합니다. test_gck_ 또는 live_gck_ 로 시작하는 키를 입력해 주세요. (API 개별 연동 키 test_ck_ 는 지원되지 않습니다)");
       }
-      if (data.secretKey && !data.secretKey.startsWith("live_")) {
-        throw new Error("실운영 모드에는 live_ 로 시작하는 시크릿 키가 필요합니다");
+    }
+    if (data.secretKey) {
+      const sk = data.secretKey;
+      const isWidget = sk.startsWith("test_gsk_") || sk.startsWith("live_gsk_");
+      if (!isWidget) {
+        throw new Error("시크릿 키는 '결제위젯 연동 키'여야 합니다. test_gsk_ 또는 live_gsk_ 로 시작하는 키를 입력해 주세요.");
+      }
+    }
+    if (data.enabled && data.mode === "live") {
+      if (data.clientKey && !data.clientKey.startsWith("live_gck_")) {
+        throw new Error("실운영 모드에는 live_gck_ 로 시작하는 클라이언트 키가 필요합니다");
+      }
+      if (data.secretKey && !data.secretKey.startsWith("live_gsk_")) {
+        throw new Error("실운영 모드에는 live_gsk_ 로 시작하는 시크릿 키가 필요합니다");
       }
     }
 
