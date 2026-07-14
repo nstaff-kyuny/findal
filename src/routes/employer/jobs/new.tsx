@@ -77,12 +77,52 @@ function Page() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pastJobs, setPastJobs] = useState<any[]>([]);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   useEffect(() => { if (!user) return; (async () => {
     const { data } = await supabase.from("employer_profiles").select("*").eq("user_id", user.id).single();
     setEmp(data);
     setContact(data?.contact_phone ?? "");
+    const { data: past } = await supabase
+      .from("jobs").select("id, title, place_name, created_at")
+      .eq("employer_id", user.id).order("created_at", { ascending: false }).limit(50);
+    setPastJobs(past ?? []);
   })(); }, [user]);
+
+  const applyJobToForm = (job: any) => {
+    setIndustry(job.industry);
+    setJobRole(job.job_role);
+    setTitle(job.title ?? "");
+    setPlaceName(job.place_name ?? "");
+    setLocation(job.location ?? "");
+    const rg = (job.region ?? "서울").trim();
+    const sp = rg.indexOf(" ");
+    if (sp > 0) { setRegion(rg.slice(0, sp)); setDistrict(rg.slice(sp + 1)); }
+    else { setRegion(rg); setDistrict(""); }
+    setContractType((job.contract_type as any) ?? "daily");
+    setWage(job.daily_wage ? String(job.daily_wage) : "");
+    setMonthlyWage(job.monthly_wage ? String(job.monthly_wage) : "");
+    if (job.contract_months) { setContractMonths(String(job.contract_months)); setOneMonthPlus(false); }
+    else if ((job.contract_type as any) === "monthly") { setOneMonthPlus(true); }
+    const pd = (job.pay_day ?? "").trim();
+    const m = pd.match(/^(당월|익월)\s*(\d+)/);
+    if (m) { setPayMonth(m[1] as any); setPayDayNum(m[2]); }
+    setPrep(job.preparations ?? "");
+    setRooms(job.rooms_per_day ? String(job.rooms_per_day) : "");
+    setRoomsUnit((job as any).rooms_unit === "실" ? "실" : "unit");
+    setHeadcount(String(job.headcount ?? 1));
+    setPhotoUrl(job.photo_url ?? null);
+  };
+
+  const copyPastJob = async (jobId: string) => {
+    const { data: job } = await supabase.from("jobs").select("*").eq("id", jobId).single();
+    if (!job) return toast.error("공고를 찾을 수 없습니다");
+    applyJobToForm(job);
+    setDates([]);
+    setCopyOpen(false);
+    toast.success("공고 내용을 복사했습니다. 근무일자만 새로 입력하세요.");
+  };
 
   useEffect(() => {
     const list = rolesFor(industry);
