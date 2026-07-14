@@ -237,6 +237,7 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
       if (!wageNum || wageNum <= 0) return toast.error("일당을 입력하세요");
     }
 
+    if (isEdit && reachedEditLimit) return toast.error(`수정은 최대 ${MAX_EDITS}회까지만 가능합니다`);
     setSaving(true);
     try {
       const combined = `${title}\n${prep ?? ""}\n${placeName}`.trim();
@@ -245,8 +246,8 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
       if (mod.risk === "보통") toast.warning(`주의 표현: ${mod.reason}`);
       const fullRegion = district ? `${region} ${district}` : region;
       const phoneToUse = useDefaultContact ? (emp?.contact_phone ?? "") : contact;
-      const { data: inserted, error } = await supabase.from("jobs").insert({
-        employer_id: userId, industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
+      const jobPayload: any = {
+        industry, job_role: jobRole, title, place_name: placeName, location, region: fullRegion,
         photo_url: photoUrl,
         contract_type: contractType,
         daily_wage: wageNum,
@@ -255,27 +256,90 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
         pay_day: `${payMonth} ${payDayNum}일`, preparations: prep || null,
         work_dates: contractType === "monthly" ? [] : dates,
         rooms_per_day: rooms ? Number(rooms) : null,
-        headcount: headcountNum, is_active: true,
-      } as any).select("id").single();
-      if (error) return toast.error(error.message);
-      if (inserted?.id && phoneToUse) {
-        await supabase.from("job_contacts").upsert({ job_id: inserted.id, employer_id: userId, contact_phone: phoneToUse }, { onConflict: "job_id" });
+        rooms_unit: roomsUnit,
+        headcount: headcountNum,
+      };
+      let savedId: string | null = null;
+      if (isEdit && editJobId) {
+        jobPayload.edit_count = editCount + 1;
+        const { error } = await supabase.from("jobs").update(jobPayload).eq("id", editJobId);
+        if (error) return toast.error(error.message);
+        savedId = editJobId;
+      } else {
+        jobPayload.employer_id = userId;
+        jobPayload.is_active = true;
+        const { data: inserted, error } = await supabase.from("jobs").insert(jobPayload).select("id").single();
+        if (error) return toast.error(error.message);
+        savedId = inserted?.id ?? null;
       }
-      toast.success("공고 등록 완료");
-      // reset
-      setTitle(""); setPlaceName(""); setLocation(""); setWage(""); setMonthlyWage("");
-      setContractMonths(""); setOneMonthPlus(false); setPrep("");
-      setRooms(""); setHeadcount(""); setPhotoUrl(null); setDates([]);
+      if (savedId && phoneToUse) {
+        await supabase.from("job_contacts").upsert({ job_id: savedId, employer_id: userId, contact_phone: phoneToUse }, { onConflict: "job_id" });
+      }
+      toast.success(isEdit ? `수정 완료 (${editCount + 1}/${MAX_EDITS})` : "공고 등록 완료");
+      if (!isEdit) {
+        // reset
+        setTitle(""); setPlaceName(""); setLocation(""); setWage(""); setMonthlyWage("");
+        setContractMonths(""); setOneMonthPlus(false); setPrep("");
+        setRooms(""); setHeadcount(""); setPhotoUrl(null); setDates([]);
+      }
       onCreated();
+      if (isEdit && onBack) onBack();
     } finally { setSaving(false); }
   };
 
+  if (loadingJob) {
+    return <div className="p-6 text-sm text-muted-foreground">불러오는 중…</div>;
+  }
+
   return (
     <div className="p-5 space-y-4">
-      <div>
-        <h2 className="text-lg font-bold">새 공고 등록</h2>
-        <p className="text-xs text-muted-foreground">데스크톱 화면에 맞춰 한번에 입력하실 수 있습니다.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-bold">{isEdit ? "공고 수정" : "새 공고 등록"}</h2>
+          <p className="text-xs text-muted-foreground">
+            {isEdit ? `수정 ${editCount}/${MAX_EDITS}회` : "데스크톱 화면에 맞춰 한번에 입력하실 수 있습니다."}
+          </p>
+        </div>
+        <div className="flex gap-2">
+          {isEdit && onBack && (
+            <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft size={14} className="mr-1" />목록으로</Button>
+          )}
+          {!isEdit && pastJobs.length > 0 && (
+            <Dialog open={copyOpen} onOpenChange={setCopyOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm"><Copy size={14} className="mr-1" />지난 공고 복사</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-lg">
+                <DialogHeader><DialogTitle>지난 공고 복사</DialogTitle></DialogHeader>
+                <p className="text-xs text-muted-foreground">복사할 공고를 선택하면 입력 폼에 내용이 채워집니다. 대표 사진도 함께 복사되며, 근무일자는 새로 입력하세요.</p>
+                <div className="max-h-80 overflow-auto border rounded-md divide-y">
+                  {pastJobs.map((j) => (
+                    <button
+                      key={j.id}
+                      type="button"
+                      onClick={() => copyPastJob(j.id)}
+                      className="w-full text-left p-3 hover:bg-muted/50 flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{j.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{j.place_name} · {new Date(j.created_at).toLocaleDateString("ko-KR")}</p>
+                      </div>
+                      <Copy size={14} className="text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
+      {isEdit && (
+        <Card className="bg-amber-50 border-amber-200"><CardContent className="p-3 text-xs">
+          공고 수정은 <b>최대 {MAX_EDITS}회</b>까지만 가능합니다. 현재 <b>{editCount}/{MAX_EDITS}</b>회 수정됨.
+          {reachedEditLimit && <p className="text-red-600 mt-1">⚠ 수정 횟수를 초과하여 더 이상 수정할 수 없습니다.</p>}
+        </CardContent></Card>
+      )}
+
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="col-span-2">
