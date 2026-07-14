@@ -16,8 +16,11 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ImagePlus, Sparkles, CalendarDays, Download } from "lucide-react";
+import { ImagePlus, Sparkles, CalendarDays, Download, Copy, ArrowLeft } from "lucide-react";
 import {
   INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS,
 } from "@/lib/constants";
@@ -25,6 +28,7 @@ import { useI18n } from "@/lib/i18n";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
 
 const MAX_WORK_DATES = 5;
+const MAX_EDITS = 2;
 
 /* =============================================================
    공고 등록 (desktop)
