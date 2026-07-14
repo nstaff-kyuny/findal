@@ -16,7 +16,8 @@ import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
-import { ImagePlus, CalendarDays, Sparkles } from "lucide-react";
+import { ImagePlus, CalendarDays, Sparkles, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
 
 const MAX_WORK_DATES = 5;
