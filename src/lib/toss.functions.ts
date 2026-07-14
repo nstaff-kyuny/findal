@@ -9,7 +9,22 @@ const PACKS = [
   { qty: 100, price: 100000 },
 ] as const;
 
-// DB에 저장된 결제 설정을 서버에서 로드. 실패시 환경변수로 폴백.
+// 결제위젯 SDK 전용 데모(문서) 키 - 잘못된 형식이 저장되어 있을 때 안전 폴백
+const TOSS_WIDGET_DEMO_CLIENT_KEY = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+const TOSS_WIDGET_DEMO_SECRET_KEY = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
+
+function sanitizeClientKey(k: string | null | undefined): string {
+  const v = (k ?? "").trim();
+  if (v.startsWith("test_gck_") || v.startsWith("live_gck_")) return v;
+  return TOSS_WIDGET_DEMO_CLIENT_KEY;
+}
+function sanitizeSecretKey(k: string | null | undefined): string {
+  const v = (k ?? "").trim();
+  if (v.startsWith("test_gsk_") || v.startsWith("live_gsk_")) return v;
+  return TOSS_WIDGET_DEMO_SECRET_KEY;
+}
+
+// DB에 저장된 결제 설정을 서버에서 로드. 잘못된 형식(API 개별 연동 키)은 위젯 데모 키로 대체.
 async function loadTossConfig() {
   const { data } = await supabaseAdmin
     .from("payment_settings" as any)
@@ -19,11 +34,15 @@ async function loadTossConfig() {
     .limit(1)
     .maybeSingle();
   const row = data as any;
+  const rawClient = row?.client_key || process.env.TOSS_CLIENT_KEY || "";
+  const rawSecret = row?.secret_key || process.env.TOSS_SECRET_KEY || "";
   return {
     enabled: row?.enabled ?? false,
     mode: (row?.mode ?? "test") as "test" | "live",
-    clientKey: row?.client_key || process.env.TOSS_CLIENT_KEY || "test_ck_ORzdMaqN3wPEOkkapbygV5AkYXQG",
-    secretKey: row?.secret_key || process.env.TOSS_SECRET_KEY || "",
+    clientKey: sanitizeClientKey(rawClient),
+    secretKey: sanitizeSecretKey(rawSecret),
+    rawClientKey: rawClient,
+    rawSecretKey: rawSecret,
     securityKey: row?.security_key || process.env.TOSS_SECURITY_KEY || "",
     merchantId: row?.merchant_id ?? null,
   };
