@@ -68,6 +68,13 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
   const [photoBusy, setPhotoBusy] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editCount, setEditCount] = useState(0);
+  const [loadingJob, setLoadingJob] = useState(!!editJobId);
+  const [pastJobs, setPastJobs] = useState<any[]>([]);
+  const [copyOpen, setCopyOpen] = useState(false);
+  const [roomsUnit, setRoomsUnit] = useState<"unit" | "실">("unit");
+  const isEdit = !!editJobId;
+  const reachedEditLimit = isEdit && editCount >= MAX_EDITS;
 
   // merged industries/roles (built-in + admin custom)
   const allIndustries = useMemo(() => {
