@@ -204,7 +204,7 @@ function ManagerPage() {
 
 
 /* ----------------- 공고 관리 ----------------- */
-function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => void }) {
+function JobsPanel({ userId, onChanged, onEdit }: { userId: string; onChanged: () => void; onEdit: (id: string) => void }) {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
