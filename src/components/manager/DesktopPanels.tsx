@@ -94,9 +94,76 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
     (async () => {
       const { data } = await supabase.from("employer_profiles").select("*").eq("user_id", userId).single();
       setEmp(data);
-      setContact(data?.contact_phone ?? "");
+      if (!editJobId) setContact(data?.contact_phone ?? "");
     })();
-  }, [userId]);
+  }, [userId, editJobId]);
+
+  // 지난 공고 리스트 로드 (복사용)
+  useEffect(() => {
+    if (isEdit) return;
+    (async () => {
+      const { data } = await supabase
+        .from("jobs").select("id, title, place_name, created_at")
+        .eq("employer_id", userId).order("created_at", { ascending: false }).limit(50);
+      setPastJobs(data ?? []);
+    })();
+  }, [userId, isEdit]);
+
+  const applyJobToForm = (job: any, contactPhone?: string | null) => {
+    setIndustry(job.industry);
+    setJobRole(job.job_role);
+    setTitle(job.title ?? "");
+    setPlaceName(job.place_name ?? "");
+    setLocation(job.location ?? "");
+    const rg = (job.region ?? "서울").trim();
+    const sp = rg.indexOf(" ");
+    if (sp > 0) { setRegion(rg.slice(0, sp)); setDistrict(rg.slice(sp + 1)); }
+    else { setRegion(rg); setDistrict(""); }
+    setContractType((job.contract_type as any) ?? "daily");
+    setWage(job.daily_wage ? String(job.daily_wage) : "");
+    setMonthlyWage(job.monthly_wage ? String(job.monthly_wage) : "");
+    if (job.contract_months) { setContractMonths(String(job.contract_months)); setOneMonthPlus(false); }
+    else if ((job.contract_type as any) === "monthly") { setOneMonthPlus(true); }
+    const pd = (job.pay_day ?? "").trim();
+    const m = pd.match(/^(당월|익월)\s*(\d+)/);
+    if (m) { setPayMonth(m[1] as any); setPayDayNum(m[2]); }
+    setPrep(job.preparations ?? "");
+    setRooms(job.rooms_per_day ? String(job.rooms_per_day) : "");
+    setRoomsUnit(((job as any).rooms_unit === "실" ? "실" : "unit"));
+    setHeadcount(String(job.headcount ?? 1));
+    setDates(isEdit ? (job.work_dates ?? []) : []);
+    setPhotoUrl(job.photo_url ?? null);
+    if (contactPhone !== undefined) {
+      const phone = contactPhone ?? "";
+      if (phone && emp?.contact_phone && phone === emp.contact_phone) {
+        setUseDefaultContact(true); setContact(phone);
+      } else { setUseDefaultContact(false); setContact(phone); }
+    }
+  };
+
+  // 수정 모드일 때 기존 공고 로드
+  useEffect(() => {
+    if (!editJobId) return;
+    (async () => {
+      setLoadingJob(true);
+      const { data: job } = await supabase.from("jobs").select("*").eq("id", editJobId).single();
+      if (!job) { setLoadingJob(false); return; }
+      const { data: jc } = await supabase.from("job_contacts").select("contact_phone").eq("job_id", editJobId).maybeSingle();
+      applyJobToForm(job, jc?.contact_phone ?? "");
+      setEditCount(job.edit_count ?? 0);
+      setLoadingJob(false);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editJobId]);
+
+  const copyPastJob = async (jobId: string) => {
+    const { data: job } = await supabase.from("jobs").select("*").eq("id", jobId).single();
+    if (!job) return toast.error("공고를 찾을 수 없습니다");
+    applyJobToForm(job);
+    setDates([]); // 새 공고 등록이므로 날짜는 비움
+    setCopyOpen(false);
+    toast.success("공고 내용을 복사했습니다. 근무일자와 필요한 부분만 수정 후 등록하세요.");
+  };
 
   useEffect(() => {
     const list = rolesFor(industry);
