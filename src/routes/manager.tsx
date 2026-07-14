@@ -684,7 +684,7 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
               <TableBody>
                 {tx.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-6">내역 없음</TableCell></TableRow>}
                 {tx.map((t) => (
-                  <TableRow key={t.id}>
+                  <TableRow key={t.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setTxDetail(t)}>
                     <TableCell className="text-xs">{new Date(t.created_at).toLocaleDateString("ko-KR")}</TableCell>
                     <TableCell className="text-xs">{t.note ?? t.type}</TableCell>
                     <TableCell className={`text-xs text-right font-bold ${t.delta > 0 ? "text-green-600" : "text-red-600"}`}>
@@ -697,6 +697,28 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={!!txDetail} onOpenChange={(o) => !o && setTxDetail(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>사용 내역 상세</DialogTitle></DialogHeader>
+          {txDetail && (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">일시</span><span>{new Date(txDetail.created_at).toLocaleString("ko-KR")}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">유형</span><span>{txDetail.type}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">증감</span><span className={`font-bold ${txDetail.delta > 0 ? "text-green-600" : "text-red-600"}`}>{txDetail.delta > 0 ? "+" : ""}{txDetail.delta} 크레딧</span></div>
+              {txDetail.note && (
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1">내용</p>
+                  <p className="bg-muted p-3 rounded text-xs whitespace-pre-wrap break-words">{txDetail.note}</p>
+                </div>
+              )}
+              {txDetail.job_id && (
+                <div className="flex justify-between"><span className="text-muted-foreground">공고 ID</span><span className="font-mono text-xs">{txDetail.job_id}</span></div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
