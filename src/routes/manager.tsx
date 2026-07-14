@@ -551,21 +551,42 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
 
   useEffect(() => { load(); }, [load]);
 
-  const purchase = async (pack: number, amount: number) => {
-    const paymentRef = `MOCK-${Date.now()}`;
-    const { error: e1 } = await supabase.from("credit_purchase_requests").insert({
-      employer_id: userId, pack, amount_krw: amount,
-      status: "fulfilled", payment_ref: paymentRef, payment_method: "online",
-    } as any);
-    if (e1) return toast.error(e1.message);
-    const { error: e2 } = await supabase.from("employer_profiles")
-      .update({ credits: (emp?.credits ?? 0) + pack } as any).eq("user_id", userId);
-    if (e2) return toast.error(e2.message);
-    await supabase.from("credit_transactions").insert({
-      employer_id: userId, delta: pack, type: "admin_grant", note: `온라인 구매(${pack} 크레딧)`,
-    } as any);
-    toast.success(`${pack} 크레딧이 적립되었습니다`);
-    load(); onChanged();
+  const createOrder = useServerFn(createCreditOrder);
+  const fetchPublicCfg = useServerFn(getTossPublicConfig);
+  const [busyPack, setBusyPack] = useState<number | null>(null);
+  const [txDetail, setTxDetail] = useState<any | null>(null);
+  const widgetsRef = useRef<any>(null);
+
+  useEffect(() => { loadTossSdk().catch(() => {}); }, []);
+
+  const purchase = async (pack: number) => {
+    setBusyPack(pack);
+    try {
+      const TossPayments = await loadTossSdk();
+      const cfg = await fetchPublicCfg({}).catch(() => null);
+      if (cfg && !cfg.enabled) { toast.error("현재 결제가 비활성화되어 있습니다."); return; }
+      const clientKey = cfg?.clientKey || FALLBACK_TOSS_CLIENT_KEY;
+      const order = await createOrder({ data: { pack } });
+      const tossPayments = TossPayments(clientKey);
+      const widgets = tossPayments.widgets({ customerKey: userId });
+      widgetsRef.current = widgets;
+      await widgets.setAmount({ value: order.amount, currency: "KRW" });
+      const paymentWindow = await widgets.renderPaymentWindow({
+        variantKey: { paymentMethod: "DEFAULT", agreement: "AGREEMENT" },
+      });
+      paymentWindow.on("paymentRequest", async () => {
+        try {
+          await widgets.requestPayment({
+            orderId: order.orderId,
+            orderName: order.orderName,
+            successUrl: window.location.origin + "/employer/credits/success",
+            failUrl: window.location.origin + "/employer/credits/fail",
+          });
+        } catch (err: any) { toast.error(err?.message || "결제 요청 실패"); }
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "결제창을 열 수 없습니다");
+    } finally { setBusyPack(null); }
   };
 
   return (
@@ -581,17 +602,20 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
         <Card>
           <CardContent className="p-5 space-y-2">
             <h3 className="font-bold text-sm">크레딧 구매 (1크레딧 = 1,000원)</h3>
+            <p className="text-[11px] text-muted-foreground">토스페이먼츠를 통해 안전하게 결제됩니다. 결제 완료 후 크레딧이 자동 적립됩니다.</p>
             <div className="grid grid-cols-3 gap-2">
               {CREDIT_PACKS.map((p) => (
-                <Button key={p.qty} variant="outline" className="h-auto py-3 flex flex-col" onClick={() => purchase(p.qty, p.price)}>
+                <Button key={p.qty} variant="outline" className="h-auto py-3 flex flex-col" onClick={() => purchase(p.qty)} disabled={busyPack !== null}>
                   <span className="font-bold text-base">{p.qty} 크레딧</span>
                   <span className="text-xs text-muted-foreground">{p.price.toLocaleString()}원</span>
+                  {busyPack === p.qty && <span className="text-[10px] text-primary mt-1">결제창 여는 중…</span>}
                 </Button>
               ))}
             </div>
           </CardContent>
         </Card>
       </div>
+
 
       <div className="grid grid-cols-2 gap-4">
         <Card>
