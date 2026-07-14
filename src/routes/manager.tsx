@@ -330,14 +330,13 @@ function JobsPanel({ userId, onChanged, onEdit }: { userId: string; onChanged: (
                   <TableCell className="text-xs text-muted-foreground">{j.place_name}<br />{j.region}</TableCell>
                   <TableCell className="text-right tabular-nums">{wageText}</TableCell>
                   <TableCell className="text-center">
-                    {j.is_active ? <Badge>활성</Badge> : <Badge variant="destructive">비활성</Badge>}
+                    {isJobCompleted(j) ? <Badge variant="secondary" className="bg-slate-200 text-slate-700">마감</Badge>
+                      : j.is_active ? <Badge>활성</Badge> : <Badge variant="destructive">비활성</Badge>}
                   </TableCell>
                   <TableCell className="text-center text-xs">{editCount}/2</TableCell>
                   <TableCell className="text-right">
                     <div className="inline-flex gap-1">
-                      <a href={`/employer/jobs/edit/${j.id}`} target="_blank" rel="noreferrer">
-                        <Button size="sm" variant="secondary" disabled={!canEdit}>수정</Button>
-                      </a>
+                      <Button size="sm" variant="secondary" disabled={!canEdit} onClick={() => onEdit(j.id)}>수정</Button>
                       <Button size="sm" variant="outline" onClick={() => toggle(j)}>{j.is_active ? "비활성화" : "활성화"}</Button>
                       <Dialog open={promoOpenId === j.id} onOpenChange={(o) => setPromoOpenId(o ? j.id : null)}>
                         <DialogTrigger asChild>
