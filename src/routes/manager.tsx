@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,29 @@ import {
   INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS, CREDIT_PACKS,
 } from "@/lib/constants";
 import { NewJobPanel, HistoryPanel, ProfilePanel } from "@/components/manager/DesktopPanels";
+import { isJobCompleted } from "@/lib/job-visuals";
+import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
+
+const FALLBACK_TOSS_CLIENT_KEY = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+declare global { interface Window { TossPayments?: any } }
+function loadTossSdk(): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") return reject(new Error("no window"));
+    if (window.TossPayments) return resolve(window.TossPayments);
+    const existing = document.querySelector<HTMLScriptElement>('script[data-toss="v2"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.TossPayments));
+      existing.addEventListener("error", () => reject(new Error("Toss SDK 로드 실패")));
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://js.tosspayments.com/v2/standard";
+    s.async = true; s.dataset.toss = "v2";
+    s.onload = () => resolve(window.TossPayments);
+    s.onerror = () => reject(new Error("Toss SDK 로드 실패"));
+    document.head.appendChild(s);
+  });
+}
 
 export const Route = createFileRoute("/manager")({
   component: ManagerPage,
