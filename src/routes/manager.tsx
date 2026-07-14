@@ -122,8 +122,10 @@ function ManagerPage() {
   const { loading, user, roles, signOut } = useAuth();
   const [tab, setTab] = useState<TabValue>("jobs");
   const [phoneKey, setPhoneKey] = useState(0);
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
   useEffect(() => { setPhoneKey((k) => k + 1); }, [tab]);
+  useEffect(() => { if (tab !== "jobs" && tab !== "new") setEditingJobId(null); }, [tab]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">불러오는 중…</div>;
@@ -141,7 +143,8 @@ function ManagerPage() {
     return <LoginForm />;
   }
 
-  
+  const openEdit = (id: string) => { setEditingJobId(id); setTab("new"); };
+  const closeEdit = () => { setEditingJobId(null); setTab("jobs"); };
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
@@ -157,20 +160,28 @@ function ManagerPage() {
       </header>
 
       <div className="flex-1 flex min-h-0 w-full max-w-[1600px] mx-auto">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} orientation="vertical" className="flex-1 flex flex-row min-h-0">
+        <Tabs value={tab} onValueChange={(v) => { setTab(v as TabValue); if (v !== "new") setEditingJobId(null); }} orientation="vertical" className="flex-1 flex flex-row min-h-0">
           <aside className="w-52 shrink-0 sticky top-[60px] self-start max-h-[calc(100vh-60px)] overflow-auto p-4">
             <TabsList className="flex-col h-auto w-full items-stretch bg-background border rounded-lg p-2 gap-1">
               {(Object.keys(TAB_META) as TabValue[]).map((v) => (
-                <TabsTrigger key={v} value={v} className="justify-start w-full">{TAB_META[v].label}</TabsTrigger>
+                <TabsTrigger key={v} value={v} className="justify-start w-full">
+                  {v === "new" && editingJobId ? "공고 수정" : TAB_META[v].label}
+                </TabsTrigger>
               ))}
             </TabsList>
           </aside>
           <div className="flex-1 min-w-0 bg-background border-l">
             <TabsContent value="new" className="m-0">
-              <NewJobPanel userId={user.id} onCreated={() => setPhoneKey((k) => k + 1)} />
+              <NewJobPanel
+                key={editingJobId ?? "new"}
+                userId={user.id}
+                editJobId={editingJobId ?? undefined}
+                onBack={closeEdit}
+                onCreated={() => setPhoneKey((k) => k + 1)}
+              />
             </TabsContent>
             <TabsContent value="jobs" className="m-0">
-              <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
+              <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} onEdit={openEdit} />
             </TabsContent>
             <TabsContent value="apps" className="m-0">
               <ApplicationsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
