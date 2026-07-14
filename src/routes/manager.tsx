@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,29 @@ import {
   INDUSTRY_LABEL, ROLE_LABEL, PROMOTION_OPTIONS, CREDIT_PACKS,
 } from "@/lib/constants";
 import { NewJobPanel, HistoryPanel, ProfilePanel } from "@/components/manager/DesktopPanels";
+import { isJobCompleted } from "@/lib/job-visuals";
+import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
+
+const FALLBACK_TOSS_CLIENT_KEY = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
+declare global { interface Window { TossPayments?: any } }
+function loadTossSdk(): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") return reject(new Error("no window"));
+    if (window.TossPayments) return resolve(window.TossPayments);
+    const existing = document.querySelector<HTMLScriptElement>('script[data-toss="v2"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(window.TossPayments));
+      existing.addEventListener("error", () => reject(new Error("Toss SDK 로드 실패")));
+      return;
+    }
+    const s = document.createElement("script");
+    s.src = "https://js.tosspayments.com/v2/standard";
+    s.async = true; s.dataset.toss = "v2";
+    s.onload = () => resolve(window.TossPayments);
+    s.onerror = () => reject(new Error("Toss SDK 로드 실패"));
+    document.head.appendChild(s);
+  });
+}
 
 export const Route = createFileRoute("/manager")({
   component: ManagerPage,
@@ -98,8 +122,10 @@ function ManagerPage() {
   const { loading, user, roles, signOut } = useAuth();
   const [tab, setTab] = useState<TabValue>("jobs");
   const [phoneKey, setPhoneKey] = useState(0);
+  const [editingJobId, setEditingJobId] = useState<string | null>(null);
 
   useEffect(() => { setPhoneKey((k) => k + 1); }, [tab]);
+  useEffect(() => { if (tab !== "jobs" && tab !== "new") setEditingJobId(null); }, [tab]);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">불러오는 중…</div>;
@@ -117,7 +143,8 @@ function ManagerPage() {
     return <LoginForm />;
   }
 
-  
+  const openEdit = (id: string) => { setEditingJobId(id); setTab("new"); };
+  const closeEdit = () => { setEditingJobId(null); setTab("jobs"); };
 
   return (
     <div className="min-h-screen bg-muted/30 flex flex-col">
@@ -133,20 +160,28 @@ function ManagerPage() {
       </header>
 
       <div className="flex-1 flex min-h-0 w-full max-w-[1600px] mx-auto">
-        <Tabs value={tab} onValueChange={(v) => setTab(v as TabValue)} orientation="vertical" className="flex-1 flex flex-row min-h-0">
+        <Tabs value={tab} onValueChange={(v) => { setTab(v as TabValue); if (v !== "new") setEditingJobId(null); }} orientation="vertical" className="flex-1 flex flex-row min-h-0">
           <aside className="w-52 shrink-0 sticky top-[60px] self-start max-h-[calc(100vh-60px)] overflow-auto p-4">
             <TabsList className="flex-col h-auto w-full items-stretch bg-background border rounded-lg p-2 gap-1">
               {(Object.keys(TAB_META) as TabValue[]).map((v) => (
-                <TabsTrigger key={v} value={v} className="justify-start w-full">{TAB_META[v].label}</TabsTrigger>
+                <TabsTrigger key={v} value={v} className="justify-start w-full">
+                  {v === "new" && editingJobId ? "공고 수정" : TAB_META[v].label}
+                </TabsTrigger>
               ))}
             </TabsList>
           </aside>
           <div className="flex-1 min-w-0 bg-background border-l">
             <TabsContent value="new" className="m-0">
-              <NewJobPanel userId={user.id} onCreated={() => setPhoneKey((k) => k + 1)} />
+              <NewJobPanel
+                key={editingJobId ?? "new"}
+                userId={user.id}
+                editJobId={editingJobId ?? undefined}
+                onBack={closeEdit}
+                onCreated={() => setPhoneKey((k) => k + 1)}
+              />
             </TabsContent>
             <TabsContent value="jobs" className="m-0">
-              <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
+              <JobsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} onEdit={openEdit} />
             </TabsContent>
             <TabsContent value="apps" className="m-0">
               <ApplicationsPanel userId={user.id} onChanged={() => setPhoneKey((k) => k + 1)} />
@@ -169,7 +204,7 @@ function ManagerPage() {
 
 
 /* ----------------- 공고 관리 ----------------- */
-function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => void }) {
+function JobsPanel({ userId, onChanged, onEdit }: { userId: string; onChanged: () => void; onEdit: (id: string) => void }) {
   const [jobs, setJobs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [promoOpenId, setPromoOpenId] = useState<string | null>(null);
@@ -295,14 +330,13 @@ function JobsPanel({ userId, onChanged }: { userId: string; onChanged: () => voi
                   <TableCell className="text-xs text-muted-foreground">{j.place_name}<br />{j.region}</TableCell>
                   <TableCell className="text-right tabular-nums">{wageText}</TableCell>
                   <TableCell className="text-center">
-                    {j.is_active ? <Badge>활성</Badge> : <Badge variant="destructive">비활성</Badge>}
+                    {isJobCompleted(j) ? <Badge variant="secondary" className="bg-slate-200 text-slate-700">마감</Badge>
+                      : j.is_active ? <Badge>활성</Badge> : <Badge variant="destructive">비활성</Badge>}
                   </TableCell>
                   <TableCell className="text-center text-xs">{editCount}/2</TableCell>
                   <TableCell className="text-right">
                     <div className="inline-flex gap-1">
-                      <a href={`/employer/jobs/edit/${j.id}`} target="_blank" rel="noreferrer">
-                        <Button size="sm" variant="secondary" disabled={!canEdit}>수정</Button>
-                      </a>
+                      <Button size="sm" variant="secondary" disabled={!canEdit} onClick={() => onEdit(j.id)}>수정</Button>
                       <Button size="sm" variant="outline" onClick={() => toggle(j)}>{j.is_active ? "비활성화" : "활성화"}</Button>
                       <Dialog open={promoOpenId === j.id} onOpenChange={(o) => setPromoOpenId(o ? j.id : null)}>
                         <DialogTrigger asChild>
@@ -517,21 +551,42 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
 
   useEffect(() => { load(); }, [load]);
 
-  const purchase = async (pack: number, amount: number) => {
-    const paymentRef = `MOCK-${Date.now()}`;
-    const { error: e1 } = await supabase.from("credit_purchase_requests").insert({
-      employer_id: userId, pack, amount_krw: amount,
-      status: "fulfilled", payment_ref: paymentRef, payment_method: "online",
-    } as any);
-    if (e1) return toast.error(e1.message);
-    const { error: e2 } = await supabase.from("employer_profiles")
-      .update({ credits: (emp?.credits ?? 0) + pack } as any).eq("user_id", userId);
-    if (e2) return toast.error(e2.message);
-    await supabase.from("credit_transactions").insert({
-      employer_id: userId, delta: pack, type: "admin_grant", note: `온라인 구매(${pack} 크레딧)`,
-    } as any);
-    toast.success(`${pack} 크레딧이 적립되었습니다`);
-    load(); onChanged();
+  const createOrder = useServerFn(createCreditOrder);
+  const fetchPublicCfg = useServerFn(getTossPublicConfig);
+  const [busyPack, setBusyPack] = useState<number | null>(null);
+  const [txDetail, setTxDetail] = useState<any | null>(null);
+  const widgetsRef = useRef<any>(null);
+
+  useEffect(() => { loadTossSdk().catch(() => {}); }, []);
+
+  const purchase = async (pack: number) => {
+    setBusyPack(pack);
+    try {
+      const TossPayments = await loadTossSdk();
+      const cfg = await fetchPublicCfg({}).catch(() => null);
+      if (cfg && !cfg.enabled) { toast.error("현재 결제가 비활성화되어 있습니다."); return; }
+      const clientKey = cfg?.clientKey || FALLBACK_TOSS_CLIENT_KEY;
+      const order = await createOrder({ data: { pack } });
+      const tossPayments = TossPayments(clientKey);
+      const widgets = tossPayments.widgets({ customerKey: userId });
+      widgetsRef.current = widgets;
+      await widgets.setAmount({ value: order.amount, currency: "KRW" });
+      const paymentWindow = await widgets.renderPaymentWindow({
+        variantKey: { paymentMethod: "DEFAULT", agreement: "AGREEMENT" },
+      });
+      paymentWindow.on("paymentRequest", async () => {
+        try {
+          await widgets.requestPayment({
+            orderId: order.orderId,
+            orderName: order.orderName,
+            successUrl: window.location.origin + "/employer/credits/success",
+            failUrl: window.location.origin + "/employer/credits/fail",
+          });
+        } catch (err: any) { toast.error(err?.message || "결제 요청 실패"); }
+      });
+    } catch (e: any) {
+      toast.error(e?.message || "결제창을 열 수 없습니다");
+    } finally { setBusyPack(null); }
   };
 
   return (
@@ -547,17 +602,20 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
         <Card>
           <CardContent className="p-5 space-y-2">
             <h3 className="font-bold text-sm">크레딧 구매 (1크레딧 = 1,000원)</h3>
+            <p className="text-[11px] text-muted-foreground">토스페이먼츠를 통해 안전하게 결제됩니다. 결제 완료 후 크레딧이 자동 적립됩니다.</p>
             <div className="grid grid-cols-3 gap-2">
               {CREDIT_PACKS.map((p) => (
-                <Button key={p.qty} variant="outline" className="h-auto py-3 flex flex-col" onClick={() => purchase(p.qty, p.price)}>
+                <Button key={p.qty} variant="outline" className="h-auto py-3 flex flex-col" onClick={() => purchase(p.qty)} disabled={busyPack !== null}>
                   <span className="font-bold text-base">{p.qty} 크레딧</span>
                   <span className="text-xs text-muted-foreground">{p.price.toLocaleString()}원</span>
+                  {busyPack === p.qty && <span className="text-[10px] text-primary mt-1">결제창 여는 중…</span>}
                 </Button>
               ))}
             </div>
           </CardContent>
         </Card>
       </div>
+
 
       <div className="grid grid-cols-2 gap-4">
         <Card>
@@ -626,7 +684,7 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
               <TableBody>
                 {tx.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-6">내역 없음</TableCell></TableRow>}
                 {tx.map((t) => (
-                  <TableRow key={t.id}>
+                  <TableRow key={t.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setTxDetail(t)}>
                     <TableCell className="text-xs">{new Date(t.created_at).toLocaleDateString("ko-KR")}</TableCell>
                     <TableCell className="text-xs">{t.note ?? t.type}</TableCell>
                     <TableCell className={`text-xs text-right font-bold ${t.delta > 0 ? "text-green-600" : "text-red-600"}`}>
@@ -639,6 +697,28 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
           </CardContent>
         </Card>
       </div>
+
+      <Dialog open={!!txDetail} onOpenChange={(o) => !o && setTxDetail(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>사용 내역 상세</DialogTitle></DialogHeader>
+          {txDetail && (
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between"><span className="text-muted-foreground">일시</span><span>{new Date(txDetail.created_at).toLocaleString("ko-KR")}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">유형</span><span>{txDetail.type}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">증감</span><span className={`font-bold ${txDetail.delta > 0 ? "text-green-600" : "text-red-600"}`}>{txDetail.delta > 0 ? "+" : ""}{txDetail.delta} 크레딧</span></div>
+              {txDetail.note && (
+                <div>
+                  <p className="text-muted-foreground text-xs mb-1">내용</p>
+                  <p className="bg-muted p-3 rounded text-xs whitespace-pre-wrap break-words">{txDetail.note}</p>
+                </div>
+              )}
+              {txDetail.job_id && (
+                <div className="flex justify-between"><span className="text-muted-foreground">공고 ID</span><span className="font-mono text-xs">{txDetail.job_id}</span></div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

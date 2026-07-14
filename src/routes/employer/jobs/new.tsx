@@ -16,7 +16,8 @@ import { useAuth } from "@/lib/auth";
 import { INDUSTRY_LABEL, ROLE_LABEL, ROLES_BY_INDUSTRY, REGIONS } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import { toast } from "sonner";
-import { ImagePlus, CalendarDays, Sparkles } from "lucide-react";
+import { ImagePlus, CalendarDays, Sparkles, Copy } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
 
 const MAX_WORK_DATES = 5;
@@ -76,12 +77,52 @@ function Page() {
   const [photoUploading, setPhotoUploading] = useState(false);
   const [aiBusy, setAiBusy] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pastJobs, setPastJobs] = useState<any[]>([]);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   useEffect(() => { if (!user) return; (async () => {
     const { data } = await supabase.from("employer_profiles").select("*").eq("user_id", user.id).single();
     setEmp(data);
     setContact(data?.contact_phone ?? "");
+    const { data: past } = await supabase
+      .from("jobs").select("id, title, place_name, created_at")
+      .eq("employer_id", user.id).order("created_at", { ascending: false }).limit(50);
+    setPastJobs(past ?? []);
   })(); }, [user]);
+
+  const applyJobToForm = (job: any) => {
+    setIndustry(job.industry);
+    setJobRole(job.job_role);
+    setTitle(job.title ?? "");
+    setPlaceName(job.place_name ?? "");
+    setLocation(job.location ?? "");
+    const rg = (job.region ?? "서울").trim();
+    const sp = rg.indexOf(" ");
+    if (sp > 0) { setRegion(rg.slice(0, sp)); setDistrict(rg.slice(sp + 1)); }
+    else { setRegion(rg); setDistrict(""); }
+    setContractType((job.contract_type as any) ?? "daily");
+    setWage(job.daily_wage ? String(job.daily_wage) : "");
+    setMonthlyWage(job.monthly_wage ? String(job.monthly_wage) : "");
+    if (job.contract_months) { setContractMonths(String(job.contract_months)); setOneMonthPlus(false); }
+    else if ((job.contract_type as any) === "monthly") { setOneMonthPlus(true); }
+    const pd = (job.pay_day ?? "").trim();
+    const m = pd.match(/^(당월|익월)\s*(\d+)/);
+    if (m) { setPayMonth(m[1] as any); setPayDayNum(m[2]); }
+    setPrep(job.preparations ?? "");
+    setRooms(job.rooms_per_day ? String(job.rooms_per_day) : "");
+    setRoomsUnit((job as any).rooms_unit === "실" ? "실" : "unit");
+    setHeadcount(String(job.headcount ?? 1));
+    setPhotoUrl(job.photo_url ?? null);
+  };
+
+  const copyPastJob = async (jobId: string) => {
+    const { data: job } = await supabase.from("jobs").select("*").eq("id", jobId).single();
+    if (!job) return toast.error("공고를 찾을 수 없습니다");
+    applyJobToForm(job);
+    setDates([]);
+    setCopyOpen(false);
+    toast.success("공고 내용을 복사했습니다. 근무일자만 새로 입력하세요.");
+  };
 
   useEffect(() => {
     const list = rolesFor(industry);
@@ -196,7 +237,36 @@ function Page() {
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-3">
-        <h2 className="font-bold">새 공고 등록</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold">새 공고 등록</h2>
+          {pastJobs.length > 0 && (
+            <Dialog open={copyOpen} onOpenChange={setCopyOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm"><Copy size={14} className="mr-1" />지난 공고 복사</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader><DialogTitle>지난 공고 복사</DialogTitle></DialogHeader>
+                <p className="text-xs text-muted-foreground">복사할 공고를 선택하면 폼이 자동으로 채워집니다. 대표 사진도 함께 복사됩니다. 근무일자는 새로 입력하세요.</p>
+                <div className="max-h-80 overflow-auto border rounded-md divide-y">
+                  {pastJobs.map((j) => (
+                    <button
+                      key={j.id}
+                      type="button"
+                      onClick={() => copyPastJob(j.id)}
+                      className="w-full text-left p-3 hover:bg-muted/50 flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{j.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{j.place_name} · {new Date(j.created_at).toLocaleDateString("ko-KR")}</p>
+                      </div>
+                      <Copy size={14} className="text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
         <Card><CardContent className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <div><Label>업종</Label>
