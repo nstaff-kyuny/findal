@@ -33,7 +33,7 @@ const MAX_EDITS = 2;
 /* =============================================================
    공고 등록 (desktop)
    ============================================================= */
-export function NewJobPanel({ userId, onCreated }: { userId: string; onCreated: () => void }) {
+export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: string; onCreated: () => void; editJobId?: string; onBack?: () => void }) {
   const { t, customIndustries, customRoles } = useI18n();
   const makeDraft = useServerFn(generateJobDraft);
   const makeImage = useServerFn(generateJobImage);
