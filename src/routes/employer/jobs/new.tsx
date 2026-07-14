@@ -237,7 +237,36 @@ function Page() {
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-3">
-        <h2 className="font-bold">새 공고 등록</h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-bold">새 공고 등록</h2>
+          {pastJobs.length > 0 && (
+            <Dialog open={copyOpen} onOpenChange={setCopyOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm"><Copy size={14} className="mr-1" />지난 공고 복사</Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader><DialogTitle>지난 공고 복사</DialogTitle></DialogHeader>
+                <p className="text-xs text-muted-foreground">복사할 공고를 선택하면 폼이 자동으로 채워집니다. 대표 사진도 함께 복사됩니다. 근무일자는 새로 입력하세요.</p>
+                <div className="max-h-80 overflow-auto border rounded-md divide-y">
+                  {pastJobs.map((j) => (
+                    <button
+                      key={j.id}
+                      type="button"
+                      onClick={() => copyPastJob(j.id)}
+                      className="w-full text-left p-3 hover:bg-muted/50 flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{j.title}</p>
+                        <p className="text-xs text-muted-foreground truncate">{j.place_name} · {new Date(j.created_at).toLocaleDateString("ko-KR")}</p>
+                      </div>
+                      <Copy size={14} className="text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
         <Card><CardContent className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <div><Label>업종</Label>
