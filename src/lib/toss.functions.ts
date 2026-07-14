@@ -74,8 +74,8 @@ export const getPaymentSettings = createServerFn({ method: "GET" })
       enabled: cfg.enabled,
       mode: cfg.mode,
       merchantId: cfg.merchantId,
-      clientKey: cfg.clientKey,
-      secretKey: cfg.secretKey,
+      clientKey: cfg.rawClientKey || cfg.clientKey,
+      secretKey: cfg.rawSecretKey || cfg.secretKey,
       securityKey: cfg.securityKey,
     };
   });
