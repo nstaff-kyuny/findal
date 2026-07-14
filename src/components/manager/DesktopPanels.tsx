@@ -495,8 +495,8 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
               </div>
             )}
 
-            <Button className="w-full" size="lg" onClick={save} disabled={saving}>
-              {saving ? "등록 중…" : "공고 등록"}
+            <Button className="w-full" size="lg" onClick={save} disabled={saving || reachedEditLimit}>
+              {saving ? (isEdit ? "저장 중…" : "등록 중…") : (isEdit ? "수정 저장" : "공고 등록")}
             </Button>
           </CardContent>
         </Card>
