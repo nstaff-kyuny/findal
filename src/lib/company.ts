@@ -23,16 +23,17 @@ export const COMPANY_INFO: CompanyInfo = {
 };
 
 export async function fetchCompanyInfo(): Promise<CompanyInfo> {
-  const { data } = await (supabase as any).from("company_info").select("*").eq("id", true).maybeSingle();
-  if (!data) return COMPANY_INFO;
+  const { data } = await (supabase as any).rpc("get_company_info");
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) return COMPANY_INFO;
   return {
-    name: data.name || COMPANY_INFO.name,
-    ceo: data.ceo || COMPANY_INFO.ceo,
-    bizNo: data.biz_no || COMPANY_INFO.bizNo,
-    mailOrderNo: data.mail_order_no || COMPANY_INFO.mailOrderNo,
-    appName: data.app_name || COMPANY_INFO.appName,
-    address: data.address || "",
-    phone: data.phone || "",
-    email: data.email || "",
+    name: row.name || COMPANY_INFO.name,
+    ceo: row.ceo || COMPANY_INFO.ceo,
+    bizNo: row.biz_no || COMPANY_INFO.bizNo,
+    mailOrderNo: row.mail_order_no || COMPANY_INFO.mailOrderNo,
+    appName: row.app_name || COMPANY_INFO.appName,
+    address: row.address || "",
+    phone: row.phone || "",
+    email: row.email || "",
   };
 }
