@@ -1012,6 +1012,19 @@ export type Database = {
           starts_at: string
         }[]
       }
+      get_company_info: {
+        Args: never
+        Returns: {
+          address: string
+          app_name: string
+          biz_no: string
+          ceo: string
+          email: string
+          mail_order_no: string
+          name: string
+          phone: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
