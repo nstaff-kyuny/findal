@@ -82,14 +82,17 @@ function Page() {
 
   const approved = filtered.filter(a => a.status === "approved");
 
-  const buildByDay = (statuses: string[]) => {
+  const buildByDay = (statuses: string[], opts?: { pastOnly?: boolean }) => {
     const [y, m] = calMonth.split("-").map(Number);
     const map = new Map<string, any[]>();
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
     apps.filter(a => statuses.includes(a.status)).forEach(a => {
       const dates: string[] = a.jobs?.work_dates ?? [];
       dates.forEach((d: string) => {
         const dt = new Date(d);
         if (dt.getFullYear() === y && dt.getMonth() + 1 === m) {
+          if (opts?.pastOnly && dt > today) return;
           if (!map.has(d)) map.set(d, []);
           map.get(d)!.push(a);
         }
@@ -98,7 +101,9 @@ function Page() {
     return map;
   };
   const confirmedByDay = useMemo(() => buildByDay(["confirmed", "no_show"]), [apps, calMonth]);
-  const confirmedByDayForPdf = useMemo(() => buildByDay(["confirmed"]), [apps, calMonth]);
+  // PDF: only actually-worked days — confirmed status AND the work date has already passed.
+  // Excludes no_show, cancelled, pending, approved (not yet worked), and future confirmed dates.
+  const confirmedByDayForPdf = useMemo(() => buildByDay(["confirmed"], { pastOnly: true }), [apps, calMonth]);
 
 
   const downloadPdf = async () => {
