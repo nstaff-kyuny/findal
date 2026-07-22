@@ -82,14 +82,17 @@ function Page() {
 
   const approved = filtered.filter(a => a.status === "approved");
 
-  const buildByDay = (statuses: string[]) => {
+  const buildByDay = (statuses: string[], opts?: { pastOnly?: boolean }) => {
     const [y, m] = calMonth.split("-").map(Number);
     const map = new Map<string, any[]>();
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
     apps.filter(a => statuses.includes(a.status)).forEach(a => {
       const dates: string[] = a.jobs?.work_dates ?? [];
       dates.forEach((d: string) => {
         const dt = new Date(d);
         if (dt.getFullYear() === y && dt.getMonth() + 1 === m) {
+          if (opts?.pastOnly && dt > today) return;
           if (!map.has(d)) map.set(d, []);
           map.get(d)!.push(a);
         }
@@ -98,7 +101,9 @@ function Page() {
     return map;
   };
   const confirmedByDay = useMemo(() => buildByDay(["confirmed", "no_show"]), [apps, calMonth]);
-  const confirmedByDayForPdf = useMemo(() => buildByDay(["confirmed"]), [apps, calMonth]);
+  // PDF: only actually-worked days — confirmed status AND the work date has already passed.
+  // Excludes no_show, cancelled, pending, approved (not yet worked), and future confirmed dates.
+  const confirmedByDayForPdf = useMemo(() => buildByDay(["confirmed"], { pastOnly: true }), [apps, calMonth]);
 
 
   const downloadPdf = async () => {
@@ -234,12 +239,15 @@ function CalendarView({ month, data }: { month: string; data: Map<string, any[]>
           return (
             <div key={i} className="min-h-[72px] border-t border-l p-1 text-[10px]">
               {d && <div className="font-bold text-xs mb-0.5">{d}</div>}
-              {entries.map((e, idx) => (
-                <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5">
-                  <div className="font-semibold truncate">{e.jobs?.place_name}</div>
-                  <div className="truncate text-muted-foreground">{Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원</div>
-                </div>
-              ))}
+              {entries.map((e, idx) => {
+                const isNoShow = e.status === "no_show";
+                return (
+                  <div key={idx} className={`rounded px-1 py-0.5 mb-0.5 ${isNoShow ? "bg-destructive/10 line-through opacity-70" : "bg-primary/10"}`}>
+                    <div className="font-semibold truncate">{e.jobs?.place_name}{isNoShow ? " (노쇼)" : ""}</div>
+                    <div className="truncate text-muted-foreground">{Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원</div>
+                  </div>
+                );
+              })}
             </div>
           );
         })}
