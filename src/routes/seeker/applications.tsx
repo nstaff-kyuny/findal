@@ -239,12 +239,15 @@ function CalendarView({ month, data }: { month: string; data: Map<string, any[]>
           return (
             <div key={i} className="min-h-[72px] border-t border-l p-1 text-[10px]">
               {d && <div className="font-bold text-xs mb-0.5">{d}</div>}
-              {entries.map((e, idx) => (
-                <div key={idx} className="bg-primary/10 rounded px-1 py-0.5 mb-0.5">
-                  <div className="font-semibold truncate">{e.jobs?.place_name}</div>
-                  <div className="truncate text-muted-foreground">{Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원</div>
-                </div>
-              ))}
+              {entries.map((e, idx) => {
+                const isNoShow = e.status === "no_show";
+                return (
+                  <div key={idx} className={`rounded px-1 py-0.5 mb-0.5 ${isNoShow ? "bg-destructive/10 line-through opacity-70" : "bg-primary/10"}`}>
+                    <div className="font-semibold truncate">{e.jobs?.place_name}{isNoShow ? " (노쇼)" : ""}</div>
+                    <div className="truncate text-muted-foreground">{Number(e.jobs?.daily_wage ?? 0).toLocaleString()}원</div>
+                  </div>
+                );
+              })}
             </div>
           );
         })}
