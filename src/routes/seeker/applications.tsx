@@ -205,7 +205,7 @@ function Page() {
               <Button onClick={downloadPdf}>{t("pdf_download")}</Button>
             </div>
             <p className="text-xs text-muted-foreground">{t("confirmed_only_note")}</p>
-            <CalendarView month={calMonth} data={confirmedByDay} />
+            <CalendarView month={calMonth} data={confirmedByDayForPdf} />
 
             <div style={{ position: "fixed", left: "-10000px", top: 0 }}>
               <PdfDoc ref={pdfRef} month={calMonth} data={confirmedByDayForPdf} userName={profile?.full_name ?? user?.email ?? ""} />
