@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog, UserX } from "lucide-react";
+import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog, UserX, Wallet, Receipt } from "lucide-react";
 import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
