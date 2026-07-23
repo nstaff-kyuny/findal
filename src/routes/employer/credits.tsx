@@ -124,7 +124,10 @@ function Page() {
         </Card>
         <h3 className="font-bold mt-3">크레딧 구매 (1크레딧 = 1,000원)</h3>
         <p className="text-xs text-muted-foreground">
-          결제는 토스페이먼츠를 통해 안전하게 진행됩니다. 크레딧의 유효기간 구매일로 부터 1년입니다.
+          결제는 토스페이먼츠를 통해 안전하게 진행됩니다. 크레딧의 유효기간은 구매일로부터 1년입니다.
+        </p>
+        <p className="text-[11px] text-muted-foreground">
+          ※ 임의 금액 입력은 지원되지 않으며, 아래의 <b>고정 상품</b> 중에서만 결제할 수 있습니다.
         </p>
         <div className="space-y-2">
           {CREDIT_PACKS.map((p) => (
@@ -141,11 +144,37 @@ function Page() {
             </Card>
           ))}
         </div>
+
+        <Card className="bg-muted/40">
+          <CardContent className="p-3 text-[12px] space-y-1.5 leading-relaxed">
+            <p className="font-semibold text-foreground">크레딧 사용 안내</p>
+            <ul className="list-disc pl-4 space-y-0.5 text-muted-foreground">
+              <li>구직자 신청을 <b>승인</b>할 때 건당 <b>1 크레딧</b>이 차감됩니다.</li>
+              <li>공고를 <b>프리미엄 노출(광고)</b>로 등록 시 기간에 따라 10~25 크레딧이 차감됩니다.</li>
+              <li>차감된 내역은 <b>구매 및 사용 내역</b> 페이지에서 실시간 확인할 수 있습니다.</li>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card className="border-amber-200 bg-amber-50/60">
+          <CardContent className="p-3 text-[12px] leading-relaxed space-y-1">
+            <p className="font-semibold text-amber-900">환불 정책 및 유의사항</p>
+            <ul className="list-disc pl-4 space-y-0.5 text-amber-900/90">
+              <li>결제 후 <b>7일 이내 & 미사용</b> 시 전액 환불이 가능합니다.</li>
+              <li>일부 사용 시 잔여 크레딧에 한해 부분 환불(수수료 차감)됩니다.</li>
+              <li>충전된 크레딧은 서비스 내 결제 수단이며, <b>현금·상품권 등으로 환급/전환되지 않습니다.</b></li>
+              <li>이벤트로 무상 지급된 크레딧은 환불 대상에서 제외됩니다.</li>
+            </ul>
+            <Link to="/terms" className="inline-block text-primary underline text-[12px] mt-1">환불정책 전문 보기 →</Link>
+          </CardContent>
+        </Card>
+
         <Link to="/employer/credits/history" className="block pt-4">
           <Button variant="outline" className="w-full h-12 text-base">
             구매 및 사용 내역 →
           </Button>
         </Link>
+
       </div>
     </MobileLayout>
   );
