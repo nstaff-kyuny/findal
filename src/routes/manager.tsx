@@ -603,6 +603,7 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
           <CardContent className="p-5 space-y-2">
             <h3 className="font-bold text-sm">크레딧 구매 (1크레딧 = 1,000원)</h3>
             <p className="text-[11px] text-muted-foreground">토스페이먼츠를 통해 안전하게 결제됩니다. 결제 완료 후 크레딧이 자동 적립됩니다.</p>
+            <p className="text-[11px] text-muted-foreground">※ 임의 금액 입력은 지원되지 않으며, 아래 <b>고정 상품</b> 중에서만 결제할 수 있습니다.</p>
             <div className="grid grid-cols-3 gap-2">
               {CREDIT_PACKS.map((p) => (
                 <Button key={p.qty} variant="outline" className="h-auto py-3 flex flex-col" onClick={() => purchase(p.qty)} disabled={busyPack !== null}>
@@ -612,8 +613,20 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
                 </Button>
               ))}
             </div>
+            <div className="mt-2 p-2 rounded bg-muted/50 text-[11px] leading-relaxed text-muted-foreground">
+              <p className="text-foreground font-semibold mb-1">크레딧 사용 경로</p>
+              <p>· 구직자 신청 <b>승인</b> 시 건당 1 크레딧 차감</p>
+              <p>· 공고 <b>프리미엄 노출(광고)</b> 등록 시 10~25 크레딧 차감 (기간별)</p>
+            </div>
+            <div className="mt-1 p-2 rounded bg-amber-50 border border-amber-200 text-[11px] leading-relaxed text-amber-900">
+              <p className="font-semibold mb-0.5">환불 정책</p>
+              <p>결제 후 7일 이내 & 미사용 시 전액 환불, 일부 사용 시 잔여분 부분 환불(수수료 차감).</p>
+              <p><b>충전된 크레딧은 서비스 내 결제 수단이며, 현금·상품권 등으로 환급/전환되지 않습니다.</b></p>
+              <a href="/terms" target="_blank" rel="noreferrer" className="text-primary underline">환불정책 전문 →</a>
+            </div>
           </CardContent>
         </Card>
+
       </div>
 
 
