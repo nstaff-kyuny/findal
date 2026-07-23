@@ -728,9 +728,13 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
               <TableBody>
                 {tx.length === 0 && <TableRow><TableCell colSpan={3} className="text-center text-xs text-muted-foreground py-6">내역 없음</TableCell></TableRow>}
                 {tx.map((t) => (
-                  <TableRow key={t.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setTxDetail(t)}>
+                  <TableRow key={t.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openTxDetail(t)}>
                     <TableCell className="text-xs">{new Date(t.created_at).toLocaleDateString("ko-KR")}</TableCell>
-                    <TableCell className="text-xs">{t.note ?? t.type}</TableCell>
+                    <TableCell className="text-xs">
+                      {t.type === "approval_use"
+                        ? (t.note?.replace(UUID_RE, "").replace(/[:：]\s*$/, "").trim() || "신청 승인")
+                        : (t.note ?? TYPE_LABEL[t.type] ?? t.type)}
+                    </TableCell>
                     <TableCell className={`text-xs text-right font-bold ${t.delta > 0 ? "text-green-600" : "text-red-600"}`}>
                       {t.delta > 0 ? "+" : ""}{t.delta}
                     </TableCell>
@@ -742,27 +746,66 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
         </Card>
       </div>
 
-      <Dialog open={!!txDetail} onOpenChange={(o) => !o && setTxDetail(null)}>
-        <DialogContent>
+      <Dialog open={!!txDetail} onOpenChange={(o) => !o && (setTxDetail(null), setTxDetailExtra(null))}>
+        <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>사용 내역 상세</DialogTitle></DialogHeader>
           {txDetail && (
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">일시</span><span>{new Date(txDetail.created_at).toLocaleString("ko-KR")}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">유형</span><span>{txDetail.type}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">유형</span><span>{TYPE_LABEL[txDetail.type] ?? txDetail.type}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">증감</span><span className={`font-bold ${txDetail.delta > 0 ? "text-green-600" : "text-red-600"}`}>{txDetail.delta > 0 ? "+" : ""}{txDetail.delta} 크레딧</span></div>
-              {txDetail.note && (
+
+              {txDetail.type === "approval_use" && (
+                <>
+                  <hr className="my-2" />
+                  <p className="text-xs font-semibold text-foreground">승인한 신청 상세</p>
+                  {txDetailLoading && <p className="text-xs text-muted-foreground text-center py-3">불러오는 중…</p>}
+                  {txDetailExtra?.notFound && <p className="text-xs text-muted-foreground">연결된 신청을 찾을 수 없습니다 (삭제되었을 수 있음).</p>}
+                  {txDetailExtra?.error && <p className="text-xs text-red-600">상세 정보를 불러오지 못했습니다.</p>}
+                  {txDetailExtra?.app && (
+                    <div className="space-y-1.5 bg-muted/40 p-3 rounded">
+                      <DetailRow label="공고" value={txDetailExtra.job?.title ?? "-"} />
+                      <DetailRow label="장소" value={txDetailExtra.job?.place_name ?? "-"} />
+                      <DetailRow label="지역" value={txDetailExtra.job?.location ?? "-"} />
+                      <DetailRow label="일당" value={txDetailExtra.job?.daily_wage ? `${Number(txDetailExtra.job.daily_wage).toLocaleString()}원` : "-"} />
+                      <DetailRow label="근무일" value={(txDetailExtra.job?.work_dates ?? []).join(", ") || "-"} />
+                      <hr className="my-1" />
+                      <DetailRow label="구직자" value={txDetailExtra.profile?.full_name ?? "(이름미입력)"} />
+                      <DetailRow label="연락처" value={txDetailExtra.profile?.phone ?? "-"} />
+                      <DetailRow label="현재상태" value={STATUS_LABEL[txDetailExtra.app.status] ?? txDetailExtra.app.status} />
+                      {txDetailExtra.app.message && (
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">신청 메모</p>
+                          <p className="text-xs italic">"{txDetailExtra.app.message}"</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+
+              {txDetail.type !== "approval_use" && txDetail.note && (
                 <div>
                   <p className="text-muted-foreground text-xs mb-1">내용</p>
                   <p className="bg-muted p-3 rounded text-xs whitespace-pre-wrap break-words">{txDetail.note}</p>
                 </div>
               )}
               {txDetail.job_id && (
-                <div className="flex justify-between"><span className="text-muted-foreground">공고 ID</span><span className="font-mono text-xs">{txDetail.job_id}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">공고 ID</span><span className="font-mono text-[10px]">{txDetail.job_id}</span></div>
               )}
             </div>
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-[11px] text-muted-foreground shrink-0">{label}</span>
+      <span className="text-xs font-medium text-right break-all">{value}</span>
     </div>
   );
 }
