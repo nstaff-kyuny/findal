@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog, UserX } from "lucide-react";
+import { Bell, Megaphone, Gift, HelpCircle, MessageSquare, FileText, ChevronRight, UserCog, UserX, Wallet, Receipt } from "lucide-react";
 import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company";
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
@@ -175,6 +175,27 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           </div>
         )}
       </CardContent></Card>
+
+      {role === "employer" && (
+        <Card><CardContent className="p-0 divide-y">
+          <SectionHeader>결제 / 크레딧</SectionHeader>
+          <div className="px-4 py-3 flex justify-between items-center">
+            <div>
+              <p className="text-sm font-semibold">보유 크레딧</p>
+              <p className="text-[11px] text-muted-foreground">1 크레딧 = 1,000원 · 공고 신청 승인 및 광고 노출 시 차감</p>
+            </div>
+            <p className="text-2xl font-bold text-primary">{roleData?.credits ?? 0}</p>
+          </div>
+          <LinkRow to="/employer/credits" icon={<Wallet size={16} />} label="크레딧 충전하기" />
+          <LinkRow to="/employer/credits/history" icon={<Receipt size={16} />} label="구매 및 사용 내역" />
+          <LinkRow to="/terms" icon={<FileText size={16} />} label="크레딧 환불정책" />
+
+          <div className="px-4 py-2 text-[11px] text-muted-foreground bg-muted/30 leading-relaxed">
+            ※ 충전된 크레딧은 서비스 내 결제 수단으로만 사용되며, <b>현금 및 다른 유가물로 환급/전환되지 않습니다.</b> 미사용 크레딧은 환불정책에 따라 결제 금액 기준으로 환불됩니다.
+          </div>
+        </CardContent></Card>
+      )}
+
 
       {role === "seeker" && (
         <Card><CardContent className="p-0 divide-y">
