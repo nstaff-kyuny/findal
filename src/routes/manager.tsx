@@ -555,7 +555,38 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
   const fetchPublicCfg = useServerFn(getTossPublicConfig);
   const [busyPack, setBusyPack] = useState<number | null>(null);
   const [txDetail, setTxDetail] = useState<any | null>(null);
+  const [txDetailExtra, setTxDetailExtra] = useState<any | null>(null);
+  const [txDetailLoading, setTxDetailLoading] = useState(false);
   const widgetsRef = useRef<any>(null);
+
+  const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+  const TYPE_LABEL: Record<string, string> = {
+    approval_use: "신청 승인 차감",
+    purchase: "크레딧 충전",
+    admin_grant: "관리자 무상지급",
+    promote_use: "프리미엄 광고 차감",
+    refund: "환불",
+  };
+  const STATUS_LABEL: Record<string, string> = { pending: "대기", approved: "승인", rejected: "거절", confirmed: "출근 확정", no_show: "노쇼", cancelled: "취소" };
+
+  const openTxDetail = async (t: any) => {
+    setTxDetail(t);
+    setTxDetailExtra(null);
+    const match = t?.note?.match(UUID_RE);
+    if (!match || t.type !== "approval_use") return;
+    setTxDetailLoading(true);
+    try {
+      const { data: app } = await supabase.from("job_applications").select("*").eq("id", match[0]).maybeSingle();
+      if (!app) { setTxDetailExtra({ notFound: true }); return; }
+      const [jobRes, profRes] = await Promise.all([
+        supabase.from("jobs").select("id, title, place_name, location, daily_wage, work_dates").eq("id", app.job_id).maybeSingle(),
+        supabase.from("profiles").select("id, full_name, phone").eq("id", app.seeker_id).maybeSingle(),
+      ]);
+      setTxDetailExtra({ app, job: jobRes.data, profile: profRes.data });
+    } catch {
+      setTxDetailExtra({ error: true });
+    } finally { setTxDetailLoading(false); }
+  };
 
   useEffect(() => { loadTossSdk().catch(() => {}); }, []);
 
