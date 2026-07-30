@@ -94,7 +94,7 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
     (async () => {
       const { data } = await supabase.from("employer_profiles").select("*").eq("user_id", userId).single();
       setEmp(data);
-      if (!editJobId) setContact(data?.contact_phone ?? "");
+      if (!editJobId) setContact((prev) => prev || (data?.contact_phone ?? ""));
     })();
   }, [userId, editJobId]);
 
