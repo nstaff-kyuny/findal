@@ -273,6 +273,7 @@ function Page() {
       if (inserted?.id && phoneToUse) {
         await supabase.from("job_contacts").upsert({ job_id: inserted.id, employer_id: user.id, contact_phone: phoneToUse }, { onConflict: "job_id" });
       }
+      clearFormDraft(draftKey);
       toast.success("공고 등록 완료");
       nav({ to: "/employer/jobs" });
     } finally {
