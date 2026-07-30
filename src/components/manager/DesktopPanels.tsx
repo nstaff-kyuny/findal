@@ -326,6 +326,7 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
         setTitle(""); setPlaceName(""); setLocation(""); setWage(""); setMonthlyWage("");
         setContractMonths(""); setOneMonthPlus(false); setPrep("");
         setRooms(""); setHeadcount(""); setPhotoUrl(null); setDates([]);
+        clearFormDraft(draftKey);
       }
       onCreated();
       if (isEdit && onBack) onBack();
