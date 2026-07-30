@@ -26,6 +26,7 @@ import {
 } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
+import { useFormDraft, clearFormDraft } from "@/lib/form-draft";
 
 const MAX_WORK_DATES = 5;
 const MAX_EDITS = 2;
@@ -94,7 +95,7 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
     (async () => {
       const { data } = await supabase.from("employer_profiles").select("*").eq("user_id", userId).single();
       setEmp(data);
-      if (!editJobId) setContact(data?.contact_phone ?? "");
+      if (!editJobId) setContact((prev) => prev || (data?.contact_phone ?? ""));
     })();
   }, [userId, editJobId]);
 
@@ -163,6 +164,50 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
     setDates([]); // 새 공고 등록이므로 날짜는 비움
     setCopyOpen(false);
     toast.success("공고 내용을 복사했습니다. 근무일자와 필요한 부분만 수정 후 등록하세요.");
+  };
+
+  // ---- 작성 중 임시저장 (패널 이동 후 복원) ----
+  const draftKey = `job_draft_pc_${userId}`;
+  const draftValues = {
+    industry, jobRole, title, placeName, location, region, district,
+    contractType, wage, monthlyWage, contractMonths, oneMonthPlus,
+    payMonth, payDayNum, prep, rooms, roomsUnit, headcount,
+    useDefaultContact, contact, dates, photoUrl,
+  };
+  useFormDraft(draftKey, draftValues, (d) => {
+    if (d.industry) setIndustry(d.industry);
+    if (d.jobRole) setJobRole(d.jobRole);
+    if (d.title != null) setTitle(d.title);
+    if (d.placeName != null) setPlaceName(d.placeName);
+    if (d.location != null) setLocation(d.location);
+    if (d.region) setRegion(d.region);
+    if (d.district != null) setDistrict(d.district);
+    if (d.contractType) setContractType(d.contractType);
+    if (d.wage != null) setWage(d.wage);
+    if (d.monthlyWage != null) setMonthlyWage(d.monthlyWage);
+    if (d.contractMonths != null) setContractMonths(d.contractMonths);
+    if (d.oneMonthPlus != null) setOneMonthPlus(d.oneMonthPlus);
+    if (d.payMonth) setPayMonth(d.payMonth);
+    if (d.payDayNum != null) setPayDayNum(d.payDayNum);
+    if (d.prep != null) setPrep(d.prep);
+    if (d.rooms != null) setRooms(d.rooms);
+    if (d.roomsUnit) setRoomsUnit(d.roomsUnit);
+    if (d.headcount != null) setHeadcount(d.headcount);
+    if (d.useDefaultContact != null) setUseDefaultContact(d.useDefaultContact);
+    if (d.contact != null) setContact(d.contact);
+    if (Array.isArray(d.dates)) setDates(d.dates);
+    if (d.photoUrl !== undefined) setPhotoUrl(d.photoUrl);
+  }, {
+    enabled: !isEdit,
+    onRestored: () => toast.info("작성 중이던 공고 내용을 불러왔습니다"),
+  });
+
+  const resetForm = () => {
+    setTitle(""); setPlaceName(""); setLocation(""); setDistrict("");
+    setWage(""); setMonthlyWage(""); setContractMonths(""); setOneMonthPlus(false);
+    setPrep(""); setRooms(""); setHeadcount(""); setDates([]); setPhotoUrl(null);
+    clearFormDraft(draftKey);
+    toast.success("작성 내용을 초기화했습니다");
   };
 
   useEffect(() => {
@@ -281,6 +326,7 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
         setTitle(""); setPlaceName(""); setLocation(""); setWage(""); setMonthlyWage("");
         setContractMonths(""); setOneMonthPlus(false); setPrep("");
         setRooms(""); setHeadcount(""); setPhotoUrl(null); setDates([]);
+        clearFormDraft(draftKey);
       }
       onCreated();
       if (isEdit && onBack) onBack();
@@ -297,12 +343,15 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
         <div>
           <h2 className="text-lg font-bold">{isEdit ? "공고 수정" : "새 공고 등록"}</h2>
           <p className="text-xs text-muted-foreground">
-            {isEdit ? `수정 ${editCount}/${MAX_EDITS}회` : "데스크톱 화면에 맞춰 한번에 입력하실 수 있습니다."}
+            {isEdit ? `수정 ${editCount}/${MAX_EDITS}회` : "작성 중인 내용은 자동 임시저장되어 다른 메뉴에 다녀와도 유지됩니다."}
           </p>
         </div>
         <div className="flex gap-2">
           {isEdit && onBack && (
             <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft size={14} className="mr-1" />목록으로</Button>
+          )}
+          {!isEdit && (
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={resetForm}>작성 초기화</Button>
           )}
           {!isEdit && pastJobs.length > 0 && (
             <Dialog open={copyOpen} onOpenChange={setCopyOpen}>

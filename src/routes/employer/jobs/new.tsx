@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { ImagePlus, CalendarDays, Sparkles, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
+import { useFormDraft, clearFormDraft } from "@/lib/form-draft";
 
 const MAX_WORK_DATES = 5;
 
@@ -83,12 +84,56 @@ function Page() {
   useEffect(() => { if (!user) return; (async () => {
     const { data } = await supabase.from("employer_profiles").select("*").eq("user_id", user.id).single();
     setEmp(data);
-    setContact(data?.contact_phone ?? "");
+    setContact((prev) => prev || (data?.contact_phone ?? ""));
     const { data: past } = await supabase
       .from("jobs").select("id, title, place_name, created_at")
       .eq("employer_id", user.id).order("created_at", { ascending: false }).limit(50);
     setPastJobs(past ?? []);
   })(); }, [user]);
+
+  // ---- 작성 중 임시저장 (페이지 이동 후 복원) ----
+  const draftKey = user ? `job_draft_new_${user.id}` : "job_draft_new";
+  const draftValues = {
+    industry, jobRole, title, placeName, location, region, district,
+    contractType, wage, monthlyWage, contractMonths, oneMonthPlus,
+    payMonth, payDayNum, prep, rooms, roomsUnit, headcount,
+    useDefaultContact, contact, dates, photoUrl,
+  };
+  useFormDraft(draftKey, draftValues, (d) => {
+    if (d.industry) setIndustry(d.industry);
+    if (d.jobRole) setJobRole(d.jobRole);
+    if (d.title != null) setTitle(d.title);
+    if (d.placeName != null) setPlaceName(d.placeName);
+    if (d.location != null) setLocation(d.location);
+    if (d.region) setRegion(d.region);
+    if (d.district != null) setDistrict(d.district);
+    if (d.contractType) setContractType(d.contractType);
+    if (d.wage != null) setWage(d.wage);
+    if (d.monthlyWage != null) setMonthlyWage(d.monthlyWage);
+    if (d.contractMonths != null) setContractMonths(d.contractMonths);
+    if (d.oneMonthPlus != null) setOneMonthPlus(d.oneMonthPlus);
+    if (d.payMonth) setPayMonth(d.payMonth);
+    if (d.payDayNum != null) setPayDayNum(d.payDayNum);
+    if (d.prep != null) setPrep(d.prep);
+    if (d.rooms != null) setRooms(d.rooms);
+    if (d.roomsUnit) setRoomsUnit(d.roomsUnit);
+    if (d.headcount != null) setHeadcount(d.headcount);
+    if (d.useDefaultContact != null) setUseDefaultContact(d.useDefaultContact);
+    if (d.contact != null) setContact(d.contact);
+    if (Array.isArray(d.dates)) setDates(d.dates);
+    if (d.photoUrl !== undefined) setPhotoUrl(d.photoUrl);
+  }, {
+    enabled: !!user,
+    onRestored: () => toast.info("작성 중이던 공고 내용을 불러왔습니다"),
+  });
+
+  const resetForm = () => {
+    setTitle(""); setPlaceName(""); setLocation(""); setDistrict("");
+    setWage(""); setMonthlyWage(""); setContractMonths(""); setOneMonthPlus(false);
+    setPrep(""); setRooms(""); setHeadcount(""); setDates([]); setPhotoUrl(null);
+    clearFormDraft(draftKey);
+    toast.success("작성 내용을 초기화했습니다");
+  };
 
   const applyJobToForm = (job: any) => {
     setIndustry(job.industry);
@@ -123,6 +168,7 @@ function Page() {
     setCopyOpen(false);
     toast.success("공고 내용을 복사했습니다. 근무일자만 새로 입력하세요.");
   };
+
 
   useEffect(() => {
     const list = rolesFor(industry);
@@ -227,6 +273,7 @@ function Page() {
       if (inserted?.id && phoneToUse) {
         await supabase.from("job_contacts").upsert({ job_id: inserted.id, employer_id: user.id, contact_phone: phoneToUse }, { onConflict: "job_id" });
       }
+      clearFormDraft(draftKey);
       toast.success("공고 등록 완료");
       nav({ to: "/employer/jobs" });
     } finally {
@@ -237,8 +284,10 @@ function Page() {
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold">새 공고 등록</h2>
+          <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={resetForm}>작성 초기화</Button>
           {pastJobs.length > 0 && (
             <Dialog open={copyOpen} onOpenChange={setCopyOpen}>
               <DialogTrigger asChild>
@@ -266,7 +315,9 @@ function Page() {
               </DialogContent>
             </Dialog>
           )}
+          </div>
         </div>
+        <p className="text-[11px] text-muted-foreground -mt-1">작성 중인 내용은 자동 임시저장되어 다른 페이지에 다녀와도 유지됩니다.</p>
         <Card><CardContent className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <div><Label>업종</Label>
