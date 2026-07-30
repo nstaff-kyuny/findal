@@ -343,12 +343,15 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
         <div>
           <h2 className="text-lg font-bold">{isEdit ? "공고 수정" : "새 공고 등록"}</h2>
           <p className="text-xs text-muted-foreground">
-            {isEdit ? `수정 ${editCount}/${MAX_EDITS}회` : "데스크톱 화면에 맞춰 한번에 입력하실 수 있습니다."}
+            {isEdit ? `수정 ${editCount}/${MAX_EDITS}회` : "작성 중인 내용은 자동 임시저장되어 다른 메뉴에 다녀와도 유지됩니다."}
           </p>
         </div>
         <div className="flex gap-2">
           {isEdit && onBack && (
             <Button variant="outline" size="sm" onClick={onBack}><ArrowLeft size={14} className="mr-1" />목록으로</Button>
+          )}
+          {!isEdit && (
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={resetForm}>작성 초기화</Button>
           )}
           {!isEdit && pastJobs.length > 0 && (
             <Dialog open={copyOpen} onOpenChange={setCopyOpen}>
