@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { ImagePlus, CalendarDays, Sparkles, Copy } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
+import { useFormDraft, clearFormDraft } from "@/lib/form-draft";
 
 const MAX_WORK_DATES = 5;
 
