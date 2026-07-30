@@ -315,7 +315,9 @@ function Page() {
               </DialogContent>
             </Dialog>
           )}
+          </div>
         </div>
+        <p className="text-[11px] text-muted-foreground -mt-1">작성 중인 내용은 자동 임시저장되어 다른 페이지에 다녀와도 유지됩니다.</p>
         <Card><CardContent className="p-4 space-y-4">
           <div className="grid grid-cols-2 gap-2">
             <div><Label>업종</Label>
