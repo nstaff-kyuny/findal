@@ -284,8 +284,10 @@ function Page() {
   return (
     <MobileLayout role="employer">
       <div className="p-3 space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <h2 className="font-bold">새 공고 등록</h2>
+          <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="sm" className="text-xs text-muted-foreground" onClick={resetForm}>작성 초기화</Button>
           {pastJobs.length > 0 && (
             <Dialog open={copyOpen} onOpenChange={setCopyOpen}>
               <DialogTrigger asChild>
