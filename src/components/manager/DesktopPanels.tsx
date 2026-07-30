@@ -26,6 +26,7 @@ import {
 } from "@/lib/constants";
 import { useI18n } from "@/lib/i18n";
 import { generateJobDraft, generateJobImage, moderateText } from "@/lib/ai.functions";
+import { useFormDraft, clearFormDraft } from "@/lib/form-draft";
 
 const MAX_WORK_DATES = 5;
 const MAX_EDITS = 2;
