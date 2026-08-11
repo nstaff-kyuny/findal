@@ -69,7 +69,9 @@ export const getTossPublicConfig = createServerFn({ method: "GET" })
       enabled: cfg.enabled,
       mode: cfg.mode,
       clientKey: cfg.clientKey,
+      keyType: cfg.keyType,
     };
+
   });
 
 // 관리자 전용: 전체 설정 조회 (마스킹된 형태로 반환)
