@@ -91,5 +91,9 @@
     "preview": "vite preview"
   },
   "sideEffects": false,
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "seroval": "1.5.4",
+    "seroval-plugins": "1.5.4"
+  }
 }
