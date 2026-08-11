@@ -18,7 +18,7 @@ import { generateScreeningQuestions, moderateText } from "@/lib/ai.functions";
 
 export const Route = createFileRoute("/seeker/jobs/$id")({
   component: () => <RoleGate role="seeker"><Page /></RoleGate>,
-  validateSearch: (s: Record<string, unknown>) => ({ from: (s.from as string) || "" }),
+  validateSearch: (s: Record<string, unknown>): { from?: string } => (s.from ? { from: String(s.from) } : {}),
 });
 
 function Page() {
