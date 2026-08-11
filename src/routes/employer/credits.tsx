@@ -85,6 +85,24 @@ function Page() {
       const order = await createOrder({ data: { pack: qty } });
 
       const tossPayments = TossPayments(clientKey);
+      const successUrl = window.location.origin + "/employer/credits/success";
+      const failUrl = window.location.origin + "/employer/credits/fail";
+
+      // API 개별 연동 키(ck_)는 결제창 API, 결제위젯 연동 키(gck_)는 위젯 API 사용
+      if (!clientKey.includes("_gck_")) {
+        const payment = tossPayments.payment({ customerKey: user.id });
+        await payment.requestPayment({
+          method: "CARD",
+          amount: { currency: "KRW", value: order.amount },
+          orderId: order.orderId,
+          orderName: order.orderName,
+          successUrl,
+          failUrl,
+          card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false },
+        });
+        return;
+      }
+
       const widgets = tossPayments.widgets({ customerKey: user.id });
       widgetsRef.current = widgets;
 
@@ -99,13 +117,14 @@ function Page() {
           await widgets.requestPayment({
             orderId: order.orderId,
             orderName: order.orderName,
-            successUrl: window.location.origin + "/employer/credits/success",
-            failUrl: window.location.origin + "/employer/credits/fail",
+            successUrl,
+            failUrl,
           });
         } catch (err: any) {
           toast.error(err?.message || "결제 요청 실패");
         }
       });
+
     } catch (e: any) {
       toast.error(e?.message || "결제창을 열 수 없습니다");
     } finally {
