@@ -9,22 +9,31 @@ const PACKS = [
   { qty: 100, price: 100000 },
 ] as const;
 
-// 결제위젯 SDK 전용 데모(문서) 키 - 잘못된 형식이 저장되어 있을 때 안전 폴백
+// 데모(문서) 키 - 키가 아예 없을 때 안전 폴백 (결제위젯 SDK 데모 키)
 const TOSS_WIDGET_DEMO_CLIENT_KEY = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 const TOSS_WIDGET_DEMO_SECRET_KEY = "test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6";
 
+// 결제위젯 연동 키(gck/gsk) 와 API 개별 연동 키(ck/sk) 모두 지원
+const CLIENT_PREFIXES = ["test_gck_", "live_gck_", "test_ck_", "live_ck_"];
+const SECRET_PREFIXES = ["test_gsk_", "live_gsk_", "test_sk_", "live_sk_"];
+
 function sanitizeClientKey(k: string | null | undefined): string {
   const v = (k ?? "").trim();
-  if (v.startsWith("test_gck_") || v.startsWith("live_gck_")) return v;
+  if (CLIENT_PREFIXES.some((p) => v.startsWith(p))) return v;
   return TOSS_WIDGET_DEMO_CLIENT_KEY;
 }
 function sanitizeSecretKey(k: string | null | undefined): string {
   const v = (k ?? "").trim();
-  if (v.startsWith("test_gsk_") || v.startsWith("live_gsk_")) return v;
+  if (SECRET_PREFIXES.some((p) => v.startsWith(p))) return v;
   return TOSS_WIDGET_DEMO_SECRET_KEY;
 }
 
-// DB에 저장된 결제 설정을 서버에서 로드. 잘못된 형식(API 개별 연동 키)은 위젯 데모 키로 대체.
+// 클라이언트 키 종류: 위젯(widget) 또는 API 개별연동(payment)
+function keyTypeOf(clientKey: string): "widget" | "payment" {
+  return clientKey.includes("_gck_") ? "widget" : "payment";
+}
+
+// DB에 저장된 결제 설정을 서버에서 로드.
 async function loadTossConfig() {
   const { data } = await supabaseAdmin
     .from("payment_settings" as any)
@@ -36,10 +45,12 @@ async function loadTossConfig() {
   const row = data as any;
   const rawClient = row?.client_key || process.env.TOSS_CLIENT_KEY || "";
   const rawSecret = row?.secret_key || process.env.TOSS_SECRET_KEY || "";
+  const clientKey = sanitizeClientKey(rawClient);
   return {
     enabled: row?.enabled ?? false,
     mode: (row?.mode ?? "test") as "test" | "live",
-    clientKey: sanitizeClientKey(rawClient),
+    clientKey,
+    keyType: keyTypeOf(clientKey),
     secretKey: sanitizeSecretKey(rawSecret),
     rawClientKey: rawClient,
     rawSecretKey: rawSecret,
@@ -47,6 +58,7 @@ async function loadTossConfig() {
     merchantId: row?.merchant_id ?? null,
   };
 }
+
 
 // 클라이언트 결제창 초기화용: 시크릿 키는 절대 반환하지 않음
 export const getTossPublicConfig = createServerFn({ method: "GET" })
@@ -57,7 +69,9 @@ export const getTossPublicConfig = createServerFn({ method: "GET" })
       enabled: cfg.enabled,
       mode: cfg.mode,
       clientKey: cfg.clientKey,
+      keyType: cfg.keyType,
     };
+
   });
 
 // 관리자 전용: 전체 설정 조회 (마스킹된 형태로 반환)
@@ -102,34 +116,27 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
     });
     if (!isAdmin) throw new Error("권한 없음");
 
-    // 키 형식 검증: 결제위젯 연동 키만 지원 (test_gck_/test_gsk_ 또는 live_gck_/live_gsk_)
-    // API 개별 연동 키(test_ck_/test_sk_)는 위젯 SDK에서 지원되지 않음
-    if (data.clientKey) {
-      const ck = data.clientKey;
-      const isWidget = ck.startsWith("test_gck_") || ck.startsWith("live_gck_");
-      if (!isWidget) {
-        throw new Error(
-          "클라이언트 키는 '결제위젯 연동 키'여야 합니다. test_gck_ 또는 live_gck_ 로 시작하는 키를 입력해 주세요. (API 개별 연동 키 test_ck_ 는 지원되지 않습니다)",
-        );
-      }
+    // 키 형식 검증: 결제위젯 연동 키(gck/gsk) 와 API 개별 연동 키(ck/sk) 모두 허용
+    if (data.clientKey && !CLIENT_PREFIXES.some((p) => data.clientKey!.startsWith(p))) {
+      throw new Error(
+        "클라이언트 키 형식이 올바르지 않습니다. test_ck_/live_ck_ (API 개별 연동) 또는 test_gck_/live_gck_ (결제위젯 연동) 로 시작하는 키를 입력해 주세요.",
+      );
     }
-    if (data.secretKey) {
-      const sk = data.secretKey;
-      const isWidget = sk.startsWith("test_gsk_") || sk.startsWith("live_gsk_");
-      if (!isWidget) {
-        throw new Error(
-          "시크릿 키는 '결제위젯 연동 키'여야 합니다. test_gsk_ 또는 live_gsk_ 로 시작하는 키를 입력해 주세요.",
-        );
-      }
+    if (data.secretKey && !SECRET_PREFIXES.some((p) => data.secretKey!.startsWith(p))) {
+      throw new Error(
+        "시크릿 키 형식이 올바르지 않습니다. test_sk_/live_sk_ 또는 test_gsk_/live_gsk_ 로 시작하는 키를 입력해 주세요.",
+      );
     }
     if (data.enabled && data.mode === "live") {
-      if (data.clientKey && !data.clientKey.startsWith("live_gck_")) {
-        throw new Error("실운영 모드에는 live_gck_ 로 시작하는 클라이언트 키가 필요합니다");
+      if (data.clientKey && !data.clientKey.startsWith("live_")) {
+        throw new Error("실운영 모드에는 live_ 로 시작하는 클라이언트 키가 필요합니다");
       }
-      if (data.secretKey && !data.secretKey.startsWith("live_gsk_")) {
-        throw new Error("실운영 모드에는 live_gsk_ 로 시작하는 시크릿 키가 필요합니다");
+      if (data.secretKey && !data.secretKey.startsWith("live_")) {
+        throw new Error("실운영 모드에는 live_ 로 시작하는 시크릿 키가 필요합니다");
       }
     }
+
+
 
     const { data: existing } = await supabaseAdmin
       .from("payment_settings" as any)
