@@ -1974,19 +1974,19 @@ function RefundRequestsCard() {
         승인 시 토스 결제취소 API가 호출되고, 같은 수량의 크레딧이 자동 차감됩니다. 미사용 크레딧이 부족하면 승인이 차단됩니다.
       </p>
       <table className="w-full text-sm">
-        <thead><tr className="text-left border-b">
-          <th className="py-2">신청일</th><th>업체</th><th>금액/크레딧</th><th>사유</th><th>보유</th><th>상태</th><th></th>
+        <thead><tr className="text-left border-b align-middle">
+          <th className="py-2 align-middle">신청일</th><th className="align-middle">업체</th><th className="align-middle">금액/크레딧</th><th className="align-middle">사유</th><th className="align-middle">보유</th><th className="align-middle">상태</th><th className="align-middle"></th>
         </tr></thead>
         <tbody>
           {rows.map(r => (
-            <tr key={r.id} className="border-b align-top">
-              <td className="py-2 text-xs">{new Date(r.created_at).toLocaleString("ko-KR")}</td>
-              <td className="text-xs">{r.company_name ?? "-"}</td>
-              <td className="text-xs">{Number(r.amount_krw).toLocaleString()}원 / {r.credits}</td>
-              <td className="text-xs max-w-[220px]">{r.reason}{r.admin_note && <span className="block text-muted-foreground">메모: {r.admin_note}</span>}</td>
-              <td className="text-xs">{r.employer_credits ?? "-"}</td>
-              <td><Badge variant={r.status === "completed" ? "default" : "secondary"}>{STATUS[r.status] ?? r.status}</Badge></td>
-              <td className="text-right whitespace-nowrap">
+            <tr key={r.id} className="border-b align-middle">
+              <td className="py-2 text-xs align-middle">{new Date(r.created_at).toLocaleString("ko-KR")}</td>
+              <td className="text-xs align-middle">{r.company_name ?? "-"}</td>
+              <td className="text-xs align-middle">{Number(r.amount_krw).toLocaleString()}원 / {r.credits}</td>
+              <td className="text-xs max-w-[220px] align-middle">{r.reason}{r.admin_note && <span className="block text-muted-foreground">메모: {r.admin_note}</span>}</td>
+              <td className="text-xs align-middle">{r.employer_credits ?? "-"}</td>
+              <td className="align-middle"><Badge variant={r.status === "completed" ? "default" : "secondary"}>{STATUS[r.status] ?? r.status}</Badge></td>
+              <td className="text-right whitespace-nowrap align-middle">
                 {r.status === "pending" && (
                   <span className="flex gap-1 justify-end">
                     <Button size="sm" onClick={() => approve(r.id)} disabled={busy === r.id}>승인·환불</Button>
