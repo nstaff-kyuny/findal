@@ -205,7 +205,9 @@ export const confirmCreditOrder = createServerFn({ method: "POST" })
       .object({
         paymentKey: z.string().min(1).max(200),
         orderId: z.string().min(1).max(64),
-        amount: z.number().int().positive(),
+        // 토스 리다이렉트에서 금액이 누락/변형될 수 있으므로 선택값으로 처리하고
+        // 실제 승인 금액은 서버에 저장된 주문 금액을 사용한다.
+        amount: z.coerce.number().int().positive().optional(),
       })
       .parse(data),
   )
@@ -223,7 +225,11 @@ export const confirmCreditOrder = createServerFn({ method: "POST" })
     if (orderErr || !order) throw new Error("주문을 찾을 수 없습니다");
     const ord = order as any;
     if (ord.employer_id !== context.userId) throw new Error("권한 없음");
-    if (ord.amount_krw !== data.amount) throw new Error("결제 금액이 일치하지 않습니다");
+    if (data.amount !== undefined && ord.amount_krw !== data.amount) {
+      throw new Error("결제 금액이 일치하지 않습니다");
+    }
+    const amount = ord.amount_krw as number;
+
 
     if (ord.status === "confirmed") {
       return { ok: true, alreadyConfirmed: true, pack: ord.pack };
@@ -240,7 +246,7 @@ export const confirmCreditOrder = createServerFn({ method: "POST" })
       body: JSON.stringify({
         paymentKey: data.paymentKey,
         orderId: data.orderId,
-        amount: data.amount,
+        amount,
       }),
     });
     const body = await res.json();
