@@ -213,7 +213,9 @@ function Page() {
             );
           })}
         </div>
+        )}
       </div>
+
 
       <Dialog open={!!detail} onOpenChange={(o) => !o && setDetail(null)}>
         <DialogContent className="max-w-sm">
