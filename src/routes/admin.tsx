@@ -24,6 +24,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { analyzeInquiryText, generateAdminAiInsights, generateAdBannerImage } from "@/lib/ai.functions";
 import { getPaymentSettings, savePaymentSettings, diagnoseTossKeys, expireStaleCreditOrders } from "@/lib/toss.functions";
+import { adminListRefundRequests, adminApproveRefund, adminRejectRefund } from "@/lib/refunds.functions";
 
 
 export const Route = createFileRoute("/admin")({ component: Admin });
@@ -1926,7 +1927,77 @@ function PaymentTab() {
         </div>
         <p className="text-xs text-amber-600">⚠ 시크릿 키는 데이터베이스에 저장되며 서버에서만 사용됩니다. 절대 프론트엔드 코드에 붙여넣지 마세요.</p>
       </CardContent></Card>
+
+      <div className="md:col-span-2"><RefundRequestsCard /></div>
     </div>
+  );
+}
+
+function RefundRequestsCard() {
+  const listFn = useServerFn(adminListRefundRequests);
+  const approveFn = useServerFn(adminApproveRefund);
+  const rejectFn = useServerFn(adminRejectRefund);
+  const [rows, setRows] = useState<any[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const load = async () => {
+    try { setRows(await listFn({})); } catch (e: any) { toast.error(e?.message || "환불 신청을 불러오지 못했습니다"); }
+  };
+  useEffect(() => { load(); }, []);
+
+  const approve = async (id: string) => {
+    if (!confirm("토스 결제취소를 실행하고 크레딧을 회수합니다. 계속할까요?")) return;
+    setBusy(id);
+    try { await approveFn({ data: { id, note: null } }); toast.success("환불이 완료되었습니다"); await load(); }
+    catch (e: any) { toast.error(e?.message || "환불 처리 실패"); }
+    finally { setBusy(null); }
+  };
+  const reject = async (id: string) => {
+    const note = prompt("거절 사유를 입력하세요");
+    if (note === null) return;
+    setBusy(id);
+    try { await rejectFn({ data: { id, note } }); toast.success("환불 신청을 거절했습니다"); await load(); }
+    catch (e: any) { toast.error(e?.message || "처리 실패"); }
+    finally { setBusy(null); }
+  };
+
+  const STATUS: Record<string, string> = { pending: "심사중", completed: "환불완료", rejected: "거절", cancelled: "신청취소", approved: "승인" };
+
+  return (
+    <Card><CardContent className="p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold">크레딧 환불 신청 관리</h3>
+        <Button size="sm" variant="outline" onClick={load}>새로고침</Button>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        승인 시 토스 결제취소 API가 호출되고, 같은 수량의 크레딧이 자동 차감됩니다. 미사용 크레딧이 부족하면 승인이 차단됩니다.
+      </p>
+      <table className="w-full text-sm">
+        <thead><tr className="text-left border-b">
+          <th className="py-2">신청일</th><th>업체</th><th>금액/크레딧</th><th>사유</th><th>보유</th><th>상태</th><th></th>
+        </tr></thead>
+        <tbody>
+          {rows.map(r => (
+            <tr key={r.id} className="border-b align-top">
+              <td className="py-2 text-xs">{new Date(r.created_at).toLocaleString("ko-KR")}</td>
+              <td className="text-xs">{r.company_name ?? "-"}</td>
+              <td className="text-xs">{Number(r.amount_krw).toLocaleString()}원 / {r.credits}</td>
+              <td className="text-xs max-w-[220px]">{r.reason}{r.admin_note && <span className="block text-muted-foreground">메모: {r.admin_note}</span>}</td>
+              <td className="text-xs">{r.employer_credits ?? "-"}</td>
+              <td><Badge variant={r.status === "completed" ? "default" : "secondary"}>{STATUS[r.status] ?? r.status}</Badge></td>
+              <td className="text-right whitespace-nowrap">
+                {r.status === "pending" && (
+                  <span className="flex gap-1 justify-end">
+                    <Button size="sm" onClick={() => approve(r.id)} disabled={busy === r.id}>승인·환불</Button>
+                    <Button size="sm" variant="outline" onClick={() => reject(r.id)} disabled={busy === r.id}>거절</Button>
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+          {rows.length === 0 && <tr><td colSpan={7} className="py-6 text-center text-xs text-muted-foreground">환불 신청이 없습니다</td></tr>}
+        </tbody>
+      </table>
+    </CardContent></Card>
   );
 }
 

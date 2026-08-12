@@ -906,6 +906,51 @@ export type Database = {
         }
         Relationships: []
       }
+      refund_requests: {
+        Row: {
+          admin_note: string | null
+          amount_krw: number
+          created_at: string
+          credits: number
+          employer_id: string
+          id: string
+          order_id: string
+          processed_at: string | null
+          processed_by: string | null
+          reason: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_krw: number
+          created_at?: string
+          credits: number
+          employer_id: string
+          id?: string
+          order_id: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_krw?: number
+          created_at?: string
+          credits?: number
+          employer_id?: string
+          id?: string
+          order_id?: string
+          processed_at?: string | null
+          processed_by?: string | null
+          reason?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       seeker_favorites: {
         Row: {
           created_at: string
@@ -1065,6 +1110,7 @@ export type Database = {
         | "signup_bonus"
         | "partner_monthly"
         | "partner_recharge"
+        | "refund"
       experience_level: "lt5" | "gte5"
       industry:
         | "hotel"
@@ -1221,6 +1267,7 @@ export const Constants = {
         "signup_bonus",
         "partner_monthly",
         "partner_recharge",
+        "refund",
       ],
       experience_level: ["lt5", "gte5"],
       industry: [
