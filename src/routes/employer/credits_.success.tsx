@@ -8,14 +8,27 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
-const searchSchema = z.object({
-  paymentKey: z.string().optional(),
-  orderId: z.string().optional(),
-  amount: z.coerce.number().optional(),
-});
+type SuccessSearch = {
+  paymentKey?: string;
+  orderId?: string;
+  amount?: number;
+};
+
+// 토스 리다이렉트 파라미터는 형식이 달라질 수 있으므로 절대 throw 하지 않는다.
+// (검증 실패로 throw 하면 라우터 에러 화면이 떠서 결제가 실패한 것처럼 보임)
+function parseSearch(raw: Record<string, unknown>): SuccessSearch {
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  const rawAmount = str(raw?.amount) ?? (typeof raw?.amount === "number" ? String(raw.amount) : undefined);
+  const n = rawAmount ? Number(rawAmount.replace(/[^0-9.]/g, "")) : NaN;
+  return {
+    paymentKey: str(raw?.paymentKey),
+    orderId: str(raw?.orderId),
+    amount: Number.isFinite(n) && n > 0 ? Math.round(n) : undefined,
+  };
+}
 
 export const Route = createFileRoute("/employer/credits_/success")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s): SuccessSearch => parseSearch(s as Record<string, unknown>),
   component: () => <RoleGate role="employer"><Page /></RoleGate>,
 });
 
@@ -28,7 +41,7 @@ function Page() {
   const [pack, setPack] = useState<number>(0);
 
   useEffect(() => {
-    if (!search.paymentKey || !search.orderId || !search.amount) {
+    if (!search.paymentKey || !search.orderId) {
       setState("fail");
       setMsg("결제 정보가 올바르지 않습니다.");
       return;
@@ -38,11 +51,12 @@ function Page() {
         const r = await confirm({ data: {
           paymentKey: search.paymentKey!,
           orderId: search.orderId!,
-          amount: search.amount!,
+          ...(search.amount ? { amount: search.amount } : {}),
         }});
         setPack(r.pack || 0);
         setState("ok");
       } catch (e: any) {
+
         setMsg(e?.message || "결제 승인에 실패했습니다.");
         setState("fail");
       }
