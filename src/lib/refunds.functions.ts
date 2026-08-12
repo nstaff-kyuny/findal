@@ -235,14 +235,28 @@ export const adminApproveRefund = createServerFn({ method: "POST" })
         },
       );
       const body: any = await res.json().catch(() => ({}));
-      if (!res.ok) {
+      // 토스 대시보드에서 이미 취소한 건은 정상 처리로 간주(멱등)
+      const alreadyCanceled =
+        body?.code === "ALREADY_CANCELED_PAYMENT" ||
+        (typeof body?.message === "string" && body.message.includes("이미 취소된 결제"));
+      if (!res.ok && !alreadyCanceled) {
         await db
           .from("refund_requests" as any)
           .update({ admin_note: `취소 실패: ${body?.code ?? ""} ${body?.message ?? ""}`.trim() })
           .eq("id", req.id);
         throw new Error(body?.message || "토스 결제취소 실패");
       }
-      await db.from("credit_orders" as any).update({ status: "canceled", raw: body }).eq("id", ord.id);
+      await db
+        .from("credit_orders" as any)
+        .update({ status: "canceled", raw: body })
+        .eq("id", ord.id);
+      if (alreadyCanceled) {
+        await db
+          .from("refund_requests" as any)
+          .update({ admin_note: "토스에서 이미 취소된 결제 — 크레딧만 회수 처리" })
+          .eq("id", req.id);
+      }
+
     } else {
       await db.from("credit_orders" as any).update({ status: "canceled" }).eq("id", ord.id);
     }
