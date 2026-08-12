@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
 import { useI18n } from "@/lib/i18n";
-import { ClipboardList, Inbox, Plus, BookOpen, Monitor, ExternalLink } from "lucide-react";
+import { ClipboardList, Inbox, Plus, BookOpen, Monitor } from "lucide-react";
 
 export const Route = createFileRoute("/employer/home")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
@@ -75,12 +75,7 @@ function Page() {
               <p className="text-sm font-bold">{t("pc_admin_notice_title")}</p>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">{t("pc_admin_notice_body")}</p>
-            <p className="text-sm font-mono font-semibold text-primary">{t("pc_admin_site_url")}</p>
-            <a href="/manager" target="_blank" rel="noreferrer" className="block">
-              <Button size="sm" variant="outline" className="w-full border-primary/50 text-primary">
-                <ExternalLink size={14} className="mr-1" />{t("pc_admin_open")}
-              </Button>
-            </a>
+            <p className="text-xs text-muted-foreground">{t("pc_admin_site_url")}</p>
           </CardContent>
         </Card>
       </div>

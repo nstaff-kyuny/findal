@@ -158,9 +158,8 @@ export const UI: Dict = {
 
   // PC admin notice (employer mobile home)
   pc_admin_notice_title: { ko: "PC에서 더 편리하게 관리하세요", en: "Manage more easily on PC", mn: "PC дээр илүү тохиромжтой удирдаарай", ru: "Удобное управление с ПК", zh: "在电脑上更便捷地管理" },
-  pc_admin_notice_body: { ko: "공고 등록, 신청 승인, 크레딧, 승인기록 다운로드 등은 PC 관리자 페이지에서 더 빠르게 처리할 수 있습니다.", en: "Job posts, approvals, credits, and history downloads are faster on the PC admin page.", mn: "Зар, зөвшөөрөл, кредит, түүхийг PC удирдлагын хуудаснаас илүү хурдан хийнэ.", ru: "Объявления, одобрения, кредиты и история — быстрее на ПК.", zh: "在电脑管理页面可更快处理招聘、审批、积分和记录下载。" },
-  pc_admin_site_url: { ko: "findar.nstaff.co.kr", en: "findar.nstaff.co.kr", mn: "findar.nstaff.co.kr", ru: "findar.nstaff.co.kr", zh: "findar.nstaff.co.kr" },
-  pc_admin_open: { ko: "PC 관리자 페이지 열기", en: "Open PC admin page", mn: "PC удирдлагын хуудас нээх", ru: "Открыть страницу ПК-админа", zh: "打开电脑管理页面" },
+  pc_admin_notice_body: { ko: "공고 등록, 신청 승인, 크레딧, 승인기록 다운로드 등은 아래 PC 관리자 페이지에서 더 빠르게 처리할 수 있습니다.", en: "Job posts, approvals, credits, and history downloads are faster on the PC admin page below.", mn: "Зар, зөвшөөрөл, кредит, түүхийг доорх PC удирдлагын хуудаснаас илүү хурдан хийнэ.", ru: "Объявления, одобрения, кредиты и история — быстрее на ПК по ссылке ниже.", zh: "在下方电脑管理页面可更快处理招聘、审批、积分和记录下载。" },
+  pc_admin_site_url: { ko: "https://findar.nstaff.co.kr/manager", en: "https://findar.nstaff.co.kr/manager", mn: "https://findar.nstaff.co.kr/manager", ru: "https://findar.nstaff.co.kr/manager", zh: "https://findar.nstaff.co.kr/manager" },
 };
 
 export function t(key: string, lang: Lang): string {
