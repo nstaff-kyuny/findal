@@ -161,6 +161,7 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
       { value: "credits", label: "크레딧" },
       { value: "purchases", label: "크레딧 구매현황" },
       { value: "payment", label: "결제 연동" },
+      { value: "refunds", label: "환불 신청 관리" },
     ],
   },
   {
