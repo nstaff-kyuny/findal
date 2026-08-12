@@ -47,12 +47,20 @@ function loadTossSdk(): Promise<any> {
   });
 }
 
+const PAY_METHODS = [
+  { key: "CARD", label: "카드" },
+  { key: "TRANSFER", label: "계좌이체" },
+  { key: "VIRTUAL_ACCOUNT", label: "가상계좌" },
+] as const;
+
 function Page() {
   const { user } = useAuth();
   const [emp, setEmp] = useState<any>(null);
   const [busy, setBusy] = useState<number | null>(null);
+  const [payMethod, setPayMethod] = useState<"CARD" | "TRANSFER" | "VIRTUAL_ACCOUNT">("CARD");
   const createOrder = useServerFn(createCreditOrder);
   const widgetsRef = useRef<any>(null);
+
 
   const load = async () => {
     if (!user) return;
@@ -92,16 +100,22 @@ function Page() {
       if (!clientKey.includes("_gck_")) {
         const payment = tossPayments.payment({ customerKey: user.id });
         await payment.requestPayment({
-          method: "CARD",
+          method: payMethod,
           amount: { currency: "KRW", value: order.amount },
           orderId: order.orderId,
           orderName: order.orderName,
           successUrl,
           failUrl,
-          card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false },
+          ...(payMethod === "CARD"
+            ? { card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false } }
+            : {}),
+          ...(payMethod === "VIRTUAL_ACCOUNT"
+            ? { virtualAccount: { cashReceipt: { type: "소득공제" }, useEscrow: false, validHours: 24 } }
+            : {}),
         });
         return;
       }
+
 
       const widgets = tossPayments.widgets({ customerKey: user.id });
       widgetsRef.current = widgets;
@@ -148,7 +162,22 @@ function Page() {
         <p className="text-[11px] text-muted-foreground">
           ※ 임의 금액 입력은 지원되지 않으며, 아래의 <b>고정 상품</b> 중에서만 결제할 수 있습니다.
         </p>
+        <div className="flex gap-1.5">
+          {PAY_METHODS.map((m) => (
+            <button
+              key={m.key}
+              type="button"
+              onClick={() => setPayMethod(m.key)}
+              className={`flex-1 h-9 rounded-md border text-sm ${
+                payMethod === m.key ? "bg-primary text-primary-foreground border-primary" : "bg-background"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
         <div className="space-y-2">
+
           {CREDIT_PACKS.map((p) => (
             <Card key={p.qty}>
               <CardContent className="p-3 flex justify-between items-center">

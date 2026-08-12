@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
+import { reportOrderFailure } from "@/lib/toss.functions";
 
 type FailSearch = { code?: string; message?: string; orderId?: string };
 
@@ -21,10 +24,20 @@ export const Route = createFileRoute("/employer/credits_/fail")({
 function Page() {
   const search = useSearch({ from: "/employer/credits_/fail" });
   const nav = useNavigate();
+  const report = useServerFn(reportOrderFailure);
   const isMerchantSuspended =
     (search.message || "").includes("업체 사정") ||
     (search.message || "").includes("일시 중지") ||
     ["NOT_AVAILABLE_PAYMENT", "REJECT_CARD_COMPANY", "PROVIDER_ERROR"].includes(search.code || "");
+
+  // 실패 사유를 주문에 기록 (관리자가 원인 추적 가능하도록)
+  useEffect(() => {
+    if (!search.orderId) return;
+    report({
+      data: { orderId: search.orderId, code: search.code ?? null, message: search.message ?? null },
+    }).catch(() => {});
+  }, [search.orderId]);
+
   return (
     <MobileLayout role="employer">
       <div className="p-4">
