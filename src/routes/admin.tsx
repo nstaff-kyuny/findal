@@ -222,6 +222,7 @@ function AdminPanel() {
         <TabsContent value="banners"><BannersTab /></TabsContent>
         <TabsContent value="purchases"><PurchasesTab /></TabsContent>
         <TabsContent value="payment"><PaymentTab /></TabsContent>
+        <TabsContent value="refunds"><RefundRequestsCard /></TabsContent>
         <TabsContent value="notices"><NoticesTab /></TabsContent>
         <TabsContent value="events"><EventsTab /></TabsContent>
         <TabsContent value="faqs"><FaqsTab /></TabsContent>
