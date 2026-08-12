@@ -13,8 +13,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   LogOut, Monitor, Megaphone, Plus,
@@ -25,6 +26,7 @@ import {
 import { NewJobPanel, HistoryPanel, ProfilePanel } from "@/components/manager/DesktopPanels";
 import { isJobCompleted } from "@/lib/job-visuals";
 import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
+import { listRefundableOrders, createRefundRequest, listMyRefundRequests, cancelMyRefundRequest } from "@/lib/refunds.functions";
 
 const FALLBACK_TOSS_CLIENT_KEY = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 declare global { interface Window { TossPayments?: any } }
@@ -531,6 +533,153 @@ function ApplicationsPanel({ userId, onChanged }: { userId: string; onChanged: (
   );
 }
 
+/* ----------------- 환불 ----------------- */
+const REFUND_STATUS: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  pending: { label: "심사중", variant: "secondary" },
+  approved: { label: "승인", variant: "default" },
+  completed: { label: "환불완료", variant: "default" },
+  rejected: { label: "거절", variant: "destructive" },
+  cancelled: { label: "신청취소", variant: "outline" },
+};
+
+function RefundCard({ onChanged }: { onChanged: () => void }) {
+  const fetchRefundable = useServerFn(listRefundableOrders);
+  const fetchMine = useServerFn(listMyRefundRequests);
+  const submit = useServerFn(createRefundRequest);
+  const cancelReq = useServerFn(cancelMyRefundRequest);
+
+  const [info, setInfo] = useState<{ credits: number; windowDays: number; orders: any[] } | null>(null);
+  const [mine, setMine] = useState<any[]>([]);
+  const [open, setOpen] = useState(false);
+  const [orderId, setOrderId] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const reload = useCallback(async () => {
+    const [a, b] = await Promise.all([
+      fetchRefundable({}).catch(() => null),
+      fetchMine({}).catch(() => [] as any[]),
+    ]);
+    setInfo(a as any);
+    setMine((b as any[]) ?? []);
+  }, [fetchRefundable, fetchMine]);
+
+  useEffect(() => { reload(); }, [reload]);
+
+  const selected = info?.orders.find((o) => o.id === orderId) ?? null;
+
+  const doSubmit = async () => {
+    if (!orderId) return toast.error("환불할 결제를 선택해 주세요");
+    if (reason.trim().length < 2) return toast.error("환불 사유를 입력해 주세요");
+    setBusy(true);
+    try {
+      await submit({ data: { orderId, reason: reason.trim() } });
+      toast.success("환불 신청이 접수되었습니다. 관리자 확인 후 처리됩니다.");
+      setOpen(false); setOrderId(""); setReason("");
+      await reload(); onChanged();
+    } catch (e: any) {
+      toast.error(e?.message || "환불 신청에 실패했습니다");
+    } finally { setBusy(false); }
+  };
+
+  const doCancel = async (id: string) => {
+    try {
+      await cancelReq({ data: { id } });
+      toast.success("환불 신청을 취소했습니다.");
+      await reload();
+    } catch (e: any) { toast.error(e?.message || "취소에 실패했습니다"); }
+  };
+
+  return (
+    <>
+      <Card>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm">환불 신청 / 환불 내역</h3>
+            {info && info.orders.length > 0 && (
+              <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
+                환불 신청하기 ({info.orders.length}건 가능)
+              </Button>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            결제 후 {info?.windowDays ?? 7}일 이내, <b>해당 결제의 크레딧을 사용하지 않은 경우</b>에만 전액 환불 신청이 가능합니다.
+            관리자가 승인하면 결제수단으로 환불되고 같은 수량의 크레딧이 차감됩니다.
+            {info && info.orders.length === 0 && " 현재 환불 신청 가능한 결제가 없습니다."}
+          </p>
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>신청일</TableHead><TableHead>크레딧</TableHead><TableHead>금액</TableHead>
+              <TableHead>사유</TableHead><TableHead>상태</TableHead><TableHead className="text-right">관리</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {mine.length === 0 && <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">환불 신청 내역 없음</TableCell></TableRow>}
+              {mine.map((r) => (
+                <TableRow key={r.id}>
+                  <TableCell className="text-xs">{new Date(r.created_at).toLocaleDateString("ko-KR")}</TableCell>
+                  <TableCell className="text-xs">{r.credits}</TableCell>
+                  <TableCell className="text-xs">{Number(r.amount_krw).toLocaleString()}원</TableCell>
+                  <TableCell className="text-xs max-w-[220px]">
+                    <span className="line-clamp-2">{r.reason}</span>
+                    {r.admin_note && <span className="block text-[10px] text-muted-foreground mt-0.5">관리자: {r.admin_note}</span>}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={REFUND_STATUS[r.status]?.variant ?? "secondary"} className="text-[10px]">
+                      {REFUND_STATUS[r.status]?.label ?? r.status}
+                    </Badge>
+                    {r.processed_at && <span className="block text-[10px] text-muted-foreground mt-0.5">{new Date(r.processed_at).toLocaleDateString("ko-KR")}</span>}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {r.status === "pending" && (
+                      <Button size="sm" variant="ghost" className="text-xs" onClick={() => doCancel(r.id)}>신청취소</Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>환불 신청</DialogTitle>
+            <DialogDescription>보유 크레딧 {info?.credits ?? 0}개 · 미사용 크레딧 범위 내에서만 신청됩니다.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs">환불할 결제</Label>
+              <select
+                className="w-full border rounded h-10 px-2 mt-1 bg-background text-sm"
+                value={orderId}
+                onChange={(e) => setOrderId(e.target.value)}
+              >
+                <option value="">선택하세요</option>
+                {(info?.orders ?? []).map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {new Date(o.created_at).toLocaleDateString("ko-KR")} · {o.pack} 크레딧 · {Number(o.amount_krw).toLocaleString()}원
+                  </option>
+                ))}
+              </select>
+            </div>
+            {selected && (
+              <p className="text-[11px] text-muted-foreground">
+                환불 시 <b>{selected.pack} 크레딧</b>이 차감되고 {Number(selected.amount_krw).toLocaleString()}원이 결제수단으로 환불됩니다.
+              </p>
+            )}
+            <div>
+              <Label className="text-xs">환불 사유</Label>
+              <Textarea value={reason} onChange={(e) => setReason(e.target.value)} placeholder="예: 착오 결제 / 서비스 이용 계획 변경" rows={3} />
+            </div>
+            <Button className="w-full" onClick={doSubmit} disabled={busy}>{busy ? "접수 중…" : "환불 신청 접수"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
 /* ----------------- 크레딧 ----------------- */
 function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => void }) {
   const [emp, setEmp] = useState<any>(null);
@@ -678,6 +827,10 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
         </Card>
 
       </div>
+
+      <RefundCard onChanged={() => { load(); onChanged(); }} />
+
+
 
 
       <div className="grid grid-cols-2 gap-4">
