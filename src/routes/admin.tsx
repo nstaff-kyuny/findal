@@ -161,6 +161,7 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
       { value: "credits", label: "크레딧" },
       { value: "purchases", label: "크레딧 구매현황" },
       { value: "payment", label: "결제 연동" },
+      { value: "refunds", label: "환불 신청 관리" },
     ],
   },
   {
@@ -221,6 +222,7 @@ function AdminPanel() {
         <TabsContent value="banners"><BannersTab /></TabsContent>
         <TabsContent value="purchases"><PurchasesTab /></TabsContent>
         <TabsContent value="payment"><PaymentTab /></TabsContent>
+        <TabsContent value="refunds"><RefundRequestsCard /></TabsContent>
         <TabsContent value="notices"><NoticesTab /></TabsContent>
         <TabsContent value="events"><EventsTab /></TabsContent>
         <TabsContent value="faqs"><FaqsTab /></TabsContent>
