@@ -302,3 +302,112 @@ export const confirmCreditOrder = createServerFn({ method: "POST" })
 
     return { ok: true, pack: ord.pack };
   });
+
+// 관리자 전용: 저장된 키가 실제로 어느 상점(MID)에 속하는지 토스 API로 진단
+export const diagnoseTossKeys = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("권한 없음");
+
+    const cfg = await loadTossConfig();
+    const basic = Buffer.from(`${cfg.secretKey}:`).toString("base64");
+
+    // 최근 주문이 있으면 그 주문으로 조회 → mId 확인. 없으면 더미 주문으로 키 유효성만 확인.
+    const { data: recent } = await supabaseAdmin
+      .from("credit_orders" as any)
+      .select("id")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const probeId = (recent as any)?.id || `diag_${Date.now()}`;
+
+    let mId: string | null = null;
+    let keyValid = false;
+    let note = "";
+    try {
+      const res = await fetch(`https://api.tosspayments.com/v1/payments/orders/${encodeURIComponent(probeId)}`, {
+        headers: { Authorization: `Basic ${basic}` },
+      });
+      const body: any = await res.json().catch(() => ({}));
+      if (res.ok) {
+        keyValid = true;
+        mId = body?.mId ?? null;
+      } else if (body?.code === "NOT_FOUND_PAYMENT") {
+        keyValid = true;
+        note = "키는 유효하지만 조회할 결제 이력이 없어 상점 ID를 확인할 수 없습니다. 결제를 1회 시도한 뒤 다시 진단해 주세요.";
+      } else if (body?.code === "UNAUTHORIZED_KEY") {
+        note = "시크릿 키가 유효하지 않습니다. 토스 개발자센터에서 키를 다시 확인해 주세요.";
+      } else {
+        note = body?.message || `조회 실패 (HTTP ${res.status})`;
+      }
+    } catch (e: any) {
+      note = e?.message || "토스 API 연결 실패";
+    }
+
+    const entered = (cfg.merchantId ?? "").trim();
+    return {
+      keyValid,
+      mId,
+      enteredMerchantId: entered || null,
+      merchantMismatch: !!(mId && entered && mId !== entered),
+      mode: cfg.mode,
+      keyType: cfg.keyType,
+      note,
+    };
+  });
+
+// 결제 실패 사유를 주문에 기록 (본인 주문만)
+export const reportOrderFailure = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        orderId: z.string().min(1).max(64),
+        code: z.string().max(100).optional().nullable(),
+        message: z.string().max(500).optional().nullable(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: order } = await supabaseAdmin
+      .from("credit_orders" as any)
+      .select("id, employer_id, status")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    const ord = order as any;
+    if (!ord || ord.employer_id !== context.userId) return { ok: false };
+    if (ord.status === "confirmed") return { ok: false };
+
+    await supabaseAdmin
+      .from("credit_orders" as any)
+      .update({
+        status: "failed",
+        raw: { failure: { code: data.code ?? null, message: data.message ?? null, at: new Date().toISOString() } },
+      })
+      .eq("id", data.orderId);
+    return { ok: true };
+  });
+
+// 1시간 이상 미완료로 남은 주문을 만료 처리
+export const expireStaleCreditOrders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: isAdmin } = await context.supabase.rpc("has_role", {
+      _user_id: context.userId,
+      _role: "admin",
+    });
+    if (!isAdmin) throw new Error("권한 없음");
+    const cutoff = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("credit_orders" as any)
+      .update({ status: "expired" })
+      .eq("status", "pending")
+      .lt("created_at", cutoff)
+      .select("id");
+    if (error) throw new Error(error.message);
+    return { expired: (data as any[] | null)?.length ?? 0 };
+  });
