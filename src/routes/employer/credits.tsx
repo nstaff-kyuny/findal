@@ -98,18 +98,13 @@ function Page() {
       if (!clientKey.includes("_gck_")) {
         const payment = tossPayments.payment({ customerKey: user.id });
         await payment.requestPayment({
-          method: payMethod,
+          method: "CARD",
           amount: { currency: "KRW", value: order.amount },
           orderId: order.orderId,
           orderName: order.orderName,
           successUrl,
           failUrl,
-          ...(payMethod === "CARD"
-            ? { card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false } }
-            : {}),
-          ...(payMethod === "VIRTUAL_ACCOUNT"
-            ? { virtualAccount: { cashReceipt: { type: "소득공제" }, useEscrow: false, validHours: 24 } }
-            : {}),
+          card: { useEscrow: false, flowMode: "DEFAULT", useCardPoint: false, useAppCardOnly: false },
         });
         return;
       }
