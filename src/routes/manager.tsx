@@ -681,6 +681,10 @@ function CreditsPanel({ userId, onChanged }: { userId: string; onChanged: () => 
 
       </div>
 
+      <RefundCard onChanged={() => { load(); onChanged(); }} />
+
+
+
 
       <div className="grid grid-cols-2 gap-4">
         <Card>
