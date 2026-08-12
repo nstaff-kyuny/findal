@@ -1850,7 +1850,36 @@ function PaymentTab() {
         <Button onClick={doSave} className="w-full" disabled={loading || saving}>
           {saving ? "저장 중…" : "설정 저장"}
         </Button>
+
+        <div className="border-t pt-3 space-y-2">
+          <div className="flex gap-2">
+            <Button variant="outline" className="flex-1" onClick={doDiagnose} disabled={loading || diagnosing}>
+              {diagnosing ? "진단 중…" : "키 진단 (상점 확인)"}
+            </Button>
+            <Button variant="outline" className="flex-1" onClick={doExpire} disabled={loading}>
+              미완료 주문 정리
+            </Button>
+          </div>
+          {diag && (
+            <div className="rounded-md border p-2 text-[11px] space-y-1 bg-muted/40">
+              <p>키 유효성: <b className={diag.keyValid ? "text-emerald-600" : "text-destructive"}>{diag.keyValid ? "정상" : "실패"}</b></p>
+              <p>키가 속한 실제 상점(MID): <b>{diag.mId ?? "확인 불가"}</b></p>
+              <p>입력한 가맹점 ID: <b>{diag.enteredMerchantId ?? "미입력"}</b></p>
+              {diag.merchantMismatch && (
+                <p className="text-destructive font-semibold">
+                  ⚠ 입력한 가맹점 ID와 키가 속한 상점이 다릅니다. 심사 완료된 상점의 키인지 개발자센터에서 다시 확인하세요.
+                </p>
+              )}
+              {diag.note && <p className="text-muted-foreground">{diag.note}</p>}
+            </div>
+          )}
+          <p className="text-[11px] text-muted-foreground">
+            결제창에서 “업체 사정으로 인해 결제를 일시 중지하였습니다” 메시지가 나오면 앱 오류가 아니라 결제사 상점 상태 문제입니다.
+            해당 상점의 심사·계약 완료 여부와 사용할 결제수단(카드/계좌이체) 활성화 여부를 확인하세요.
+          </p>
+        </div>
       </CardContent></Card>
+
 
       <Card><CardContent className="p-4 space-y-3 text-sm">
         <h3 className="font-bold">연동 가이드 · 토스페이먼츠</h3>
