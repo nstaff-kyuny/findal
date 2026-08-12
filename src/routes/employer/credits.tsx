@@ -222,11 +222,14 @@ function Page() {
           </CardContent>
         </Card>
 
+        <RefundSection onDone={load} />
+
         <Link to="/employer/credits/history" className="block pt-4">
           <Button variant="outline" className="w-full h-12 text-base">
-            구매 및 사용 내역 →
+            구매 · 사용 · 환불 내역 →
           </Button>
         </Link>
+
 
       </div>
     </MobileLayout>
