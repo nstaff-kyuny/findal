@@ -47,12 +47,20 @@ function loadTossSdk(): Promise<any> {
   });
 }
 
+const PAY_METHODS = [
+  { key: "CARD", label: "카드" },
+  { key: "TRANSFER", label: "계좌이체" },
+  { key: "VIRTUAL_ACCOUNT", label: "가상계좌" },
+] as const;
+
 function Page() {
   const { user } = useAuth();
   const [emp, setEmp] = useState<any>(null);
   const [busy, setBusy] = useState<number | null>(null);
+  const [payMethod, setPayMethod] = useState<"CARD" | "TRANSFER" | "VIRTUAL_ACCOUNT">("CARD");
   const createOrder = useServerFn(createCreditOrder);
   const widgetsRef = useRef<any>(null);
+
 
   const load = async () => {
     if (!user) return;
