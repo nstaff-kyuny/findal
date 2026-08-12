@@ -1729,8 +1729,33 @@ function PaymentTab() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [diag, setDiag] = useState<any>(null);
   const load = useServerFn(getPaymentSettings);
   const save = useServerFn(savePaymentSettings);
+  const diagnose = useServerFn(diagnoseTossKeys);
+  const expire = useServerFn(expireStaleCreditOrders);
+
+  const doDiagnose = async () => {
+    setDiagnosing(true);
+    try {
+      setDiag(await diagnose({}));
+    } catch (e: any) {
+      toast.error(e?.message || "진단 실패");
+    } finally {
+      setDiagnosing(false);
+    }
+  };
+
+  const doExpire = async () => {
+    try {
+      const r = await expire({});
+      toast.success(`미완료 주문 ${r.expired}건을 만료 처리했습니다`);
+    } catch (e: any) {
+      toast.error(e?.message || "정리 실패");
+    }
+  };
+
 
   useEffect(() => {
     (async () => {
