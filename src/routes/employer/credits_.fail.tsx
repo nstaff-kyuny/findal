@@ -1,19 +1,20 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
-import { z } from "zod";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { XCircle } from "lucide-react";
 
-const searchSchema = z.object({
-  code: z.string().optional(),
-  message: z.string().optional(),
-  orderId: z.string().optional(),
-});
+type FailSearch = { code?: string; message?: string; orderId?: string };
+
+// 토스 리다이렉트 파라미터 검증으로 절대 throw 하지 않도록 처리
+function parseSearch(raw: Record<string, unknown>): FailSearch {
+  const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : undefined);
+  return { code: str(raw?.code), message: str(raw?.message), orderId: str(raw?.orderId) };
+}
 
 export const Route = createFileRoute("/employer/credits_/fail")({
-  validateSearch: (s) => searchSchema.parse(s),
+  validateSearch: (s): FailSearch => parseSearch(s as Record<string, unknown>),
   component: () => <RoleGate role="employer"><Page /></RoleGate>,
 });
 
