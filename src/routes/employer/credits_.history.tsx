@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { useServerFn } from "@tanstack/react-start";
+import { listMyRefundRequests, cancelMyRefundRequest } from "@/lib/refunds.functions";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 
@@ -16,7 +18,11 @@ export const Route = createFileRoute("/employer/credits_/history")({
   component: () => <RoleGate role="employer"><Page /></RoleGate>,
 });
 
-type Filter = "all" | "purchase" | "usage";
+type Filter = "all" | "purchase" | "usage" | "refund";
+
+const REFUND_STATUS_KO: Record<string, string> = {
+  pending: "심사중", approved: "승인", completed: "환불완료", rejected: "거절", cancelled: "신청취소",
+};
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function daysAgoStr(n: number) {
@@ -43,6 +49,14 @@ function Page() {
   const [to, setTo] = useState(todayStr());
   const [detail, setDetail] = useState<any | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
+  const [refunds, setRefunds] = useState<any[]>([]);
+  const fetchRefunds = useServerFn(listMyRefundRequests);
+  const cancelRefund = useServerFn(cancelMyRefundRequest);
+
+  const loadRefunds = async () => {
+    try { setRefunds(await fetchRefunds({})); } catch { setRefunds([]); }
+  };
+  useEffect(() => { loadRefunds(); }, []);
 
   useEffect(() => { if (!user) return; (async () => {
     const { data: t } = await supabase.from("credit_transactions")
@@ -110,10 +124,10 @@ function Page() {
         </div>
 
         <div className="flex gap-1.5">
-          {(["all", "purchase", "usage"] as const).map(f => (
+          {(["all", "purchase", "usage", "refund"] as const).map(f => (
             <Button key={f} size="sm" variant={filter === f ? "default" : "outline"}
               className="flex-1" onClick={() => setFilter(f)}>
-              {f === "all" ? "전체" : f === "purchase" ? "구매 내역" : "사용 내역"}
+              {f === "all" ? "전체" : f === "purchase" ? "구매" : f === "usage" ? "사용" : "환불"}
             </Button>
           ))}
         </div>

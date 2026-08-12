@@ -356,5 +356,3 @@ function RefundSection({ onDone }: { onDone: () => void }) {
     </>
   );
 }
-
-export { STATUS_KO as REFUND_STATUS_KO };
