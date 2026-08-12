@@ -13,8 +13,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import {
   LogOut, Monitor, Megaphone, Plus,
@@ -25,6 +26,7 @@ import {
 import { NewJobPanel, HistoryPanel, ProfilePanel } from "@/components/manager/DesktopPanels";
 import { isJobCompleted } from "@/lib/job-visuals";
 import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
+import { listRefundableOrders, createRefundRequest, listMyRefundRequests, cancelMyRefundRequest } from "@/lib/refunds.functions";
 
 const FALLBACK_TOSS_CLIENT_KEY = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 declare global { interface Window { TossPayments?: any } }
