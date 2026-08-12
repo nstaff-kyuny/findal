@@ -246,7 +246,7 @@ export const confirmCreditOrder = createServerFn({ method: "POST" })
       body: JSON.stringify({
         paymentKey: data.paymentKey,
         orderId: data.orderId,
-        amount: data.amount,
+        amount,
       }),
     });
     const body = await res.json();
