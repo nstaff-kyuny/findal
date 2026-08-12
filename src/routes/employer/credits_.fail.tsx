@@ -21,6 +21,10 @@ export const Route = createFileRoute("/employer/credits_/fail")({
 function Page() {
   const search = useSearch({ from: "/employer/credits_/fail" });
   const nav = useNavigate();
+  const isMerchantSuspended =
+    (search.message || "").includes("업체 사정") ||
+    (search.message || "").includes("일시 중지") ||
+    ["NOT_AVAILABLE_PAYMENT", "REJECT_CARD_COMPANY", "PROVIDER_ERROR"].includes(search.code || "");
   return (
     <MobileLayout role="employer">
       <div className="p-4">
