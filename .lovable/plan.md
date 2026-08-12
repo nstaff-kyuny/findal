@@ -1,41 +1,31 @@
-## 작업 계획 (6가지 요청)
+# 크레딧 결제 실패(업체 사정으로 결제 일시 중지) 원인 정리와 대응
 
-### 1. 업종/직무 관리 (관리자)
-- **DB**: `custom_industries`, `custom_job_roles` 테이블 신설 (관리자만 CRUD, 모두 읽기 가능)
-- 기존 `INDUSTRY_LABEL`/`ROLES_BY_INDUSTRY` (constants.ts)는 기본값(seed)으로 유지하되, 런타임에 DB의 custom 항목과 머지
-- `src/lib/constants.ts`를 hook 기반(`useIndustries`, `useJobRoles`)으로 확장하거나, 앱 부팅 시 DB에서 불러와 메모리 머지
-- 관리자 페이지(`src/routes/admin.tsx`)에 "업종/직무 관리" 탭 추가 — 추가/수정/삭제 UI
-- 공고 등록/수정 페이지에서 이 머지된 목록 사용
+## 확인된 사실 (토스 API 실조회 결과)
 
-### 2. 단기계약(월급) 공고 타입
-- **DB jobs 컬럼 추가**: `contract_type` ('daily' | 'monthly'), `monthly_wage` int, `contract_months` int nullable (null=1개월이상)
-- `src/routes/employer/jobs/new.tsx` 및 `edit.$id.tsx`:
-  - "일당 / 단기계약" 토글
-  - 단기계약 선택 시: 일당 → 월급여 입력, 근무일자 선택 UI → "계약 기간(개월)" 입력 + "1개월 이상" 체크박스
-- 구직자 공고 카드/상세(`featured.tsx`, `home.tsx`, `seeker/jobs.$id.tsx`)에서 단기계약이면 "월 ₩X,XXX,XXX" 형식으로 표기
-- 언어팩(`i18n-dict.ts`) 키 추가: `contract_daily`, `contract_monthly`, `monthly_wage`, `contract_months`, `one_month_plus`, `per_month` (ko/en/mn/ru/zh)
+- 저장된 라이브 키는 유효합니다. 시크릿 키로 토스 결제 조회 API가 정상 응답합니다.
+- 실패한 3건 모두 토스에 주문이 정상 접수되어 `status: READY` 상태로 남아 있고, `failure` 값은 비어 있습니다. 즉 우리 앱의 주문 생성·결제창 호출 코드는 정상 동작했고, 카드 결제 단계에서 토스가 상점 상태를 이유로 중단시켰습니다.
+- 중요한 불일치: 등록된 라이브 키가 실제로 속한 상점 ID는 `nstaffttmg` 입니다. 그런데 관리자 화면에 입력된 상점 ID는 `nfindavoub` 입니다. 심사를 완료한 상점과, 실제 키가 발급된 상점이 서로 다를 가능성이 큽니다.
 
-### 3. 지난 공고 [완료] 흑백 표시
-- 구직자 홈(`seeker/home.tsx`)과 추천(`seeker/featured.tsx`) 카드:
-  - `work_dates`의 최대일이 오늘 이전이거나, `contract_type=monthly`이면서 시작 후 `contract_months` 경과한 경우 → 카드에 `grayscale` 클래스 + 우상단 "완료" 배지
-- 언어팩 키: `completed_badge` 추가
+## 결론(가장 유력한 원인)
 
-### 4. "상세주소" → "상세위치"
-- `employer/jobs/new.tsx`, `employer/jobs/edit.$id.tsx`, `seeker/jobs.$id.tsx` 라벨 변경
-- 언어팩 키 `detail_location` 갱신 (이미 있으면 텍스트 수정)
+앱 버그가 아니라 결제사 상점 설정 문제입니다. 두 가지 중 하나입니다.
 
-### 5. 준비물 textarea 2줄 추가
-- `rows={5}` → `rows={7}`
+1. 심사 완료된 상점(`nfindavoub`)의 라이브 키가 아니라, 다른(이전) 상점(`nstaffttmg`)의 라이브 키가 등록되어 있다.
+2. 키가 속한 상점 자체가 카드 결제수단 미계약 또는 "결제 일시중지" 상태다.
 
-### 6. 근무일자 카드 영역 간격 조정
-- 첨부 스크린샷 영역: `근무일자` 입력 / `기본 연락처 사용` 스위치 / `등록` 버튼이 너무 붙어있음
-- 카드 `space-y-3` → `space-y-4`, 또는 해당 블록에 `pt-2` 마진 추가
+이 판단은 토스 개발자센터에서 두 가지만 확인하면 확정됩니다: 개발자센터 상단에 표시되는 상점의 MID가 `nfindavoub`인지, 그 상점의 라이브 API 키가 지금 등록된 값과 같은지.
 
-### 기술 메모
-- 마이그레이션 1회: `custom_industries`, `custom_job_roles` 테이블 + `jobs.contract_type`/`monthly_wage`/`contract_months` 컬럼 추가
-- 마이그레이션 승인 후 코드 변경 진행
-- 모든 신규 UI 텍스트는 `useI18n().t(...)` 사용해 언어팩 즉시 반영
+## 조치 계획
 
----
+1. 토스 개발자센터에서 심사 완료된 상점을 선택한 뒤, 그 상점의 라이브 클라이언트/시크릿 키를 다시 복사해 관리자 결제 설정에 저장합니다. (앱 변경 없이 즉시 반영)
+2. 관리자 결제 설정 화면에 "키 진단" 버튼을 추가합니다. 저장된 시크릿 키로 토스에 조회를 보내 실제 상점 MID를 표시하고, 입력한 상점 ID와 다르면 경고를 띄웁니다. 이렇게 하면 상점/키 불일치를 즉시 알 수 있습니다.
+3. 결제 실패 시 토스가 보내는 code/message를 주문 레코드에 저장하고 관리자 화면에서 볼 수 있게 합니다. 지금은 실패 사유가 앱에 남지 않아 매번 화면 캡처로만 추적됩니다.
+4. 결제창 결제수단을 카드 고정(`method: "CARD"`)에서 상점에 계약된 수단을 선택할 수 있게 열어 둡니다. 카드 계약이 늦게 열리는 경우에도 계좌이체 등으로 결제가 가능해집니다.
+5. 방치된 `READY`/`pending` 주문(현재 5건)은 결제 미완료 상태이므로, 일정 시간 후 자동으로 `expired` 처리해 목록을 깨끗하게 유지합니다.
 
-이 계획대로 진행할까요? 승인해주시면 1) 마이그레이션 먼저 올리고 2) 코드 변경을 일괄로 진행하겠습니다.
+## 기술 메모
+
+- 진단은 `src/lib/toss.functions.ts`에 관리자 전용 서버 함수를 추가해 처리합니다. 토스 조회 API 응답의 `mId`를 반환하고, 시크릿 키는 절대 클라이언트로 내려보내지 않습니다.
+- 실패 사유 저장은 `src/routes/employer/credits_.fail.tsx`에서 받은 `code`/`message`를 관리자 전용 서버 함수로 전달해 `credit_orders.raw`에 기록하는 방식으로 처리합니다(금액·상태 변경은 하지 않음).
+- 결제수단 확장은 `src/routes/employer/credits.tsx`의 `payment.requestPayment` 호출부만 변경합니다.
+- 만료 처리는 `credit_orders` 상태 갱신용 서버 함수 또는 기존 일일 훅에 붙입니다.
