@@ -149,8 +149,41 @@ function Page() {
           </div>
         </CardContent></Card>
 
+        {filter === "refund" ? (
+          <div className="space-y-2">
+            {refunds.length === 0 && (
+              <p className="text-center text-xs text-muted-foreground py-8">환불 신청 내역이 없습니다</p>
+            )}
+            {refunds.map(r => (
+              <Card key={r.id}><CardContent className="p-3 space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs font-semibold">
+                    {r.credits} 크레딧 · {Number(r.amount_krw).toLocaleString()}원
+                  </p>
+                  <Badge variant={r.status === "completed" ? "default" : r.status === "pending" ? "secondary" : "outline"}>
+                    {REFUND_STATUS_KO[r.status] ?? r.status}
+                  </Badge>
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  신청 {new Date(r.created_at).toLocaleString("ko-KR")}
+                  {r.processed_at && ` · 처리 ${new Date(r.processed_at).toLocaleString("ko-KR")}`}
+                </p>
+                <p className="text-[11px]">사유: {r.reason}</p>
+                {r.admin_note && <p className="text-[11px] text-muted-foreground">관리자 메모: {r.admin_note}</p>}
+                {r.status === "pending" && (
+                  <Button size="sm" variant="outline" className="h-7 text-xs"
+                    onClick={async () => {
+                      try { await cancelRefund({ data: { id: r.id } }); toast.success("환불 신청을 취소했습니다"); loadRefunds(); }
+                      catch (e: any) { toast.error(e?.message ?? "취소 실패"); }
+                    }}>신청 취소</Button>
+                )}
+              </CardContent></Card>
+            ))}
+          </div>
+        ) : (
         <div className="space-y-1">
           {items.length === 0 && <p className="text-center text-xs text-muted-foreground py-8">내역이 없습니다</p>}
+
           {items.map(i => {
             const isApproval = i.kind === "usage" && i.raw?.type === "approval_use";
             const clickable = isApproval;
