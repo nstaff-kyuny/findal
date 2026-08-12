@@ -160,20 +160,8 @@ function Page() {
         <p className="text-[11px] text-muted-foreground">
           ※ 임의 금액 입력은 지원되지 않으며, 아래의 <b>고정 상품</b> 중에서만 결제할 수 있습니다.
         </p>
-        <div className="flex gap-1.5">
-          {PAY_METHODS.map((m) => (
-            <button
-              key={m.key}
-              type="button"
-              onClick={() => setPayMethod(m.key)}
-              className={`flex-1 h-9 rounded-md border text-sm ${
-                payMethod === m.key ? "bg-primary text-primary-foreground border-primary" : "bg-background"
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
+        <p className="text-[11px] text-muted-foreground">※ 결제수단은 <b>신용·체크카드</b>만 지원합니다.</p>
+
         <div className="space-y-2">
 
           {CREDIT_PACKS.map((p) => (
