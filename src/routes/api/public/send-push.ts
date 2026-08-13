@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { buildPushHTTPRequest } from "@pushforge/builder";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { sendFcmToTokens } from "@/lib/fcm.server";
 
 // base64url helpers
 function b64urlToBytes(s: string): Uint8Array {
