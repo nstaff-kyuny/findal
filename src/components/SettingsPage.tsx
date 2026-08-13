@@ -16,7 +16,7 @@ import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company"
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
-import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform } from "@/lib/push-client";
+import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform, getPushPermissionState } from "@/lib/push-client";
 import { Languages } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { NATIONALITY_LABEL, VISA_LABEL } from "@/lib/constants";
