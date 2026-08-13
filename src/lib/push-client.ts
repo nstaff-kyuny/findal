@@ -121,6 +121,9 @@ export async function registerPushSubscription(userId: string): Promise<boolean>
 }
 
 export async function requestPushPermissionAndSubscribe(userId: string): Promise<{ ok: boolean; reason?: string }> {
+  // 네이티브 앱은 OS 푸시(APNs/FCM) 사용
+  if (isNativeApp()) return enableNativePush(userId);
+
   const plat = detectPushPlatform();
   if (!plat.supported) return { ok: false, reason: plat.reason };
   try {
@@ -140,6 +143,10 @@ export async function requestPushPermissionAndSubscribe(userId: string): Promise
 
 export async function unsubscribePush(userId: string): Promise<void> {
   try {
+    if (isNativeApp()) {
+      await disableNativePush(userId);
+      return;
+    }
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
     const reg = await navigator.serviceWorker.getRegistration("/");
     const sub = reg ? await reg.pushManager.getSubscription() : null;
@@ -155,6 +162,7 @@ export async function unsubscribePush(userId: string): Promise<void> {
 
 export async function ensurePushSubscription(userId: string): Promise<boolean> {
   try {
+    if (isNativeApp()) return await ensureNativePush(userId);
     // Silent refresh ONLY when permission is already granted — never prompts.
     if (typeof window === "undefined" || !("Notification" in window)) return false;
     if (Notification.permission !== "granted") return false;
@@ -164,3 +172,14 @@ export async function ensurePushSubscription(userId: string): Promise<boolean> {
     return false;
   }
 }
+
+/** 설정 화면에서 표시할 현재 알림 권한 상태 (웹/네이티브 통합) */
+export async function getPushPermissionState(): Promise<NotificationPermission | "unsupported"> {
+  if (isNativeApp()) {
+    const p = await getNativePushPermission();
+    return p === "granted" ? "granted" : p === "denied" ? "denied" : "default";
+  }
+  if (typeof window === "undefined" || !("Notification" in window)) return "unsupported";
+  return Notification.permission;
+}
+
