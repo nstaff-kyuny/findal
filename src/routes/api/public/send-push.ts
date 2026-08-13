@@ -75,6 +75,41 @@ export const Route = createFileRoute("/api/public/send-push")({
         const userId: string | undefined = payload.user_id;
         if (!userId) return new Response("Missing user_id", { status: 400 });
 
+        const pushPayload = {
+          title: payload.title,
+          body: payload.body,
+          link_url: payload.link_url,
+          notification_id: payload.notification_id,
+          type: payload.type,
+        };
+
+        // ---- 1) 네이티브 앱(FCM/APNs) 발송 ----
+        let nativeSent = 0;
+        let nativeRemoved = 0;
+        try {
+          const { data: nativeTokens } = await supabaseAdmin
+            .from("native_push_tokens")
+            .select("token, platform")
+            .eq("user_id", userId);
+          if (nativeTokens && nativeTokens.length > 0) {
+            const res = await sendFcmToTokens(nativeTokens as any, {
+              title: String(payload.title ?? "Find AR"),
+              body: String(payload.body ?? ""),
+              link_url: payload.link_url,
+              notification_id: payload.notification_id,
+              type: payload.type,
+            });
+            nativeSent = res.sent;
+            if (res.staleTokens.length > 0) {
+              await supabaseAdmin.from("native_push_tokens").delete().in("token", res.staleTokens);
+              nativeRemoved = res.staleTokens.length;
+            }
+          }
+        } catch (e: any) {
+          console.warn("[send-push] native push failed", e?.message || e);
+        }
+
+        // ---- 2) 웹푸시(브라우저/PWA) 발송 ----
         let privateJWK: JsonWebKey;
         try {
           privateJWK = vapidToJWK(vapidPub, vapidPriv);
@@ -93,16 +128,8 @@ export const Route = createFileRoute("/api/public/send-push")({
           return new Response("DB error", { status: 500 });
         }
         if (!subs || subs.length === 0) {
-          return Response.json({ sent: 0 });
+          return Response.json({ sent: nativeSent, native_sent: nativeSent, removed: nativeRemoved });
         }
-
-        const pushPayload = {
-          title: payload.title,
-          body: payload.body,
-          link_url: payload.link_url,
-          notification_id: payload.notification_id,
-          type: payload.type,
-        };
 
         let sent = 0;
         const stale: string[] = [];
@@ -143,8 +170,14 @@ export const Route = createFileRoute("/api/public/send-push")({
           await supabaseAdmin.from("push_subscriptions").delete().in("id", stale);
         }
 
-        return Response.json({ sent, removed: stale.length });
+        return Response.json({
+          sent: sent + nativeSent,
+          web_sent: sent,
+          native_sent: nativeSent,
+          removed: stale.length + nativeRemoved,
+        });
       },
     },
   },
 });
+
