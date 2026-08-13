@@ -33,6 +33,7 @@ export type PushPlatform = {
   isIOS: boolean;
   isStandalone: boolean;
   needsInstall: boolean; // iOS Safari requires PWA install before push works
+  isNative?: boolean; // 앱스토어/플레이스토어에서 설치한 네이티브 앱
   reason?: string;
 };
 
@@ -40,7 +41,18 @@ export function detectPushPlatform(): PushPlatform {
   if (typeof window === "undefined" || typeof navigator === "undefined") {
     return { supported: false, isIOS: false, isStandalone: false, needsInstall: false, reason: "환경 미지원" };
   }
+  // 네이티브 앱: OS 푸시(APNs/FCM)를 사용하므로 항상 지원
+  if (isNativeApp()) {
+    return {
+      supported: true,
+      isIOS: getNativePlatform() === "ios",
+      isStandalone: true,
+      needsInstall: false,
+      isNative: true,
+    };
+  }
   const ua = navigator.userAgent || "";
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isStandalone =
     window.matchMedia("(display-mode: standalone)").matches ||
