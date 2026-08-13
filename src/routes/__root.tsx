@@ -143,6 +143,7 @@ function RootComponent() {
             <main>
               <Outlet />
             </main>
+            <NativeAppBoot />
             <EventPopup />
             <InstallPrompt />
             <Toaster />
