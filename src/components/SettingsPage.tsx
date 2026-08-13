@@ -16,7 +16,7 @@ import { COMPANY_INFO, fetchCompanyInfo, type CompanyInfo } from "@/lib/company"
 import { RegionPicker, parseRegions, serializeRegions } from "@/components/RegionPicker";
 import { toast } from "sonner";
 import { useI18n, LANG_LABEL, LANG_FLAG, type Lang } from "@/lib/i18n";
-import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform } from "@/lib/push-client";
+import { requestPushPermissionAndSubscribe, unsubscribePush, detectPushPlatform, getPushPermissionState } from "@/lib/push-client";
 import { Languages } from "lucide-react";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { NATIONALITY_LABEL, VISA_LABEL } from "@/lib/constants";
@@ -42,8 +42,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const table = role === "seeker" ? "seeker_profiles" : "employer_profiles";
   useEffect(() => { fetchCompanyInfo().then(setCompany); }, []);
   useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) setPushPermission("unsupported");
-    else setPushPermission(Notification.permission);
+    getPushPermissionState().then(setPushPermission).catch(() => setPushPermission("unsupported"));
     setPushPlatform(detectPushPlatform());
   }, []);
 
@@ -84,7 +83,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
     setPushBusy(true);
     try {
       const res = await requestPushPermissionAndSubscribe(user.id);
-      if (typeof window !== "undefined" && "Notification" in window) setPushPermission(Notification.permission);
+      setPushPermission(await getPushPermissionState());
       if (res.ok) toast.success("푸시 알림이 등록되었습니다");
       else toast.info(res.reason ?? "휴대폰 설정에서 알림 권한을 허용해 주세요");
     } catch (e: any) {

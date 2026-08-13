@@ -14,6 +14,7 @@ import { CREDIT_PACKS } from "@/lib/constants";
 import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
 import { listRefundableOrders, createRefundRequest } from "@/lib/refunds.functions";
 import { toast } from "sonner";
+import { isNativeIOS } from "@/lib/native";
 
 
 export const Route = createFileRoute("/employer/credits")({
@@ -55,6 +56,8 @@ function loadTossSdk(): Promise<any> {
 function Page() {
   const { user } = useAuth();
   const [emp, setEmp] = useState<any>(null);
+  const [iosNative, setIosNative] = useState(false);
+  useEffect(() => { setIosNative(isNativeIOS()); }, []);
   const [busy, setBusy] = useState<number | null>(null);
   const createOrder = useServerFn(createCreditOrder);
   const widgetsRef = useRef<any>(null);
@@ -148,31 +151,45 @@ function Page() {
             <p className="text-4xl font-bold">{emp?.credits ?? 0}</p>
           </CardContent>
         </Card>
-        <h3 className="font-bold mt-3">크레딧 구매 (1크레딧 = 1,000원)</h3>
-        <p className="text-xs text-muted-foreground">
-          결제는 토스페이먼츠를 통해 안전하게 진행됩니다. 크레딧의 유효기간은 구매일로부터 1년입니다.
-        </p>
-        <p className="text-[11px] text-muted-foreground">
-          ※ 임의 금액 입력은 지원되지 않으며, 아래의 <b>고정 상품</b> 중에서만 결제할 수 있습니다.
-        </p>
-        <p className="text-[11px] text-muted-foreground">※ 결제수단은 <b>신용·체크카드</b>만 지원합니다.</p>
+        {iosNative ? (
+          <Card className="bg-muted/40">
+            <CardContent className="p-4 text-[13px] space-y-2 leading-relaxed">
+              <p className="font-semibold text-foreground">크레딧 구매 안내</p>
+              <p className="text-muted-foreground">
+                iOS 앱에서는 크레딧을 구매할 수 없습니다. 아래 주소의 PC 관리자 페이지에서 구매해 주세요.
+              </p>
+              <p className="font-medium">https://findar.nstaff.co.kr/manager</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <h3 className="font-bold mt-3">크레딧 구매 (1크레딧 = 1,000원)</h3>
+            <p className="text-xs text-muted-foreground">
+              결제는 토스페이먼츠를 통해 안전하게 진행됩니다. 크레딧의 유효기간은 구매일로부터 1년입니다.
+            </p>
+            <p className="text-[11px] text-muted-foreground">
+              ※ 임의 금액 입력은 지원되지 않으며, 아래의 <b>고정 상품</b> 중에서만 결제할 수 있습니다.
+            </p>
+            <p className="text-[11px] text-muted-foreground">※ 결제수단은 <b>신용·체크카드</b>만 지원합니다.</p>
 
-        <div className="space-y-2">
+            <div className="space-y-2">
+              {CREDIT_PACKS.map((p) => (
+                <Card key={p.qty}>
+                  <CardContent className="p-3 flex justify-between items-center">
+                    <div>
+                      <p className="font-bold">{p.qty} 크레딧</p>
+                      <p className="text-xs text-muted-foreground">{p.price.toLocaleString()}원</p>
+                    </div>
+                    <Button onClick={() => purchase(p.qty)} disabled={busy !== null}>
+                      {busy === p.qty ? "결제창 여는 중…" : "결제하기"}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
 
-          {CREDIT_PACKS.map((p) => (
-            <Card key={p.qty}>
-              <CardContent className="p-3 flex justify-between items-center">
-                <div>
-                  <p className="font-bold">{p.qty} 크레딧</p>
-                  <p className="text-xs text-muted-foreground">{p.price.toLocaleString()}원</p>
-                </div>
-                <Button onClick={() => purchase(p.qty)} disabled={busy !== null}>
-                  {busy === p.qty ? "결제창 여는 중…" : "결제하기"}
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
 
         <Card className="bg-muted/40">
           <CardContent className="p-3 text-[12px] space-y-1.5 leading-relaxed">

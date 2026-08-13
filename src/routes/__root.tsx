@@ -15,6 +15,7 @@ import { I18nProvider } from "@/lib/i18n";
 import { Toaster } from "@/components/ui/sonner";
 import { EventPopup } from "@/components/EventPopup";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { NativeAppBoot } from "@/components/NativeAppBoot";
 
 function NotFoundComponent() {
   return (
@@ -142,6 +143,7 @@ function RootComponent() {
             <main>
               <Outlet />
             </main>
+            <NativeAppBoot />
             <EventPopup />
             <InstallPrompt />
             <Toaster />

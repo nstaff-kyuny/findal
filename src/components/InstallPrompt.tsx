@@ -26,6 +26,8 @@ export function InstallPrompt() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // 네이티브 앱(앱스토어/플레이스토어 설치)에서는 설치 안내 불필요
+    if ((window as any).Capacitor?.isNativePlatform?.()) return;
 
     // already installed
     const standalone =
