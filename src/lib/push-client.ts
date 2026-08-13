@@ -1,4 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
+import { getNativePlatform, isNativeApp } from "@/lib/native";
+import {
+  enableNativePush,
+  disableNativePush,
+  ensureNativePush,
+  getNativePushPermission,
+} from "@/lib/native-push";
 
 // Public VAPID key — safe to expose
 export const VAPID_PUBLIC_KEY =
