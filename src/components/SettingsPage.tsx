@@ -83,7 +83,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
     setPushBusy(true);
     try {
       const res = await requestPushPermissionAndSubscribe(user.id);
-      if (typeof window !== "undefined" && "Notification" in window) setPushPermission(Notification.permission);
+      setPushPermission(await getPushPermissionState());
       if (res.ok) toast.success("푸시 알림이 등록되었습니다");
       else toast.info(res.reason ?? "휴대폰 설정에서 알림 권한을 허용해 주세요");
     } catch (e: any) {
