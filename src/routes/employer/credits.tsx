@@ -14,6 +14,7 @@ import { CREDIT_PACKS } from "@/lib/constants";
 import { createCreditOrder, getTossPublicConfig } from "@/lib/toss.functions";
 import { listRefundableOrders, createRefundRequest } from "@/lib/refunds.functions";
 import { toast } from "sonner";
+import { isNativeIOS } from "@/lib/native";
 
 
 export const Route = createFileRoute("/employer/credits")({
@@ -55,6 +56,8 @@ function loadTossSdk(): Promise<any> {
 function Page() {
   const { user } = useAuth();
   const [emp, setEmp] = useState<any>(null);
+  const [iosNative, setIosNative] = useState(false);
+  useEffect(() => { setIosNative(isNativeIOS()); }, []);
   const [busy, setBusy] = useState<number | null>(null);
   const createOrder = useServerFn(createCreditOrder);
   const widgetsRef = useRef<any>(null);
