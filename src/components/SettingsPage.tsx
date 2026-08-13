@@ -42,8 +42,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const table = role === "seeker" ? "seeker_profiles" : "employer_profiles";
   useEffect(() => { fetchCompanyInfo().then(setCompany); }, []);
   useEffect(() => {
-    if (typeof window === "undefined" || !("Notification" in window)) setPushPermission("unsupported");
-    else setPushPermission(Notification.permission);
+    getPushPermissionState().then(setPushPermission).catch(() => setPushPermission("unsupported"));
     setPushPlatform(detectPushPlatform());
   }, []);
 
