@@ -1,5 +1,13 @@
 {
   "dependencies": {
+    "@capacitor/android": "^7",
+    "@capacitor/app": "^7",
+    "@capacitor/cli": "^7",
+    "@capacitor/core": "^7",
+    "@capacitor/ios": "^7",
+    "@capacitor/push-notifications": "^7",
+    "@capacitor/splash-screen": "^7",
+    "@capacitor/status-bar": "^7",
     "@cloudflare/vite-plugin": "^1.42.2",
     "@hookform/resolvers": "^5.2.2",
     "@pushforge/builder": "^2.0.5",
