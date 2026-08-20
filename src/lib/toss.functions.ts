@@ -74,7 +74,15 @@ export const getTossPublicConfig = createServerFn({ method: "GET" })
 
   });
 
-// 관리자 전용: 전체 설정 조회 (마스킹된 형태로 반환)
+// 시크릿/보안 키는 절대 원문으로 반환하지 않고 마스킹 처리
+function maskKey(k: string | null | undefined): string {
+  const v = (k ?? "").trim();
+  if (!v) return "";
+  const head = v.slice(0, Math.min(12, v.length));
+  return `${head}${"•".repeat(8)}`;
+}
+
+// 관리자 전용: 전체 설정 조회 (시크릿 키는 마스킹된 형태로만 반환)
 export const getPaymentSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -89,10 +97,13 @@ export const getPaymentSettings = createServerFn({ method: "GET" })
       mode: cfg.mode,
       merchantId: cfg.merchantId,
       clientKey: cfg.rawClientKey || cfg.clientKey,
-      secretKey: cfg.rawSecretKey || cfg.secretKey,
-      securityKey: cfg.securityKey,
+      secretKey: maskKey(cfg.rawSecretKey),
+      secretKeySet: Boolean(cfg.rawSecretKey),
+      securityKey: maskKey(cfg.securityKey),
+      securityKeySet: Boolean(cfg.securityKey),
     };
   });
+
 
 // 관리자 전용: 결제 설정 저장/갱신
 export const savePaymentSettings = createServerFn({ method: "POST" })
