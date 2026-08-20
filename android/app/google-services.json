@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "484872715069",
+    "project_id": "find-ar-ecc16",
+    "storage_bucket": "find-ar-ecc16.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:484872715069:android:8ca94fab08a9b0e86f2354",
+        "android_client_info": {
+          "package_name": "kr.co.nstaff.findar"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCk1c8Olu8h4Zrbi7LbvScf9dggXvUafh4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
