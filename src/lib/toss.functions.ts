@@ -74,7 +74,15 @@ export const getTossPublicConfig = createServerFn({ method: "GET" })
 
   });
 
-// 관리자 전용: 전체 설정 조회 (마스킹된 형태로 반환)
+// 시크릿/보안 키는 절대 원문으로 반환하지 않고 마스킹 처리
+function maskKey(k: string | null | undefined): string {
+  const v = (k ?? "").trim();
+  if (!v) return "";
+  const head = v.slice(0, Math.min(12, v.length));
+  return `${head}${"•".repeat(8)}`;
+}
+
+// 관리자 전용: 전체 설정 조회 (시크릿 키는 마스킹된 형태로만 반환)
 export const getPaymentSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -89,10 +97,13 @@ export const getPaymentSettings = createServerFn({ method: "GET" })
       mode: cfg.mode,
       merchantId: cfg.merchantId,
       clientKey: cfg.rawClientKey || cfg.clientKey,
-      secretKey: cfg.rawSecretKey || cfg.secretKey,
-      securityKey: cfg.securityKey,
+      secretKey: maskKey(cfg.rawSecretKey),
+      secretKeySet: Boolean(cfg.rawSecretKey),
+      securityKey: maskKey(cfg.securityKey),
+      securityKeySet: Boolean(cfg.securityKey),
     };
   });
+
 
 // 관리자 전용: 결제 설정 저장/갱신
 export const savePaymentSettings = createServerFn({ method: "POST" })
@@ -115,6 +126,11 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
       _role: "admin",
     });
     if (!isAdmin) throw new Error("권한 없음");
+    // 마스킹된 값이 그대로 전송된 경우 기존 값을 유지 (덮어쓰지 않음)
+    const isMasked = (v?: string | null) => Boolean(v && v.includes("•"));
+    if (isMasked(data.secretKey)) data.secretKey = null;
+    if (isMasked(data.securityKey)) data.securityKey = null;
+
 
     // 키 형식 검증: 결제위젯 연동 키(gck/gsk) 와 API 개별 연동 키(ck/sk) 모두 허용
     if (data.clientKey && !CLIENT_PREFIXES.some((p) => data.clientKey!.startsWith(p))) {
@@ -152,10 +168,12 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
       enabled: data.enabled,
       merchant_id: data.merchantId ?? null,
       client_key: data.clientKey ?? null,
-      secret_key: data.secretKey ?? null,
-      security_key: data.securityKey ?? null,
       updated_by: context.userId,
     };
+    // 마스킹 처리된(변경하지 않은) 키는 payload 에서 제외해 기존 값 보존
+    if (data.secretKey) payload.secret_key = data.secretKey;
+    if (data.securityKey) payload.security_key = data.securityKey;
+
 
     if ((existing as any)?.id) {
       const { error } = await supabaseAdmin

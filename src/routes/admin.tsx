@@ -1855,7 +1855,7 @@ function PaymentTab() {
             disabled={loading}
             autoComplete="off"
           />
-          <p className="text-[11px] mt-1 text-amber-600">서버에서만 사용되며 브라우저에 노출되지 않습니다.</p>
+          <p className="text-[11px] mt-1 text-amber-600">보안상 저장된 키는 일부만 표시됩니다. 변경하지 않으면 기존 키가 그대로 유지됩니다.</p>
         </div>
 
         <div>
