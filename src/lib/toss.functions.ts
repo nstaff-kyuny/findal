@@ -168,10 +168,12 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
       enabled: data.enabled,
       merchant_id: data.merchantId ?? null,
       client_key: data.clientKey ?? null,
-      secret_key: data.secretKey ?? null,
-      security_key: data.securityKey ?? null,
       updated_by: context.userId,
     };
+    // 마스킹 처리된(변경하지 않은) 키는 payload 에서 제외해 기존 값 보존
+    if (data.secretKey) payload.secret_key = data.secretKey;
+    if (data.securityKey) payload.security_key = data.securityKey;
+
 
     if ((existing as any)?.id) {
       const { error } = await supabaseAdmin
