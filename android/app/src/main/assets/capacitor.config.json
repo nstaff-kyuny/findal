@@ -1,0 +1,37 @@
+{
+	"appId": "kr.co.nstaff.findar",
+	"appName": "Find AR",
+	"webDir": "dist/client",
+	"server": {
+		"url": "https://findar.nstaff.co.kr",
+		"cleartext": false,
+		"androidScheme": "https",
+		"allowNavigation": [
+			"findar.nstaff.co.kr",
+			"*.supabase.co",
+			"*.tosspayments.com"
+		]
+	},
+	"ios": {
+		"contentInset": "always",
+		"limitsNavigationsToAppBoundDomains": false
+	},
+	"android": {
+		"allowMixedContent": false
+	},
+	"plugins": {
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
+		},
+		"SplashScreen": {
+			"launchShowDuration": 1200,
+			"backgroundColor": "#ffffff",
+			"showSpinner": false,
+			"androidScaleType": "CENTER_CROP"
+		}
+	}
+}
