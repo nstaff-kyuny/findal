@@ -126,6 +126,11 @@ export const savePaymentSettings = createServerFn({ method: "POST" })
       _role: "admin",
     });
     if (!isAdmin) throw new Error("권한 없음");
+    // 마스킹된 값이 그대로 전송된 경우 기존 값을 유지 (덮어쓰지 않음)
+    const isMasked = (v?: string | null) => Boolean(v && v.includes("•"));
+    if (isMasked(data.secretKey)) data.secretKey = null;
+    if (isMasked(data.securityKey)) data.securityKey = null;
+
 
     // 키 형식 검증: 결제위젯 연동 키(gck/gsk) 와 API 개별 연동 키(ck/sk) 모두 허용
     if (data.clientKey && !CLIENT_PREFIXES.some((p) => data.clientKey!.startsWith(p))) {
