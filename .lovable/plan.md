@@ -3,14 +3,15 @@
 ## 현재 상태
 - MacInCloud Managed Server Monthly(아시아) 결제 및 서버 활성화 완료
 - 서버: ASS-41 - user294508
-- Microsoft Remote Desktop 설치 필요, 접속 정보는 MacInCloud 대시보드 "connect now" 팝업에서 확인
+- MacInCloud 브라우저 원격 화면 연결 완료(`Connected to: AS541.macincloud.com` 확인)
 
 ## 남은 단계
 
 ### 1. MacInCloud 서버 접속
-- MacInCloud 대시보드에서 "ASS-41 - user294508" 행 오른쪽 첫 번째 아이콘 "connect now" 클릭
-- 팝업의 IP 주소, 사용자명, 비밀번호를 메모
-- Windows PC의 Microsoft Remote Desktop에서 PC name(IP), 사용자명, 비밀번호 입력 후 연결
+- 현재 표시된 창은 로그인창이 아니라 원격 세션 정보창이므로 사용자명·비밀번호 입력 불필요
+- 서버를 조작할 수 없으면 `Request Control` 클릭
+- 팝업 오른쪽 위 `X`를 눌러 닫고, 뒤에 보이는 macOS 화면에서 작업 진행
+- 별도의 원격 데스크톱 앱으로 접속할 때만 대시보드의 `download connection files`에서 받은 연결 파일과 안내 이메일의 계정 정보 사용
 
 ### 2. 개발 환경 설정 (Mac 서버 내 터미널)
 ```bash
