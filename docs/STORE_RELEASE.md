@@ -54,7 +54,9 @@ Firebase 설정 파일 배치:
 2. 스크린샷(6.7", 6.5", iPad 필요 시), 설명, 키워드, 지원 URL
 3. 개인정보 처리방침 URL, App Privacy 설문
 4. 로그인 필요 앱이므로 **심사용 테스트 계정** 제공 필수
-5. Xcode Archive → Distribute → 심사 제출(보통 1~3일)
+5. `ios/App/App/Info.plist`에 `ITSAppUsesNonExemptEncryption`가 `<false/>`로 설정되어 있는지 확인 (표준 HTTPS/TLS만 사용 시 암호화 문서 업로드 불필요)
+6. Xcode Archive → Distribute → 심사 제출(보통 1~3일)
+
 
 ## 5. 남은 준비물(운영 측)
 
