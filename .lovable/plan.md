@@ -8,10 +8,13 @@
 ## 남은 단계
 
 ### 1. MacInCloud 서버 접속
-- 현재 표시된 창은 로그인창이 아니라 원격 세션 정보창이므로 사용자명·비밀번호 입력 불필요
-- 서버를 조작할 수 없으면 `Request Control` 클릭
-- 팝업 오른쪽 위 `X`를 눌러 닫고, 뒤에 보이는 macOS 화면에서 작업 진행
-- 별도의 원격 데스크톱 앱으로 접속할 때만 대시보드의 `download connection files`에서 받은 연결 파일과 안내 이메일의 계정 정보 사용
+- 현재 검은 화면의 `Enter Name`과 `Enter Password`는 실제 Mac 서버 로그인 화면
+- 사용자명은 MacInCloud가 발급한 **서버 계정명** 입력(대시보드에 표시된 `user294508`과 동일한지 안내 메일에서 확인)
+- 비밀번호는 MacInCloud 가입 비밀번호가 아니라, 결제 후 발송된 **New MacinCloud Account Information** 안내 메일의 서버 비밀번호 입력
+- 메일함에서 `MacinCloud`, `Account Information`, `user294508`로 검색하고 스팸함도 확인
+- 안내 메일을 찾지 못하면 대시보드의 `download connection files`를 내려받아 동봉된 안내 문서를 확인
+- 그래도 비밀번호가 없으면 `Request Application Installation`이나 `Request Reboot`가 아니라 MacInCloud 지원센터에 **ASS-41 서버 로그인 자격 증명 재발급** 요청
+- 로그인 화면에서는 키보드가 `U.S.`로 설정되어 있으므로 영문 상태에서 입력하고, 비밀번호 입력 후 오른쪽 화살표 버튼 클릭
 
 ### 2. 개발 환경 설정 (Mac 서버 내 터미널)
 ```bash
