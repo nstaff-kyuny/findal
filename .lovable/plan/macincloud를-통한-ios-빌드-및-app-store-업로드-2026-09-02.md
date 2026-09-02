@@ -3,24 +3,27 @@
 ## 현재 상태
 - MacInCloud 서버(ASS-41 / user294508) 로그인 완료
 - 개발 환경 확인 완료: Node.js v25.9.0, npm 11.12.1, git 2.50.1, Xcode 26.6
-- Lovable 프로젝트의 GitHub 연결 화면 진입 중 (`No installations available` 상태)
+- Lovable 프로젝트의 GitHub 연결 완료: `nstaff-kyuny/findal`
+- 저장소가 private이라 `git clone` 시 GitHub 인증(사용자명/비밀번호) 요청 발생
+- GitHub은 비밀번호 인증을 폐지했으므로, 저장소를 public으로 전환하여 인증 없이 clone 진행
 - Bundle ID: `kr.co.nstaff.findar`, 앱 표시명: Find AR
 - iOS 프로젝트 파일(`ios/App/App.xcodeproj`) 및 `ITSAppUsesNonExemptEncryption=false` 설정 존재
 
 ## 단계별 진행 계획
 
-### 1단계. Lovable 프로젝트를 GitHub에 연결
-1. 현재 화면의 **Add account** 버튼 클릭
-2. GitHub 로그인 화면에서 본인 GitHub 계정으로 로그인
-3. Lovable GitHub App 설치 화면에서 저장소를 생성할 계정/조직 선택
-4. 저장소 이름을 `findar`로 설정하고 생성
-5. 생성된 저장소 URL을 복사 (예: `https://github.com/사용자명/findar.git`)
+### 1단계. GitHub 저장소를 public으로 변경
+1. 브라우저에서 `https://github.com/nstaff-kyuny/findal` 접속
+2. 상단 **Settings** 탭 클릭
+3. 하단 **Danger Zone** 섹션에서 **Change visibility** 클릭
+4. **Change to public** 선택 후 확인 문구 입력 → **I understand, make this repository public.** 클릭
+5. 저장소가 public으로 전환되면 주소 끝에 🔓 잠금 해제 아이콘이 표시됨
 
 ### 2단계. MacInCloud 서버에 프로젝트 가져오기
 1. MacInCloud 터미널에서 아래 명령 실행
    ```bash
    cd ~/Documents
-   git clone <생성된 GitHub 저장소 URL> findar
+   rm -rf findar
+   git clone https://github.com/nstaff-kyuny/findal.git findar
    cd findar
    npm install
    npm run build
@@ -50,6 +53,6 @@
 4. **Add for Review** → 제출
 
 ## 확인 필요 사항
-- GitHub 계정 보유 여부
+- GitHub 저장소 public 전환 완료 여부
 - Apple Developer 팀이 개인 계정인지 법인/조직 계정인지
 - App Store Connect에서 앱 정보(이름, 부제목, 개인정보 처리방침 URL 등) 준비 여부
