@@ -20,6 +20,7 @@ import { Route as ManagerRouteImport } from './routes/manager'
 import { Route as InquiryRouteImport } from './routes/inquiry'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as EventsRouteImport } from './routes/events'
+import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as Admin2RouteImport } from './routes/admin2'
 import { Route as AdminRouteImport } from './routes/admin'
@@ -100,6 +101,11 @@ const FaqRoute = FaqRouteImport.update({
 const EventsRoute = EventsRouteImport.update({
   id: '/events',
   path: '/events',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeleteAccountRoute = DeleteAccountRouteImport.update({
+  id: '/delete-account',
+  path: '/delete-account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -239,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRoute
   '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
@@ -278,6 +285,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AdminRoute
   '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
@@ -318,6 +326,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRoute
   '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin2'
     | '/auth'
+    | '/delete-account'
     | '/events'
     | '/faq'
     | '/inquiry'
@@ -398,6 +408,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin2'
     | '/auth'
+    | '/delete-account'
     | '/events'
     | '/faq'
     | '/inquiry'
@@ -437,6 +448,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin2'
     | '/auth'
+    | '/delete-account'
     | '/events'
     | '/faq'
     | '/inquiry'
@@ -477,6 +489,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRoute
   Admin2Route: typeof Admin2Route
   AuthRoute: typeof AuthRoute
+  DeleteAccountRoute: typeof DeleteAccountRoute
   EventsRoute: typeof EventsRoute
   FaqRoute: typeof FaqRoute
   InquiryRoute: typeof InquiryRoute
@@ -588,6 +601,13 @@ declare module '@tanstack/react-router' {
       path: '/events'
       fullPath: '/events'
       preLoaderRoute: typeof EventsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/delete-account': {
+      id: '/delete-account'
+      path: '/delete-account'
+      fullPath: '/delete-account'
+      preLoaderRoute: typeof DeleteAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -792,6 +812,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRoute,
   Admin2Route: Admin2Route,
   AuthRoute: AuthRoute,
+  DeleteAccountRoute: DeleteAccountRoute,
   EventsRoute: EventsRoute,
   FaqRoute: FaqRoute,
   InquiryRoute: InquiryRoute,
