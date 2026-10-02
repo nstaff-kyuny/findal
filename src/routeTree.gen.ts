@@ -9,113 +9,48 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as Admin2RouteImport } from './routes/admin2'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as DeleteAccountRouteImport } from './routes/delete-account'
-import { Route as EventsRouteImport } from './routes/events'
-import { Route as FaqRouteImport } from './routes/faq'
-import { Route as InquiryRouteImport } from './routes/inquiry'
-import { Route as ManagerRouteImport } from './routes/manager'
-import { Route as NoticesRouteImport } from './routes/notices'
-import { Route as NotificationsRouteImport } from './routes/notifications'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as ResetPasswordRouteImport } from './routes/reset-password'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
-import { Route as EmployerCreditsRouteImport } from './routes/employer/credits'
-import { Route as EmployerHistoryRouteImport } from './routes/employer/history'
-import { Route as EmployerHomeRouteImport } from './routes/employer/home'
-import { Route as EmployerMeRouteImport } from './routes/employer/me'
-import { Route as GuideRoleRouteImport } from './routes/guide.$role'
-import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
-import { Route as SeekerFavoritesRouteImport } from './routes/seeker/favorites'
-import { Route as SeekerFeaturedRouteImport } from './routes/seeker/featured'
-import { Route as SeekerHomeRouteImport } from './routes/seeker/home'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as NoticesRouteImport } from './routes/notices'
+import { Route as ManagerRouteImport } from './routes/manager'
+import { Route as InquiryRouteImport } from './routes/inquiry'
+import { Route as FaqRouteImport } from './routes/faq'
+import { Route as EventsRouteImport } from './routes/events'
+import { Route as DeleteAccountRouteImport } from './routes/delete-account'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as Admin2RouteImport } from './routes/admin2'
+import { Route as AdminRouteImport } from './routes/admin'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as SeekerMeRouteImport } from './routes/seeker/me'
-import { Route as ApiPublicJobsRouteImport } from './routes/api/public/jobs'
-import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
-import { Route as EmployerCreditsFailRouteImport } from './routes/employer/credits_.fail'
-import { Route as EmployerCreditsHistoryRouteImport } from './routes/employer/credits_.history'
-import { Route as EmployerCreditsSuccessRouteImport } from './routes/employer/credits_.success'
-import { Route as EmployerHistoryDateRouteImport } from './routes/employer/history.$date'
+import { Route as SeekerHomeRouteImport } from './routes/seeker/home'
+import { Route as SeekerFeaturedRouteImport } from './routes/seeker/featured'
+import { Route as SeekerFavoritesRouteImport } from './routes/seeker/favorites'
+import { Route as SeekerApplicationsRouteImport } from './routes/seeker/applications'
+import { Route as GuideRoleRouteImport } from './routes/guide.$role'
+import { Route as EmployerMeRouteImport } from './routes/employer/me'
+import { Route as EmployerHomeRouteImport } from './routes/employer/home'
+import { Route as EmployerHistoryRouteImport } from './routes/employer/history'
+import { Route as EmployerCreditsRouteImport } from './routes/employer/credits'
+import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
 import { Route as EmployerJobsIndexRouteImport } from './routes/employer/jobs/index'
-import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
 import { Route as SeekerJobsIdRouteImport } from './routes/seeker/jobs.$id'
-import { Route as ApiPublicHooksBackupDailyRouteImport } from './routes/api/public/hooks/backup-daily'
+import { Route as EmployerJobsNewRouteImport } from './routes/employer/jobs/new'
+import { Route as EmployerHistoryDateRouteImport } from './routes/employer/history.$date'
+import { Route as EmployerCreditsSuccessRouteImport } from './routes/employer/credits_.success'
+import { Route as EmployerCreditsHistoryRouteImport } from './routes/employer/credits_.history'
+import { Route as EmployerCreditsFailRouteImport } from './routes/employer/credits_.fail'
+import { Route as ApiPublicSendPushRouteImport } from './routes/api/public/send-push'
+import { Route as ApiPublicJobsRouteImport } from './routes/api/public/jobs'
 import { Route as EmployerJobsEditIdRouteImport } from './routes/employer/jobs/edit.$id'
+import { Route as ApiPublicHooksBackupDailyRouteImport } from './routes/api/public/hooks/backup-daily'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const Admin2Route = Admin2RouteImport.update({
-  id: '/admin2',
-  path: '/admin2',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeleteAccountRoute = DeleteAccountRouteImport.update({
-  id: '/delete-account',
-  path: '/delete-account',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const EventsRoute = EventsRouteImport.update({
-  id: '/events',
-  path: '/events',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FaqRoute = FaqRouteImport.update({
-  id: '/faq',
-  path: '/faq',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InquiryRoute = InquiryRouteImport.update({
-  id: '/inquiry',
-  path: '/inquiry',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ManagerRoute = ManagerRouteImport.update({
-  id: '/manager',
-  path: '/manager',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NoticesRoute = NoticesRouteImport.update({
-  id: '/notices',
-  path: '/notices',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NotificationsRoute = NotificationsRouteImport.update({
-  id: '/notifications',
-  path: '/notifications',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OnboardingRoute = OnboardingRouteImport.update({
-  id: '/onboarding',
-  path: '/onboarding',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ResetPasswordRoute = ResetPasswordRouteImport.update({
-  id: '/reset-password',
-  path: '/reset-password',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -123,59 +58,74 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
-  id: '/employer/applications',
-  path: '/employer/applications',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerCreditsRoute = EmployerCreditsRouteImport.update({
-  id: '/employer/credits',
-  path: '/employer/credits',
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerHistoryRoute = EmployerHistoryRouteImport.update({
-  id: '/employer/history',
-  path: '/employer/history',
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerHomeRoute = EmployerHomeRouteImport.update({
-  id: '/employer/home',
-  path: '/employer/home',
+const NoticesRoute = NoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerMeRoute = EmployerMeRouteImport.update({
-  id: '/employer/me',
-  path: '/employer/me',
+const ManagerRoute = ManagerRouteImport.update({
+  id: '/manager',
+  path: '/manager',
   getParentRoute: () => rootRouteImport,
 } as any)
-const GuideRoleRoute = GuideRoleRouteImport.update({
-  id: '/guide/$role',
-  path: '/guide/$role',
+const InquiryRoute = InquiryRouteImport.update({
+  id: '/inquiry',
+  path: '/inquiry',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
-  id: '/seeker/applications',
-  path: '/seeker/applications',
+const FaqRoute = FaqRouteImport.update({
+  id: '/faq',
+  path: '/faq',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SeekerFavoritesRoute = SeekerFavoritesRouteImport.update({
-  id: '/seeker/favorites',
-  path: '/seeker/favorites',
+const EventsRoute = EventsRouteImport.update({
+  id: '/events',
+  path: '/events',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SeekerFeaturedRoute = SeekerFeaturedRouteImport.update({
-  id: '/seeker/featured',
-  path: '/seeker/featured',
+const DeleteAccountRoute = DeleteAccountRouteImport.update({
+  id: '/delete-account',
+  path: '/delete-account',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SeekerHomeRoute = SeekerHomeRouteImport.update({
-  id: '/seeker/home',
-  path: '/seeker/home',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Admin2Route = Admin2RouteImport.update({
+  id: '/admin2',
+  path: '/admin2',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SeekerMeRoute = SeekerMeRouteImport.update({
@@ -183,39 +133,64 @@ const SeekerMeRoute = SeekerMeRouteImport.update({
   path: '/seeker/me',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicJobsRoute = ApiPublicJobsRouteImport.update({
-  id: '/api/public/jobs',
-  path: '/api/public/jobs',
+const SeekerHomeRoute = SeekerHomeRouteImport.update({
+  id: '/seeker/home',
+  path: '/seeker/home',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicSendPushRoute = ApiPublicSendPushRouteImport.update({
-  id: '/api/public/send-push',
-  path: '/api/public/send-push',
+const SeekerFeaturedRoute = SeekerFeaturedRouteImport.update({
+  id: '/seeker/featured',
+  path: '/seeker/featured',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerCreditsFailRoute = EmployerCreditsFailRouteImport.update({
-  id: '/employer/credits_/fail',
-  path: '/employer/credits/fail',
+const SeekerFavoritesRoute = SeekerFavoritesRouteImport.update({
+  id: '/seeker/favorites',
+  path: '/seeker/favorites',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerCreditsHistoryRoute = EmployerCreditsHistoryRouteImport.update({
-  id: '/employer/credits_/history',
-  path: '/employer/credits/history',
+const SeekerApplicationsRoute = SeekerApplicationsRouteImport.update({
+  id: '/seeker/applications',
+  path: '/seeker/applications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerCreditsSuccessRoute = EmployerCreditsSuccessRouteImport.update({
-  id: '/employer/credits_/success',
-  path: '/employer/credits/success',
+const GuideRoleRoute = GuideRoleRouteImport.update({
+  id: '/guide/$role',
+  path: '/guide/$role',
   getParentRoute: () => rootRouteImport,
 } as any)
-const EmployerHistoryDateRoute = EmployerHistoryDateRouteImport.update({
-  id: '/$date',
-  path: '/$date',
-  getParentRoute: () => EmployerHistoryRoute,
+const EmployerMeRoute = EmployerMeRouteImport.update({
+  id: '/employer/me',
+  path: '/employer/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerHomeRoute = EmployerHomeRouteImport.update({
+  id: '/employer/home',
+  path: '/employer/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerHistoryRoute = EmployerHistoryRouteImport.update({
+  id: '/employer/history',
+  path: '/employer/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerCreditsRoute = EmployerCreditsRouteImport.update({
+  id: '/employer/credits',
+  path: '/employer/credits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
+  id: '/employer/applications',
+  path: '/employer/applications',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerJobsIndexRoute = EmployerJobsIndexRouteImport.update({
   id: '/employer/jobs/',
   path: '/employer/jobs/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SeekerJobsIdRoute = SeekerJobsIdRouteImport.update({
+  id: '/seeker/jobs/$id',
+  path: '/seeker/jobs/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerJobsNewRoute = EmployerJobsNewRouteImport.update({
@@ -223,9 +198,39 @@ const EmployerJobsNewRoute = EmployerJobsNewRouteImport.update({
   path: '/employer/jobs/new',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SeekerJobsIdRoute = SeekerJobsIdRouteImport.update({
-  id: '/seeker/jobs/$id',
-  path: '/seeker/jobs/$id',
+const EmployerHistoryDateRoute = EmployerHistoryDateRouteImport.update({
+  id: '/$date',
+  path: '/$date',
+  getParentRoute: () => EmployerHistoryRoute,
+} as any)
+const EmployerCreditsSuccessRoute = EmployerCreditsSuccessRouteImport.update({
+  id: '/employer/credits_/success',
+  path: '/employer/credits/success',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerCreditsHistoryRoute = EmployerCreditsHistoryRouteImport.update({
+  id: '/employer/credits_/history',
+  path: '/employer/credits/history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerCreditsFailRoute = EmployerCreditsFailRouteImport.update({
+  id: '/employer/credits_/fail',
+  path: '/employer/credits/fail',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicSendPushRoute = ApiPublicSendPushRouteImport.update({
+  id: '/api/public/send-push',
+  path: '/api/public/send-push',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicJobsRoute = ApiPublicJobsRouteImport.update({
+  id: '/api/public/jobs',
+  path: '/api/public/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmployerJobsEditIdRoute = EmployerJobsEditIdRouteImport.update({
+  id: '/employer/jobs/edit/$id',
+  path: '/employer/jobs/edit/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicHooksBackupDailyRoute =
@@ -234,11 +239,6 @@ const ApiPublicHooksBackupDailyRoute =
     path: '/api/public/hooks/backup-daily',
     getParentRoute: () => rootRouteImport,
   } as any)
-const EmployerJobsEditIdRoute = EmployerJobsEditIdRouteImport.update({
-  id: '/employer/jobs/edit/$id',
-  path: '/employer/jobs/edit/$id',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -526,102 +526,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/admin2': {
-      id: '/admin2'
-      path: '/admin2'
-      fullPath: '/admin2'
-      preLoaderRoute: typeof Admin2RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/delete-account': {
-      id: '/delete-account'
-      path: '/delete-account'
-      fullPath: '/delete-account'
-      preLoaderRoute: typeof DeleteAccountRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/events': {
-      id: '/events'
-      path: '/events'
-      fullPath: '/events'
-      preLoaderRoute: typeof EventsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/faq': {
-      id: '/faq'
-      path: '/faq'
-      fullPath: '/faq'
-      preLoaderRoute: typeof FaqRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inquiry': {
-      id: '/inquiry'
-      path: '/inquiry'
-      fullPath: '/inquiry'
-      preLoaderRoute: typeof InquiryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/manager': {
-      id: '/manager'
-      path: '/manager'
-      fullPath: '/manager'
-      preLoaderRoute: typeof ManagerRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notices': {
-      id: '/notices'
-      path: '/notices'
-      fullPath: '/notices'
-      preLoaderRoute: typeof NoticesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/notifications': {
-      id: '/notifications'
-      path: '/notifications'
-      fullPath: '/notifications'
-      preLoaderRoute: typeof NotificationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reset-password': {
-      id: '/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof ResetPasswordRouteImport
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -631,81 +540,102 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/applications': {
-      id: '/employer/applications'
-      path: '/employer/applications'
-      fullPath: '/employer/applications'
-      preLoaderRoute: typeof EmployerApplicationsRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/credits': {
-      id: '/employer/credits'
-      path: '/employer/credits'
-      fullPath: '/employer/credits'
-      preLoaderRoute: typeof EmployerCreditsRouteImport
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/history': {
-      id: '/employer/history'
-      path: '/employer/history'
-      fullPath: '/employer/history'
-      preLoaderRoute: typeof EmployerHistoryRouteImport
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/home': {
-      id: '/employer/home'
-      path: '/employer/home'
-      fullPath: '/employer/home'
-      preLoaderRoute: typeof EmployerHomeRouteImport
+    '/notices': {
+      id: '/notices'
+      path: '/notices'
+      fullPath: '/notices'
+      preLoaderRoute: typeof NoticesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/me': {
-      id: '/employer/me'
-      path: '/employer/me'
-      fullPath: '/employer/me'
-      preLoaderRoute: typeof EmployerMeRouteImport
+    '/manager': {
+      id: '/manager'
+      path: '/manager'
+      fullPath: '/manager'
+      preLoaderRoute: typeof ManagerRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/guide/$role': {
-      id: '/guide/$role'
-      path: '/guide/$role'
-      fullPath: '/guide/$role'
-      preLoaderRoute: typeof GuideRoleRouteImport
+    '/inquiry': {
+      id: '/inquiry'
+      path: '/inquiry'
+      fullPath: '/inquiry'
+      preLoaderRoute: typeof InquiryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/seeker/applications': {
-      id: '/seeker/applications'
-      path: '/seeker/applications'
-      fullPath: '/seeker/applications'
-      preLoaderRoute: typeof SeekerApplicationsRouteImport
+    '/faq': {
+      id: '/faq'
+      path: '/faq'
+      fullPath: '/faq'
+      preLoaderRoute: typeof FaqRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/seeker/favorites': {
-      id: '/seeker/favorites'
-      path: '/seeker/favorites'
-      fullPath: '/seeker/favorites'
-      preLoaderRoute: typeof SeekerFavoritesRouteImport
+    '/events': {
+      id: '/events'
+      path: '/events'
+      fullPath: '/events'
+      preLoaderRoute: typeof EventsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/seeker/featured': {
-      id: '/seeker/featured'
-      path: '/seeker/featured'
-      fullPath: '/seeker/featured'
-      preLoaderRoute: typeof SeekerFeaturedRouteImport
+    '/delete-account': {
+      id: '/delete-account'
+      path: '/delete-account'
+      fullPath: '/delete-account'
+      preLoaderRoute: typeof DeleteAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/seeker/home': {
-      id: '/seeker/home'
-      path: '/seeker/home'
-      fullPath: '/seeker/home'
-      preLoaderRoute: typeof SeekerHomeRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin2': {
+      id: '/admin2'
+      path: '/admin2'
+      fullPath: '/admin2'
+      preLoaderRoute: typeof Admin2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seeker/me': {
@@ -715,60 +645,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeekerMeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/jobs': {
-      id: '/api/public/jobs'
-      path: '/api/public/jobs'
-      fullPath: '/api/public/jobs'
-      preLoaderRoute: typeof ApiPublicJobsRouteImport
+    '/seeker/home': {
+      id: '/seeker/home'
+      path: '/seeker/home'
+      fullPath: '/seeker/home'
+      preLoaderRoute: typeof SeekerHomeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/send-push': {
-      id: '/api/public/send-push'
-      path: '/api/public/send-push'
-      fullPath: '/api/public/send-push'
-      preLoaderRoute: typeof ApiPublicSendPushRouteImport
+    '/seeker/featured': {
+      id: '/seeker/featured'
+      path: '/seeker/featured'
+      fullPath: '/seeker/featured'
+      preLoaderRoute: typeof SeekerFeaturedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/credits_/fail': {
-      id: '/employer/credits_/fail'
-      path: '/employer/credits/fail'
-      fullPath: '/employer/credits/fail'
-      preLoaderRoute: typeof EmployerCreditsFailRouteImport
+    '/seeker/favorites': {
+      id: '/seeker/favorites'
+      path: '/seeker/favorites'
+      fullPath: '/seeker/favorites'
+      preLoaderRoute: typeof SeekerFavoritesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/credits_/history': {
-      id: '/employer/credits_/history'
-      path: '/employer/credits/history'
-      fullPath: '/employer/credits/history'
-      preLoaderRoute: typeof EmployerCreditsHistoryRouteImport
+    '/seeker/applications': {
+      id: '/seeker/applications'
+      path: '/seeker/applications'
+      fullPath: '/seeker/applications'
+      preLoaderRoute: typeof SeekerApplicationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/credits_/success': {
-      id: '/employer/credits_/success'
-      path: '/employer/credits/success'
-      fullPath: '/employer/credits/success'
-      preLoaderRoute: typeof EmployerCreditsSuccessRouteImport
+    '/guide/$role': {
+      id: '/guide/$role'
+      path: '/guide/$role'
+      fullPath: '/guide/$role'
+      preLoaderRoute: typeof GuideRoleRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/employer/history/$date': {
-      id: '/employer/history/$date'
-      path: '/$date'
-      fullPath: '/employer/history/$date'
-      preLoaderRoute: typeof EmployerHistoryDateRouteImport
-      parentRoute: typeof EmployerHistoryRoute
+    '/employer/me': {
+      id: '/employer/me'
+      path: '/employer/me'
+      fullPath: '/employer/me'
+      preLoaderRoute: typeof EmployerMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/home': {
+      id: '/employer/home'
+      path: '/employer/home'
+      fullPath: '/employer/home'
+      preLoaderRoute: typeof EmployerHomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/history': {
+      id: '/employer/history'
+      path: '/employer/history'
+      fullPath: '/employer/history'
+      preLoaderRoute: typeof EmployerHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/credits': {
+      id: '/employer/credits'
+      path: '/employer/credits'
+      fullPath: '/employer/credits'
+      preLoaderRoute: typeof EmployerCreditsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/applications': {
+      id: '/employer/applications'
+      path: '/employer/applications'
+      fullPath: '/employer/applications'
+      preLoaderRoute: typeof EmployerApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/employer/jobs/': {
       id: '/employer/jobs/'
       path: '/employer/jobs'
       fullPath: '/employer/jobs/'
       preLoaderRoute: typeof EmployerJobsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/employer/jobs/new': {
-      id: '/employer/jobs/new'
-      path: '/employer/jobs/new'
-      fullPath: '/employer/jobs/new'
-      preLoaderRoute: typeof EmployerJobsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/seeker/jobs/$id': {
@@ -778,11 +729,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SeekerJobsIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/hooks/backup-daily': {
-      id: '/api/public/hooks/backup-daily'
-      path: '/api/public/hooks/backup-daily'
-      fullPath: '/api/public/hooks/backup-daily'
-      preLoaderRoute: typeof ApiPublicHooksBackupDailyRouteImport
+    '/employer/jobs/new': {
+      id: '/employer/jobs/new'
+      path: '/employer/jobs/new'
+      fullPath: '/employer/jobs/new'
+      preLoaderRoute: typeof EmployerJobsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/history/$date': {
+      id: '/employer/history/$date'
+      path: '/$date'
+      fullPath: '/employer/history/$date'
+      preLoaderRoute: typeof EmployerHistoryDateRouteImport
+      parentRoute: typeof EmployerHistoryRoute
+    }
+    '/employer/credits_/success': {
+      id: '/employer/credits_/success'
+      path: '/employer/credits/success'
+      fullPath: '/employer/credits/success'
+      preLoaderRoute: typeof EmployerCreditsSuccessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/credits_/history': {
+      id: '/employer/credits_/history'
+      path: '/employer/credits/history'
+      fullPath: '/employer/credits/history'
+      preLoaderRoute: typeof EmployerCreditsHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/employer/credits_/fail': {
+      id: '/employer/credits_/fail'
+      path: '/employer/credits/fail'
+      fullPath: '/employer/credits/fail'
+      preLoaderRoute: typeof EmployerCreditsFailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/send-push': {
+      id: '/api/public/send-push'
+      path: '/api/public/send-push'
+      fullPath: '/api/public/send-push'
+      preLoaderRoute: typeof ApiPublicSendPushRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/jobs': {
+      id: '/api/public/jobs'
+      path: '/api/public/jobs'
+      fullPath: '/api/public/jobs'
+      preLoaderRoute: typeof ApiPublicJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employer/jobs/edit/$id': {
@@ -790,6 +783,13 @@ declare module '@tanstack/react-router' {
       path: '/employer/jobs/edit/$id'
       fullPath: '/employer/jobs/edit/$id'
       preLoaderRoute: typeof EmployerJobsEditIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/backup-daily': {
+      id: '/api/public/hooks/backup-daily'
+      path: '/api/public/hooks/backup-daily'
+      fullPath: '/api/public/hooks/backup-daily'
+      preLoaderRoute: typeof ApiPublicHooksBackupDailyRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
