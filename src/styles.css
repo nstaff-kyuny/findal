@@ -59,6 +59,8 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-download-store: var(--download-store);
+  --color-download-store-foreground: var(--download-store-foreground);
 }
 
 :root {
@@ -96,6 +98,8 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+  --download-store: oklch(0.22 0.008 255);
+  --download-store-foreground: oklch(0.99 0 0);
 }
 
 .dark {
@@ -131,6 +135,8 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+  --download-store: oklch(0.92 0.008 255);
+  --download-store-foreground: oklch(0.18 0.008 255);
 }
 
 @layer base {
