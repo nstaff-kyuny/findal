@@ -5,6 +5,7 @@ import {
   ClientOnly,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -96,8 +97,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:title", content: "Find AR (파인달) — 일용직 일자리 매칭 플랫폼" },
       { name: "naver-site-verification", content: "60e5318cb403ca655789cc5e65745162691bb141" },
       { name: "twitter:description", content: "외식·호텔·요양 등 단기 근무 일자리와 구직자를 빠르게 연결하는 한국형 일용직 매칭 서비스입니다." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/SJZSCjtgHgRqpOaRI9Qwdxdftlw1/social-images/social-1784174868370-main_logo.webp" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/SJZSCjtgHgRqpOaRI9Qwdxdftlw1/social-images/social-1784174868370-main_logo.webp" },
     ],
     links: [
       {
@@ -136,6 +135,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const isDownloadPage = useRouterState({ select: (state) => state.location.pathname.replace(/\/$/, "") === "/download" });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -146,8 +146,8 @@ function RootComponent() {
               <Outlet />
             </main>
             <NativeAppBoot />
-            <EventPopup />
-            <InstallPrompt />
+            {!isDownloadPage && <EventPopup />}
+            {!isDownloadPage && <InstallPrompt />}
             <Toaster />
           </I18nProvider>
         </AuthProvider>
