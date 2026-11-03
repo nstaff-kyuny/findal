@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as Admin2RouteImport } from './routes/admin2'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as DeleteAccountRouteImport } from './routes/delete-account'
+import { Route as DownloadRouteImport } from './routes/download'
 import { Route as EventsRouteImport } from './routes/events'
 import { Route as FaqRouteImport } from './routes/faq'
 import { Route as InquiryRouteImport } from './routes/inquiry'
@@ -71,6 +72,11 @@ const AuthRoute = AuthRouteImport.update({
 const DeleteAccountRoute = DeleteAccountRouteImport.update({
   id: '/delete-account',
   path: '/delete-account',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DownloadRoute = DownloadRouteImport.update({
+  id: '/download',
+  path: '/download',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsRoute = EventsRouteImport.update({
@@ -246,6 +252,7 @@ export interface FileRoutesByFullPath {
   '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/download': typeof DownloadRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
@@ -286,6 +293,7 @@ export interface FileRoutesByTo {
   '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/download': typeof DownloadRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
@@ -327,6 +335,7 @@ export interface FileRoutesById {
   '/admin2': typeof Admin2Route
   '/auth': typeof AuthRoute
   '/delete-account': typeof DeleteAccountRoute
+  '/download': typeof DownloadRoute
   '/events': typeof EventsRoute
   '/faq': typeof FaqRoute
   '/inquiry': typeof InquiryRoute
@@ -369,6 +378,7 @@ export interface FileRouteTypes {
     | '/admin2'
     | '/auth'
     | '/delete-account'
+    | '/download'
     | '/events'
     | '/faq'
     | '/inquiry'
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/admin2'
     | '/auth'
     | '/delete-account'
+    | '/download'
     | '/events'
     | '/faq'
     | '/inquiry'
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/admin2'
     | '/auth'
     | '/delete-account'
+    | '/download'
     | '/events'
     | '/faq'
     | '/inquiry'
@@ -490,6 +502,7 @@ export interface RootRouteChildren {
   Admin2Route: typeof Admin2Route
   AuthRoute: typeof AuthRoute
   DeleteAccountRoute: typeof DeleteAccountRoute
+  DownloadRoute: typeof DownloadRoute
   EventsRoute: typeof EventsRoute
   FaqRoute: typeof FaqRoute
   InquiryRoute: typeof InquiryRoute
@@ -559,6 +572,13 @@ declare module '@tanstack/react-router' {
       path: '/delete-account'
       fullPath: '/delete-account'
       preLoaderRoute: typeof DeleteAccountRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/download': {
+      id: '/download'
+      path: '/download'
+      fullPath: '/download'
+      preLoaderRoute: typeof DownloadRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events': {
@@ -813,6 +833,7 @@ const rootRouteChildren: RootRouteChildren = {
   Admin2Route: Admin2Route,
   AuthRoute: AuthRoute,
   DeleteAccountRoute: DeleteAccountRoute,
+  DownloadRoute: DownloadRoute,
   EventsRoute: EventsRoute,
   FaqRoute: FaqRoute,
   InquiryRoute: InquiryRoute,
