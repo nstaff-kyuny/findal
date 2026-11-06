@@ -9,6 +9,17 @@ import { getNativePlatform, isNativeApp } from "@/lib/native";
  * 웹푸시와 함께 함께 발송합니다.
  */
 
+/** 네이티브 호출이 응답하지 않아도 화면이 '등록 중'에 멈추지 않도록 시간 제한 */
+function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(msg)), ms);
+    p.then(
+      (v) => { clearTimeout(t); resolve(v); },
+      (e) => { clearTimeout(t); reject(e); },
+    );
+  });
+}
+
 async function plugin() {
   const mod = await import("@capacitor/push-notifications");
   return mod.PushNotifications;
@@ -33,7 +44,7 @@ export async function getNativePushPermission(): Promise<"granted" | "denied" | 
   if (!isNativeApp()) return "denied";
   try {
     const PushNotifications = await plugin();
-    const res = await PushNotifications.checkPermissions();
+    const res = await withTimeout(PushNotifications.checkPermissions(), 5000, "timeout");
     if (res.receive === "granted") return "granted";
     if (res.receive === "denied") return "denied";
     return "prompt";
@@ -48,42 +59,57 @@ export async function enableNativePush(userId: string): Promise<{ ok: boolean; r
   if (!userId) return { ok: false, reason: "로그인이 필요합니다" };
   try {
     const PushNotifications = await plugin();
-    let perm = await PushNotifications.checkPermissions();
+    let perm = await withTimeout(PushNotifications.checkPermissions(), 8000, "알림 권한 확인이 응답하지 않습니다. 앱을 완전히 종료 후 다시 실행해 주세요.");
     if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
-      perm = await PushNotifications.requestPermissions();
+      // 사용자가 팝업에 응답할 시간을 충분히 줌
+      perm = await withTimeout(PushNotifications.requestPermissions(), 60000, "알림 권한 요청 시간이 초과되었습니다. 다시 시도해 주세요.");
     }
     if (perm.receive !== "granted") {
-      return { ok: false, reason: "기기 설정에서 알림 권한을 허용해 주세요" };
+      return { ok: false, reason: "휴대폰 설정 > 앱 > Find AR > 알림에서 알림을 허용해 주세요" };
     }
 
-    const token = await new Promise<string | null>((resolve) => {
-      const timer = setTimeout(() => resolve(null), 12000);
-      PushNotifications.addListener("registration", (t) => {
-        clearTimeout(timer);
-        resolve(t.value);
-      });
-      PushNotifications.addListener("registrationError", () => {
+    let regErr = "";
+    const handles: Array<{ remove: () => Promise<void> }> = [];
+    const token = await new Promise<string | null>(async (resolve) => {
+      const timer = setTimeout(() => resolve(null), 15000);
+      try {
+        handles.push(await PushNotifications.addListener("registration", (t) => {
+          clearTimeout(timer);
+          resolve(t.value);
+        }));
+        handles.push(await PushNotifications.addListener("registrationError", (err: any) => {
+          regErr = err?.error ?? "";
+          clearTimeout(timer);
+          resolve(null);
+        }));
+        await PushNotifications.register();
+      } catch (e: any) {
+        regErr = e?.message ?? String(e);
         clearTimeout(timer);
         resolve(null);
-      });
-      PushNotifications.register();
+      }
     });
+    handles.forEach((h) => h.remove().catch(() => {}));
 
-    if (!token) return { ok: false, reason: "푸시 토큰 발급에 실패했습니다. 잠시 후 다시 시도해 주세요." };
-    await saveToken(userId, token);
+    if (!token) {
+      return {
+        ok: false,
+        reason: regErr
+          ? `푸시 등록 실패: ${regErr}`
+          : "푸시 토큰 발급에 실패했습니다. 앱을 최신 버전으로 업데이트한 뒤 다시 시도해 주세요.",
+      };
+    }
+    await withTimeout(saveToken(userId, token), 10000, "알림 등록 정보를 저장하지 못했습니다. 네트워크를 확인해 주세요.");
     return { ok: true };
   } catch (e: any) {
     return { ok: false, reason: e?.message ?? "알 수 없는 오류" };
   }
 }
-
 /** 알림 끄기: 저장된 토큰 삭제 (기기 권한 자체는 OS 설정에서 관리) */
 export async function disableNativePush(userId: string): Promise<void> {
   if (!isNativeApp() || !userId) return;
   try {
     await supabase.from("native_push_tokens" as any).delete().eq("user_id", userId).eq("platform", getNativePlatform());
-    const PushNotifications = await plugin();
-    await PushNotifications.removeAllListeners();
   } catch (e) {
     console.warn("[native-push] disable failed", e);
   }
