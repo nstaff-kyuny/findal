@@ -75,6 +75,7 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             PRODUCT_BUNDLE_IDENTIFIER=kr.co.nstaff.findar \
+            CODE_SIGN_ENTITLEMENTS=App/App.entitlements \
             CURRENT_PROJECT_VERSION=${{ github.event.inputs.build_number }} \
             MARKETING_VERSION=${{ github.event.inputs.version }}
 
