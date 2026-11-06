@@ -24,6 +24,8 @@ function pemToPkcs8(pem: string): ArrayBuffer {
   return out.buffer;
 }
 
+const IOS_BUNDLE_ID = "kr.co.nstaff.findar";
+
 let cachedToken: { token: string; exp: number } | null = null;
 
 async function getAccessToken(sa: ServiceAccount): Promise<string> {
@@ -34,7 +36,7 @@ async function getAccessToken(sa: ServiceAccount): Promise<string> {
   const claims = b64url(
     JSON.stringify({
       iss: sa.client_email,
-      scope: "https://www.googleapis.com/auth/firebase.messaging",
+      scope: "https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/cloud-platform",
       aud: "https://oauth2.googleapis.com/token",
       iat: now,
       exp: now + 3600,
@@ -87,6 +89,27 @@ export async function sendFcmToTokens(
   if (!sa || tokens.length === 0) return { sent: 0, staleTokens: [] };
 
   const accessToken = await getAccessToken(sa);
+
+  // iOS 앱은 Apple(APNs) 기기 토큰(64자리 16진수)을 저장하므로 Firebase 토큰으로 변환
+  const apnsMap = new Map<string, string>();
+  const apnsTokens = tokens.filter((t) => t.platform === "ios" && /^[0-9a-f]{64}$/i.test(t.token)).map((t) => t.token);
+  if (apnsTokens.length > 0) {
+    try {
+      const r = await fetch("https://iid.googleapis.com/iid/v1:batchImport", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json", access_token_auth: "true" },
+        body: JSON.stringify({ application: IOS_BUNDLE_ID, sandbox: false, apns_tokens: apnsTokens }),
+      });
+      const j: any = r.ok ? await r.json() : null;
+      if (!r.ok) console.warn("[fcm] apns import failed", r.status, (await r.text().catch(() => "")).slice(0, 200));
+      (j?.results ?? []).forEach((res: any) => {
+        if (res?.registration_token && res?.apns_token) apnsMap.set(res.apns_token, res.registration_token);
+      });
+    } catch (e: any) {
+      console.warn("[fcm] apns import error", e?.message || e);
+    }
+  }
+
   const url = `https://fcm.googleapis.com/v1/projects/${sa.project_id}/messages:send`;
   const data: Record<string, string> = {
     link_url: msg.link_url ?? "/notifications",
@@ -100,7 +123,7 @@ export async function sendFcmToTokens(
   await Promise.all(
     tokens.map(async (t) => {
       const message: any = {
-        token: t.token,
+        token: apnsMap.get(t.token) ?? t.token,
         notification: { title: msg.title, body: msg.body },
         data,
         android: {
