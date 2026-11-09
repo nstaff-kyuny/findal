@@ -44,6 +44,14 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   useEffect(() => {
     getPushPermissionState().then(setPushPermission).catch(() => setPushPermission("unsupported"));
     setPushPlatform(detectPushPlatform());
+    // 휴대폰 설정에서 알림을 켜고 돌아오면 상태를 다시 확인
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        getPushPermissionState().then(setPushPermission).catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
   const load = async () => {
