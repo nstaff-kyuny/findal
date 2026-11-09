@@ -13,7 +13,7 @@ import { formatWorkDatesWithWeekday, isJobCompleted } from "@/lib/job-visuals";
 import { MapPin, Search, ChevronDown, ChevronUp, BookOpen } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
-import { parseRegions } from "@/components/RegionPicker";
+import { parseRegions, regionOrFilter } from "@/components/RegionPicker";
 import { SeekerAiJobChat } from "@/components/SeekerAiJobChat";
 
 export const Route = createFileRoute("/seeker/home")({ component: () => <RoleGate role="seeker"><Page /></RoleGate> });
@@ -48,8 +48,8 @@ function Page() {
 
   useEffect(() => { (async () => {
     let qb = supabase.from("jobs").select("*").eq("is_active", true).order("created_at", { ascending: false }).limit(100);
-    if (region !== "all") qb = qb.eq("region", region);
-    else if (prefOnly && prefRegions.length > 0) qb = qb.in("region", prefRegions);
+    if (region !== "all") qb = qb.or(regionOrFilter([region]));
+    else if (prefOnly && prefRegions.length > 0) qb = qb.or(regionOrFilter(prefRegions));
     if (q) qb = qb.ilike("title", `%${q}%`);
     const cat = CATEGORIES.find(c => c.key === category);
     if (cat && cat.industries.length) qb = qb.in("industry", cat.industries as any);

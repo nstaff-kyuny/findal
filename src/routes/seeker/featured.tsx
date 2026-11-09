@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { INDUSTRY_FALLBACK_IMAGE, INDUSTRY_GRADIENT, INDUSTRY_EMOJI, formatWorkDatesWithWeekday, isJobCompleted } from "@/lib/job-visuals";
 import { useAuth } from "@/lib/auth";
 import { useI18n, useDynamicTranslate } from "@/lib/i18n";
-import { parseRegions, serializeRegions, RegionPicker } from "@/components/RegionPicker";
+import { parseRegions, serializeRegions, RegionPicker, regionOrFilter, regionMatches } from "@/components/RegionPicker";
 import { generateSeekerMatchReasons } from "@/lib/ai.functions";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
@@ -41,7 +41,7 @@ function Page() {
       myRegions = parseRegions(sp?.preferred_region);
       setPrefRegions(myRegions);
     }
-    const inRegion = (j: any) => myRegions.length === 0 || (j.region && myRegions.includes(j.region));
+    const inRegion = (j: any) => myRegions.length === 0 || regionMatches(j.region, myRegions);
 
     const now = new Date().toISOString();
     const { data: p } = await supabase.rpc("get_active_promoted_jobs");
@@ -58,7 +58,7 @@ function Page() {
 
 
     let rq = supabase.from("jobs").select("*").eq("is_active", true);
-    if (myRegions.length > 0) rq = rq.in("region", myRegions);
+    if (myRegions.length > 0) rq = rq.or(regionOrFilter(myRegions));
     const { data: r } = await rq.limit(40);
     const randomJobs = (r ?? []).sort(() => Math.random() - 0.5);
     setRandom(randomJobs);

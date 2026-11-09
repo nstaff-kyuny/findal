@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { seekerJobChat } from "@/lib/ai.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { regionOrFilter } from "@/components/RegionPicker";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,7 +49,7 @@ export function SeekerAiJobChat() {
         let q = supabase.from("jobs").select("*").eq("is_active", true).limit(6);
         if (c.industries?.length) q = q.in("industry", c.industries as any);
         if (c.roles?.length) q = q.in("job_role", c.roles as any);
-        if (c.regions?.length) q = q.in("region", c.regions);
+        if (c.regions?.length) q = q.or(regionOrFilter(c.regions));
         if (c.minWage) q = q.gte("daily_wage", c.minWage);
         const { data } = await q;
         setMatches(data ?? []);
