@@ -20,9 +20,13 @@ function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
   });
 }
 
+/**
+ * 주의: Capacitor 플러그인 객체는 Proxy 라서 async 함수에서 그대로 return 하면
+ * Promise 가 이를 thenable 로 오인해 영원히 대기합니다. 반드시 객체로 감싸서 반환합니다.
+ */
 async function plugin() {
   const mod = await import("@capacitor/push-notifications");
-  return mod.PushNotifications;
+  return { P: mod.PushNotifications };
 }
 
 async function saveToken(userId: string, token: string) {
@@ -43,7 +47,7 @@ async function saveToken(userId: string, token: string) {
 export async function getNativePushPermission(): Promise<"granted" | "denied" | "prompt"> {
   if (!isNativeApp()) return "denied";
   try {
-    const PushNotifications = await plugin();
+    const { P: PushNotifications } = await plugin();
     const res = await withTimeout(PushNotifications.checkPermissions(), 5000, "timeout");
     if (res.receive === "granted") return "granted";
     if (res.receive === "denied") return "denied";
@@ -65,7 +69,7 @@ export async function enableNativePush(userId: string): Promise<{ ok: boolean; r
     };
   }
   try {
-    const PushNotifications = await withTimeout(plugin(), 8000, "[코드 P2] 알림 모듈을 불러오지 못했습니다");
+    const { P: PushNotifications } = await withTimeout(plugin(), 8000, "[코드 P2] 알림 모듈을 불러오지 못했습니다");
     let perm = await withTimeout(PushNotifications.checkPermissions(), 8000, "[코드 P3] 알림 권한 확인이 응답하지 않습니다");
     if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
       // 사용자가 팝업에 응답할 시간을 충분히 줌
@@ -143,7 +147,7 @@ export async function ensureNativePush(userId: string): Promise<boolean> {
 export async function attachNativePushHandlers(navigate: (path: string) => void) {
   if (!isNativeApp()) return;
   try {
-    const PushNotifications = await plugin();
+    const { P: PushNotifications } = await plugin();
     await PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
       const link = (action.notification?.data as any)?.link_url || "/notifications";
       navigate(String(link));
