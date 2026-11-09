@@ -162,7 +162,10 @@ export async function unsubscribePush(userId: string): Promise<void> {
 
 export async function ensurePushSubscription(userId: string): Promise<boolean> {
   try {
-    if (isNativeApp()) return await ensureNativePush(userId);
+    if (isNativeApp()) {
+      try { if (localStorage.getItem("findar_push_off") === "1") return false; } catch {}
+      return await ensureNativePush(userId);
+    }
     // Silent refresh ONLY when permission is already granted — never prompts.
     if (typeof window === "undefined" || !("Notification" in window)) return false;
     if (Notification.permission !== "granted") return false;
