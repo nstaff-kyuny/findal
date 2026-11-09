@@ -106,16 +106,13 @@ export async function registerPushSubscription(userId: string): Promise<boolean>
   const p256dh = json.keys?.p256dh ?? arrayBufferToBase64(sub.getKey("p256dh"));
   const auth = json.keys?.auth ?? arrayBufferToBase64(sub.getKey("auth"));
 
-  const { error } = await supabase.from("push_subscriptions").upsert(
-    {
-      user_id: userId,
-      endpoint,
-      p256dh,
-      auth,
-      user_agent: navigator.userAgent,
-    },
-    { onConflict: "endpoint" }
-  );
+  void userId; // 서버 함수가 현재 로그인 계정으로 저장(같은 브라우저를 다른 계정이 쓰던 경우도 처리)
+  const { error } = await (supabase.rpc as any)("register_web_push_subscription", {
+    _endpoint: endpoint,
+    _p256dh: p256dh,
+    _auth: auth,
+    _user_agent: navigator.userAgent,
+  });
   if (error) throw error;
   return true;
 }

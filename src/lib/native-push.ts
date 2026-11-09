@@ -31,15 +31,13 @@ async function plugin() {
 
 async function saveToken(userId: string, token: string) {
   const platform = getNativePlatform();
-  const { error } = await supabase.from("native_push_tokens" as any).upsert(
-    {
-      user_id: userId,
-      token,
-      platform,
-      user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-    },
-    { onConflict: "token" },
-  );
+  void userId; // 서버 함수가 현재 로그인 계정(auth.uid())으로 저장합니다.
+  // 같은 기기를 다른 계정이 쓰던 경우에도 현재 계정으로 안전하게 옮겨 저장합니다.
+  const { error } = await (supabase.rpc as any)("register_native_push_token", {
+    _token: token,
+    _platform: platform,
+    _user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+  });
   if (error) throw error;
 }
 
