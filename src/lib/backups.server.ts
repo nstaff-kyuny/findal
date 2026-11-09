@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { backupRetentionCutoff } from "@/lib/backup-retention";
 
 export const BACKUP_TABLES = [
   "profiles",
@@ -28,6 +29,33 @@ export const BACKUP_TABLES = [
   "app_version",
   "backup_jobs",
 ];
+
+/**
+ * 3개월이 지난 백업 기록(backup_jobs)과 그 백업 파일(backups 버킷)만 삭제합니다.
+ * 앱 화면·공고·회원 정보 테이블은 건드리지 않습니다.
+ */
+export async function purgeOldBackups(now: Date = new Date()): Promise<number> {
+  const cutoff = backupRetentionCutoff(now).toISOString();
+  const { data: old, error } = await supabaseAdmin
+    .from("backup_jobs")
+    .select("id, file_path")
+    .lt("created_at", cutoff)
+    .limit(500);
+  if (error) throw error;
+  if (!old || old.length === 0) return 0;
+
+  const paths = old.map((r) => r.file_path).filter((p): p is string => !!p);
+  if (paths.length > 0) {
+    const { error: rmErr } = await supabaseAdmin.storage.from("backups").remove(paths);
+    if (rmErr) throw rmErr;
+  }
+  const { error: delErr } = await supabaseAdmin
+    .from("backup_jobs")
+    .delete()
+    .in("id", old.map((r) => r.id));
+  if (delErr) throw delErr;
+  return old.length;
+}
 
 export async function runBackup(kind: "manual" | "scheduled") {
   const { data: job, error: jobErr } = await supabaseAdmin
@@ -80,7 +108,15 @@ export async function runBackup(kind: "manual" | "scheduled") {
       })
       .eq("id", job.id);
 
-    return { ok: true, id: job.id, path, size: buffer.byteLength };
+    // 백업 성공 후 3개월 지난 백업 기록·파일 자동 정리 (실패해도 백업 결과에는 영향 없음)
+    let purged = 0;
+    try {
+      purged = await purgeOldBackups();
+    } catch (e) {
+      console.error("old backup purge failed", e);
+    }
+
+    return { ok: true, id: job.id, path, size: buffer.byteLength, purged };
   } catch (e: any) {
     await supabaseAdmin
       .from("backup_jobs")
