@@ -452,6 +452,8 @@ export type Database = {
       job_applications: {
         Row: {
           approved_at: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
           confirmed_at: string | null
           created_at: string
           employer_id: string
@@ -464,6 +466,8 @@ export type Database = {
         }
         Insert: {
           approved_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           confirmed_at?: string | null
           created_at?: string
           employer_id: string
@@ -476,6 +480,8 @@ export type Database = {
         }
         Update: {
           approved_at?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
           confirmed_at?: string | null
           created_at?: string
           employer_id?: string
@@ -1078,6 +1084,7 @@ export type Database = {
         Returns: Json
       }
       approve_application: { Args: { _app_id: string }; Returns: Json }
+      employer_cancel_application: { Args: { _app_id: string }; Returns: Json }
       get_active_promoted_jobs: {
         Args: never
         Returns: {
