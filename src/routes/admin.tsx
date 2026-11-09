@@ -299,7 +299,7 @@ function BackupsTab() {
           <div className="flex items-center justify-between gap-3 flex-wrap">
             <div>
               <h3 className="font-bold">데이터 백업</h3>
-              <p className="text-xs text-muted-foreground">전체 데이터(근로자/구인자/공고 등)와 앱 구조 정보를 JSON으로 저장합니다. 매일 새벽 3시에 자동으로 백업됩니다.</p>
+              <p className="text-xs text-muted-foreground">전체 데이터(근로자/구인자/공고 등)와 앱 구조 정보를 JSON으로 저장합니다. 매일 새벽 3시에 자동으로 백업되며, 3개월이 지난 백업 기록은 자동 삭제됩니다.</p>
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={refresh} disabled={loading}>새로고침</Button>
