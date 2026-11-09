@@ -8,6 +8,15 @@ export function parseRegions(v: string | null | undefined): string[] {
   if (!v) return [];
   return v.split(",").map(s => s.trim()).filter(Boolean);
 }
+/** PostgREST `or` filter matching jobs whose region starts with any province (e.g. "서울 송파구"). */
+export function regionOrFilter(regions: string[]): string {
+  return regions.map(r => `region.like.${r.replace(/[,()%*]/g, "")}*`).join(",");
+}
+export function regionMatches(jobRegion: string | null | undefined, regions: string[]): boolean {
+  if (!jobRegion) return false;
+  const jr = jobRegion.trim();
+  return regions.some(r => jr === r || jr.startsWith(r + " ") || jr.startsWith(r));
+}
 export function serializeRegions(arr: string[]): string {
   return arr.join(",");
 }
