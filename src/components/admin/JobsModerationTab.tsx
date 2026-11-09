@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { isJobCompleted } from "@/lib/job-visuals";
 import { useI18n } from "@/lib/i18n";
 import { jobModerationStatus, type JobModerationStatus } from "@/lib/job-moderation";
+import { JobDetailDialog } from "./JobDetailDialog";
 
 const STATUS_LABEL: Record<JobModerationStatus, string> = {
   live: "노출중",
@@ -28,6 +29,7 @@ export function JobsModerationTab() {
   const [filter, setFilter] = useState<"live" | "admin_hidden" | "inactive" | "all">("live");
   const [q, setQ] = useState("");
   const [target, setTarget] = useState<any | null>(null);
+  const [detail, setDetail] = useState<any | null>(null);
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -149,10 +151,10 @@ export function JobsModerationTab() {
                     <div className="text-xs text-muted-foreground">{comp?.contact_phone ?? ""}</div>
                   </td>
                   <td className="pr-2 max-w-xs">
-                    <div className="font-medium flex items-center gap-2">
+                    <button type="button" onClick={() => setDetail(j)} className="font-medium flex items-center gap-2 text-left text-primary hover:underline">
                       {j.photo_url && <img src={j.photo_url} alt="" className="w-8 h-8 rounded object-cover shrink-0" />}
                       <span className="truncate">{j.title}</span>
-                    </div>
+                    </button>
                     <div className="text-xs text-muted-foreground">{j.place_name} · {tIndustry(j.industry)} / {tRole(j.job_role)}</div>
                     {j._status === "admin_hidden" && j.admin_hidden_reason && (
                       <div className="text-xs text-destructive mt-0.5">사유: {j.admin_hidden_reason}</div>
@@ -172,7 +174,8 @@ export function JobsModerationTab() {
                       <div className="text-[11px] text-muted-foreground mt-0.5">{new Date(j.admin_hidden_at).toLocaleDateString()}</div>
                     )}
                   </td>
-                  <td className="text-right whitespace-nowrap">
+                  <td className="text-right whitespace-nowrap space-x-1">
+                    <Button size="sm" variant="outline" onClick={() => setDetail(j)}>상세보기</Button>
                     {j.admin_hidden ? (
                       <Button size="sm" variant="outline" disabled={busy}
                         onClick={() => { if (confirm("이 공고를 다시 노출할까요? 구직자 화면에 다시 보이게 됩니다.")) setHidden(j, false); }}>
@@ -190,6 +193,15 @@ export function JobsModerationTab() {
           </tbody>
         </table>
       </div>
+
+      <JobDetailDialog
+        job={detail}
+        company={detail ? companies[detail.employer_id] : undefined}
+        statusLabel={detail ? STATUS_LABEL[jobModerationStatus(detail, isJobCompleted(detail))] : undefined}
+        onOpenChange={(o) => { if (!o) setDetail(null); }}
+        onHide={(j) => { setDetail(null); setTarget(j); setReason(""); }}
+        onUnhide={(j) => { if (confirm("이 공고를 다시 노출할까요? 구직자 화면에 다시 보이게 됩니다.")) { setDetail(null); setHidden(j, false); } }}
+      />
 
       <Dialog open={!!target} onOpenChange={(o) => { if (!o) setTarget(null); }}>
         <DialogContent>
