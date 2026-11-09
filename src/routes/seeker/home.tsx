@@ -119,25 +119,27 @@ function Page() {
               </Button>
             ))}
           </div>
-          {prefRegions.length > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {prefRegions.length > 0 && (
+              <Button
+                size="sm"
+                variant={prefOnly && region === "all" ? "default" : "outline"}
+                className="text-xs h-7"
+                onClick={() => { setPrefOnly(v => !v); setRegion("all"); }}
+              >
+                <MapPin size={12} className="mr-1" />
+                {t("pref_region_only")}
+              </Button>
+            )}
             <Button
               size="sm"
-              variant={prefOnly && region === "all" ? "default" : "outline"}
+              variant={showCompleted ? "default" : "outline"}
               className="text-xs h-7"
-              onClick={() => { setPrefOnly(v => !v); setRegion("all"); }}
+              onClick={() => setShowCompleted(v => !v)}
             >
-              <MapPin size={12} className="mr-1" />
-              {t("pref_region_only")}
+              {showCompleted ? "✓ " : ""}{t("show_completed")}
             </Button>
-          )}
-          <Button
-            size="sm"
-            variant={showCompleted ? "default" : "outline"}
-            className="text-xs h-7"
-            onClick={() => setShowCompleted(v => !v)}
-          >
-            {showCompleted ? "✓ " : ""}{t("show_completed")}
-          </Button>
+          </div>
         </div>
       )}
 
