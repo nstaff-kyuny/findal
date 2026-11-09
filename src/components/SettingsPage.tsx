@@ -44,6 +44,14 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   useEffect(() => {
     getPushPermissionState().then(setPushPermission).catch(() => setPushPermission("unsupported"));
     setPushPlatform(detectPushPlatform());
+    // 휴대폰 설정에서 알림을 켜고 돌아오면 상태를 다시 확인
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        getPushPermissionState().then(setPushPermission).catch(() => {});
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
   }, []);
 
   const load = async () => {
@@ -62,6 +70,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
     if (!user) return;
     setNotifyPush(push); setNotifyMkt(mkt);
     await supabase.from(table).update({ notify_push: push, notify_marketing: mkt } as any).eq("user_id", user.id);
+    try { localStorage.setItem("findar_push_off", push ? "0" : "1"); } catch {}
     if (push) {
       await activatePush();
     } else {
@@ -82,8 +91,13 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
     }
     setPushBusy(true);
     try {
-      const res = await requestPushPermissionAndSubscribe(user.id);
-      setPushPermission(await getPushPermissionState());
+      const res = await Promise.race([
+        requestPushPermissionAndSubscribe(user.id),
+        new Promise<{ ok: boolean; reason?: string }>((r) =>
+          setTimeout(() => r({ ok: false, reason: "응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요." }), 45000),
+        ),
+      ]);
+      setPushPermission(await getPushPermissionState().catch(() => "default" as const));
       if (res.ok) toast.success("푸시 알림이 등록되었습니다");
       else toast.info(res.reason ?? "휴대폰 설정에서 알림 권한을 허용해 주세요");
     } catch (e: any) {
@@ -226,11 +240,11 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           <div className="flex items-center gap-2"><Bell size={16} /> <span>푸시 알림</span></div>
           <Switch checked={notifyPush} disabled={pushBusy} onCheckedChange={(v) => updateNotify(v, notifyMkt)} />
         </Row>
-        {notifyPush && (
+        {notifyPush && pushPermission !== "granted" && pushPermission !== "unsupported" && (
           <div className="px-4 py-3 flex items-center justify-between gap-3 text-sm flex-wrap">
-            <span className="text-muted-foreground">앱 알림 권한: {pushPermission === "granted" ? "허용됨" : pushPermission === "denied" ? "차단됨" : pushPermission === "unsupported" ? "미지원" : "대기"}</span>
-            <Button size="sm" variant="outline" disabled={pushBusy || pushPermission === "unsupported"} onClick={activatePush}>
-              {pushBusy ? "등록 중..." : "권한 등록"}
+            <span className="text-muted-foreground">휴대폰 알림을 켜야 소식을 받을 수 있어요</span>
+            <Button size="sm" disabled={pushBusy} onClick={activatePush}>
+              {pushBusy ? "확인 중..." : "알림 켜기"}
             </Button>
           </div>
         )}
