@@ -57,9 +57,16 @@ export async function getNativePushPermission(): Promise<"granted" | "denied" | 
 export async function enableNativePush(userId: string): Promise<{ ok: boolean; reason?: string }> {
   if (!isNativeApp()) return { ok: false, reason: "네이티브 앱에서만 사용할 수 있습니다" };
   if (!userId) return { ok: false, reason: "로그인이 필요합니다" };
+  const cap = (window as any).Capacitor;
+  if (cap?.isPluginAvailable && !cap.isPluginAvailable("PushNotifications")) {
+    return {
+      ok: false,
+      reason: "[코드 P1] 설치된 앱에 알림 기능이 포함되어 있지 않습니다. 앱을 새 버전으로 다시 빌드해야 합니다.",
+    };
+  }
   try {
-    const PushNotifications = await plugin();
-    let perm = await withTimeout(PushNotifications.checkPermissions(), 8000, "알림 권한 확인이 응답하지 않습니다. 앱을 완전히 종료 후 다시 실행해 주세요.");
+    const PushNotifications = await withTimeout(plugin(), 8000, "[코드 P2] 알림 모듈을 불러오지 못했습니다");
+    let perm = await withTimeout(PushNotifications.checkPermissions(), 8000, "[코드 P3] 알림 권한 확인이 응답하지 않습니다");
     if (perm.receive === "prompt" || perm.receive === "prompt-with-rationale") {
       // 사용자가 팝업에 응답할 시간을 충분히 줌
       perm = await withTimeout(PushNotifications.requestPermissions(), 60000, "알림 권한 요청 시간이 초과되었습니다. 다시 시도해 주세요.");
