@@ -35,6 +35,7 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
   const [version, setVersion] = useState<{ version: string; is_latest: boolean } | null>(null);
   const [editOpen, setEditOpen] = useState(false);
   const [pushBusy, setPushBusy] = useState(false);
+  const [pushMsg, setPushMsg] = useState<string | null>(null);
   const [pushPermission, setPushPermission] = useState<NotificationPermission | "unsupported">("default");
   const [pushPlatform, setPushPlatform] = useState<ReturnType<typeof detectPushPlatform> | null>(null);
   const [form, setForm] = useState<any>({});
@@ -90,18 +91,27 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
       return;
     }
     setPushBusy(true);
+    setPushMsg(null);
     try {
       const res = await Promise.race([
         requestPushPermissionAndSubscribe(user.id),
         new Promise<{ ok: boolean; reason?: string }>((r) =>
-          setTimeout(() => r({ ok: false, reason: "응답이 지연되고 있습니다. 잠시 후 다시 시도해 주세요." }), 45000),
+          setTimeout(() => r({ ok: false, reason: "[코드 T] 응답이 없습니다 (" + (plat.isNative ? "앱" : "웹") + ")" }), 45000),
         ),
       ]);
-      setPushPermission(await getPushPermissionState().catch(() => "default" as const));
-      if (res.ok) toast.success("푸시 알림이 등록되었습니다");
-      else toast.info(res.reason ?? "휴대폰 설정에서 알림 권한을 허용해 주세요");
+      if (res.ok) {
+        setPushPermission("granted");
+        toast.success("푸시 알림이 등록되었습니다");
+      } else {
+        setPushPermission(await getPushPermissionState().catch(() => "default" as const));
+        const msg = res.reason ?? "휴대폰 설정에서 알림 권한을 허용해 주세요";
+        setPushMsg(msg);
+        toast.info(msg);
+      }
     } catch (e: any) {
-      toast.error(e?.message ?? "푸시 알림 등록에 실패했습니다");
+      const msg = e?.message ?? "푸시 알림 등록에 실패했습니다";
+      setPushMsg(msg);
+      toast.error(msg);
     } finally {
       setPushBusy(false);
     }
@@ -247,6 +257,9 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
               {pushBusy ? "확인 중..." : "알림 켜기"}
             </Button>
           </div>
+        )}
+        {notifyPush && pushMsg && (
+          <div className="px-4 pb-3 text-[11px] text-destructive leading-relaxed">{pushMsg}</div>
         )}
         {notifyPush && pushPlatform?.needsInstall && (
           <div className="px-4 pb-3 text-[11px] text-amber-600 leading-relaxed">
