@@ -25,6 +25,7 @@ import { RegionPicker, parseRegions, serializeRegions } from "@/components/Regio
 import { analyzeInquiryText, generateAdminAiInsights, generateAdBannerImage } from "@/lib/ai.functions";
 import { getPaymentSettings, savePaymentSettings, diagnoseTossKeys, expireStaleCreditOrders } from "@/lib/toss.functions";
 import { adminListRefundRequests, adminApproveRefund, adminRejectRefund } from "@/lib/refunds.functions";
+import { JobsModerationTab } from "@/components/admin/JobsModerationTab";
 
 
 export const Route = createFileRoute("/admin")({ component: Admin });
@@ -145,6 +146,13 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
     ],
   },
   {
+    id: "jobs",
+    label: "공고 관리",
+    items: [
+      { value: "job-moderation", label: "공고 노출 관리" },
+    ],
+  },
+  {
     id: "content",
     label: "콘텐츠/소식",
     items: [
@@ -217,6 +225,7 @@ function AdminPanel() {
       <div className="flex-1 min-w-0">
         <TabsContent value="all-users"><AllUsersTab /></TabsContent>
         <TabsContent value="users"><UsersTab /></TabsContent>
+        <TabsContent value="job-moderation"><JobsModerationTab /></TabsContent>
         <TabsContent value="credits"><CreditsTab /></TabsContent>
         <TabsContent value="referrers"><ReferrersTab /></TabsContent>
         <TabsContent value="banners"><BannersTab /></TabsContent>

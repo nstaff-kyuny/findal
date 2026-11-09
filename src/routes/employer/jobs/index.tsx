@@ -69,8 +69,9 @@ function Page() {
   };
 
   const toggle = async (j: any) => {
+    if (j.admin_hidden) return toast.error("관리자에 의해 비노출 처리된 공고입니다. 고객센터로 문의해 주세요.");
     const { error } = await supabase.from("jobs").update({ is_active: !j.is_active }).eq("id", j.id);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(error.message.replace(/^ADMIN_HIDDEN:\s*/, ""));
     load();
   };
   const remove = async (id: string) => {
@@ -148,7 +149,9 @@ function Page() {
                   {j.contract_type === "monthly"
                     ? <Badge className="text-xs bg-sky-100 text-sky-700 border border-sky-200">단기</Badge>
                     : <Badge className="text-xs bg-emerald-600 text-white">일용직</Badge>}
-                  {!j.is_active && <Badge variant="destructive" className="text-xs">비활성</Badge>}
+                  {j.admin_hidden
+                    ? <Badge variant="destructive" className="text-xs">관리자 비노출</Badge>
+                    : !j.is_active && <Badge variant="destructive" className="text-xs">비활성</Badge>}
                   {!done && dLeft && (
                     <Badge className={`text-xs ${dLeft.today ? "bg-red-600 text-white animate-pulse" : "bg-slate-100 text-slate-700 border border-slate-200"}`}>
                       <Clock size={11} className="mr-1" />{dLeft.text}
@@ -174,13 +177,18 @@ function Page() {
                   );
                 })()}
                 <p className="text-xs text-muted-foreground mt-0.5">※ 공고 수정은 최대 2회까지 가능합니다</p>
+                {j.admin_hidden && (
+                  <p className="text-xs text-destructive mt-1">
+                    ※ 관리자에 의해 비노출 처리되어 구직자에게 보이지 않습니다.{j.admin_hidden_reason ? ` 사유: ${j.admin_hidden_reason}` : ""}
+                  </p>
+                )}
               </div>
             </div>
             <div className="flex gap-1.5 flex-wrap">
               <Link to="/employer/jobs/edit/$id" params={{ id: j.id }} className={!canEdit ? "pointer-events-none opacity-50" : ""}>
                 <Button size="sm" variant="secondary" disabled={!canEdit}>수정</Button>
               </Link>
-              <Button size="sm" variant="outline" className="flex-1" onClick={() => toggle(j)}>{j.is_active ? "비활성" : "활성"}</Button>
+              <Button size="sm" variant="outline" className="flex-1" disabled={!!j.admin_hidden} onClick={() => toggle(j)}>{j.admin_hidden ? "비노출됨" : j.is_active ? "비활성" : "활성"}</Button>
               <Dialog open={promoOpenId === j.id} onOpenChange={(o) => setPromoOpenId(o ? j.id : null)}>
                 <DialogTrigger asChild><Button size="sm" variant="outline" className="flex-1"><Megaphone size={14} className="mr-1" />광고</Button></DialogTrigger>
                 <DialogContent>

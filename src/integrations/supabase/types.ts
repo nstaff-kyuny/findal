@@ -528,6 +528,9 @@ export type Database = {
       }
       jobs: {
         Row: {
+          admin_hidden: boolean
+          admin_hidden_at: string | null
+          admin_hidden_reason: string | null
           contract_months: number | null
           contract_type: string
           created_at: string
@@ -553,6 +556,9 @@ export type Database = {
           work_dates: string[]
         }
         Insert: {
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_reason?: string | null
           contract_months?: number | null
           contract_type?: string
           created_at?: string
@@ -578,6 +584,9 @@ export type Database = {
           work_dates?: string[]
         }
         Update: {
+          admin_hidden?: boolean
+          admin_hidden_at?: string | null
+          admin_hidden_reason?: string | null
           contract_months?: number | null
           contract_type?: string
           created_at?: string
@@ -1081,6 +1090,10 @@ export type Database = {
     Functions: {
       admin_grant_credits: {
         Args: { _amount: number; _employer: string; _note: string }
+        Returns: Json
+      }
+      admin_set_job_hidden: {
+        Args: { _hidden: boolean; _job_id: string; _reason: string }
         Returns: Json
       }
       approve_application: { Args: { _app_id: string }; Returns: Json }
