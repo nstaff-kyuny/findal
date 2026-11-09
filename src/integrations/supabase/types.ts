@@ -1142,6 +1142,15 @@ export type Database = {
         Args: { _platform: string; _token: string; _user_agent: string }
         Returns: Json
       }
+      register_web_push_subscription: {
+        Args: {
+          _auth: string
+          _endpoint: string
+          _p256dh: string
+          _user_agent: string
+        }
+        Returns: Json
+      }
       run_partner_monthly_grants: { Args: never; Returns: Json }
       seeker_confirm_application: { Args: { _app_id: string }; Returns: Json }
       seeker_reapply_application: {

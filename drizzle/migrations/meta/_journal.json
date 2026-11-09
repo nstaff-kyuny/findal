@@ -29,6 +29,13 @@
       "when": 1794228038552,
       "tag": "0003_register_native_push_token",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794228081325,
+      "tag": "0004_register_web_push_subscription",
+      "breakpoints": true
     }
   ]
 }
