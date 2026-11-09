@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import ReactMarkdown from "react-markdown";
 import { seekerJobChat } from "@/lib/ai.functions";
 import { supabase } from "@/integrations/supabase/client";
+import { regionOrFilter } from "@/components/RegionPicker";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
