@@ -1,17 +1,26 @@
 /**
  * 네이티브(Capacitor) 런타임 감지 유틸.
- * 웹 브라우저에서는 모두 false 를 반환하며, SSR 에서도 안전합니다.
- * Capacitor 모듈은 항상 동적 import 로만 불러옵니다(웹/SSR 번들 안전).
+ * 웹 브라우저/SSR 에서는 "web" 을 반환합니다.
+ * Capacitor 브리지가 늦게 주입되는 경우에도 androidBridge / webkit bridge 를 직접 확인합니다.
  */
 
 export type NativePlatform = "ios" | "android" | "web";
 
 export function getNativePlatform(): NativePlatform {
   if (typeof window === "undefined") return "web";
-  const cap = (window as any).Capacitor;
-  if (!cap?.isNativePlatform?.()) return "web";
-  const p = cap.getPlatform?.();
-  return p === "ios" || p === "android" ? p : "web";
+  const w = window as any;
+  const cap = w.Capacitor;
+  try {
+    if (cap?.isNativePlatform?.()) {
+      const p = cap.getPlatform?.();
+      if (p === "ios" || p === "android") return p;
+    }
+  } catch {}
+  if (w.androidBridge) return "android";
+  if (w.webkit?.messageHandlers?.bridge) return "ios";
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent || "" : "";
+  if (/FindAR|Capacitor/i.test(ua)) return /Android/i.test(ua) ? "android" : "ios";
+  return "web";
 }
 
 export function isNativeApp(): boolean {
