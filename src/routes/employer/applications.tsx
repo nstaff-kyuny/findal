@@ -99,6 +99,7 @@ function Page() {
   };
 
   const approve = async (id: string) => {
+    if (!confirm("승인하면 1크레딧이 차감됩니다.\n\n※ 승인(출근 확정) 후 출근을 취소하더라도 사용된 크레딧은 반환되지 않습니다.\n\n승인하시겠습니까?")) return;
     const { error } = await supabase.rpc("approve_application", { _app_id: id } as any);
     if (error) {
       const msg = error.message || "";
@@ -122,14 +123,21 @@ function Page() {
     if (error) return toast.error(error.message);
     toast.success("노쇼 처리됨"); load();
   };
-  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"출근 확정", no_show:"노쇼" };
+  const cancelWork = async (id: string) => {
+    if (!confirm("출근을 취소하시겠습니까?\n\n※ 출근 확정(승인)으로 사용된 크레딧은 반환되지 않습니다.\n구직자에게 출근 취소 알림이 전송됩니다.")) return;
+    const { error } = await supabase.rpc("employer_cancel_application", { _app_id: id } as any);
+    if (error) return toast.error(error.message);
+    toast.success("출근이 취소되었습니다. (사용된 크레딧은 반환되지 않습니다)");
+    load();
+  };
+  const STATUS_LABEL: Record<string,string> = { pending:"대기", approved:"승인", rejected:"거절", confirmed:"출근 확정", no_show:"노쇼", cancelled:"출근 취소" };
   const unmarkNoShow = async (id: string) => {
     if (!confirm("노쇼 표시를 취소하고 이전 상태로 복구하시겠습니까?")) return;
     const { error } = await supabase.rpc("unmark_no_show", { _app_id: id } as any);
     if (error) return toast.error(error.message);
     toast.success("노쇼 표시가 취소되었습니다"); load();
   };
-  const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary" };
+  const STATUS_VARIANT: Record<string, any> = { approved:"default", rejected:"destructive", no_show:"destructive", pending:"secondary", cancelled:"outline" };
   const STATUS_CLASS: Record<string,string> = { confirmed: "bg-green-600 hover:bg-green-600 text-white border-transparent" };
 
   const [search, setSearch] = useState("");
@@ -153,7 +161,7 @@ function Page() {
   const groups = useMemo(() => ({
     pending: apps.filter(a => a.status === "pending").filter(matchSearch),
     approved: apps.filter(a => a.status === "approved" || a.status === "confirmed").filter(matchSearch),
-    rejected: apps.filter(a => a.status === "rejected").filter(matchSearch),
+    rejected: apps.filter(a => a.status === "rejected" || (a.status === "cancelled" && a.cancelled_by === "employer")).filter(matchSearch),
     no_show: apps.filter(a => a.status === "no_show").filter(matchSearch),
   }), [apps, search]);
 
@@ -275,6 +283,15 @@ function Page() {
           <Button size="sm" variant="outline" className="flex-1" onClick={() => noShow(a.id)}>노쇼(미출근) 표시</Button>
         </div>
       )}
+      {(a.status === "approved" || a.status === "confirmed") && (
+        <div className="space-y-1">
+          <Button size="sm" variant="outline" className="w-full text-destructive border-destructive/40" onClick={() => cancelWork(a.id)}>출근 취소</Button>
+          <p className="text-xs text-muted-foreground">※ 출근 취소 시 사용된 크레딧은 반환되지 않습니다</p>
+        </div>
+      )}
+      {a.status === "cancelled" && (
+        <p className="text-xs text-muted-foreground">구인처에서 출근을 취소했습니다 · 사용된 크레딧은 반환되지 않습니다</p>
+      )}
       {a.status === "no_show" && (
         <div className="flex gap-2">
           <Button size="sm" variant="outline" className="flex-1" onClick={() => unmarkNoShow(a.id)}>노쇼 취소(복구)</Button>
@@ -309,7 +326,7 @@ function Page() {
           <TabsList className="grid grid-cols-5 w-full">
             <TabsTrigger value="pending" className="text-sm">대기 ({groups.pending.length})</TabsTrigger>
             <TabsTrigger value="approved" className="text-sm">승인 ({groups.approved.length})</TabsTrigger>
-            <TabsTrigger value="rejected" className="text-sm">거절 ({groups.rejected.length})</TabsTrigger>
+            <TabsTrigger value="rejected" className="text-sm">거절·취소 ({groups.rejected.length})</TabsTrigger>
             <TabsTrigger value="no_show" className="text-sm">노쇼 ({groups.no_show.length})</TabsTrigger>
             <TabsTrigger value="calendar" className="text-sm">📅 달력</TabsTrigger>
           </TabsList>
