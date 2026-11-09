@@ -53,8 +53,8 @@ export function JobsModerationTab() {
     [jobs],
   );
   const counts = useMemo(() => {
-    const c = { live: 0, admin_hidden: 0, inactive: 0, completed: 0 };
-    withStatus.forEach((j) => { c[j._status]++; });
+    const c: Record<JobModerationStatus, number> = { live: 0, admin_hidden: 0, inactive: 0, completed: 0 };
+    withStatus.forEach((j) => { c[j._status as JobModerationStatus]++; });
     return c;
   }, [withStatus]);
 
