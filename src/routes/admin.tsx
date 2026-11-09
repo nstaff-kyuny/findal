@@ -159,7 +159,8 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
       { value: "notices", label: "공지사항" },
       { value: "events", label: "이벤트" },
       { value: "faqs", label: "FAQ" },
-      { value: "banners", label: "광고 배너" },
+      { value: "banners", label: "광고 배너(구직자용)" },
+      { value: "banners-employer", label: "광고 배너(구인자용)" },
     ],
   },
   {
@@ -228,7 +229,8 @@ function AdminPanel() {
         <TabsContent value="job-moderation"><JobsModerationTab /></TabsContent>
         <TabsContent value="credits"><CreditsTab /></TabsContent>
         <TabsContent value="referrers"><ReferrersTab /></TabsContent>
-        <TabsContent value="banners"><BannersTab /></TabsContent>
+        <TabsContent value="banners"><BannersTab audience="seeker" /></TabsContent>
+        <TabsContent value="banners-employer"><BannersTab audience="employer" /></TabsContent>
         <TabsContent value="purchases"><PurchasesTab /></TabsContent>
         <TabsContent value="payment"><PaymentTab /></TabsContent>
         <TabsContent value="refunds"><RefundRequestsCard /></TabsContent>
@@ -1366,7 +1368,7 @@ function ReferrersTab() {
   );
 }
 
-function BannersTab() {
+function BannersTab({ audience }: { audience: "seeker" | "employer" }) {
   const [list, setList] = useState<any[]>([]);
   const [title, setTitle] = useState(""); const [img, setImg] = useState(""); const [url, setUrl] = useState("");
   const [start, setStart] = useState(""); const [end, setEnd] = useState("");
@@ -1376,10 +1378,10 @@ function BannersTab() {
   const [aiBusy, setAiBusy] = useState(false);
   const genBanner = useServerFn(generateAdBannerImage);
   const load = async () => {
-    const { data } = await supabase.from("ad_banners").select("*").order("created_at", { ascending: false });
+    const { data } = await supabase.from("ad_banners").select("*").eq("audience", audience).order("created_at", { ascending: false });
     setList(data ?? []);
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [audience]);
 
   const uploadFile = async (file: File, setter: (v: string) => void) => {
     setUploading(true);
@@ -1414,7 +1416,7 @@ function BannersTab() {
     if (!title || !end) return toast.error("제목과 종료일 필수");
     const { error } = await supabase.from("ad_banners").insert({
       title, image_url: img || null, link_url: url || null,
-      starts_at: start || new Date().toISOString(), ends_at: end,
+      starts_at: start || new Date().toISOString(), ends_at: end, audience,
     } as any);
     if (error) return toast.error(error.message);
     setTitle(""); setImg(""); setUrl(""); setStart(""); setEnd(""); setAiPrompt(""); load();
@@ -1449,7 +1451,8 @@ function BannersTab() {
   return (
     <Card className="mt-4"><CardContent className="p-4 space-y-4">
       <div>
-        <h3 className="font-bold">광고 배너 관리</h3>
+        <h3 className="font-bold">{audience === "employer" ? "광고 배너 관리 (구인자용)" : "광고 배너 관리 (구직자용)"}</h3>
+        <p className="text-xs text-muted-foreground mt-1">{audience === "employer" ? "구인자 콘솔 홈 화면 하단 '광고' 영역에 표시됩니다." : "구직자 추천 페이지 하단 '광고' 영역에 표시됩니다."}</p>
         <p className="text-xs text-muted-foreground mt-1">권장 배너 사이즈: <b>640 × 200px (16:5 가로형)</b> · 모바일에서 가로 꽉 차게 표시됩니다. 다른 비율 이미지는 자동으로 16:5로 잘려서 표시됩니다.</p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
