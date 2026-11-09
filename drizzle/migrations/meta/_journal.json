@@ -8,6 +8,13 @@
       "when": 1794205242008,
       "tag": "0000_employer_cancel_application",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794210175738,
+      "tag": "0001_admin_hide_jobs",
+      "breakpoints": true
     }
   ]
 }
