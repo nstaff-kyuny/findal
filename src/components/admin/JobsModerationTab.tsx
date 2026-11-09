@@ -200,7 +200,7 @@ export function JobsModerationTab() {
         </table>
       </div>
 
-      {!loading && paged.totalPages > 1 && (
+      {!loading && shown.length > 0 && (
         <nav aria-label="공고 목록 페이지" className="flex items-center justify-center gap-1 pt-2">
           <Button size="sm" variant="outline" disabled={paged.page === 1} onClick={() => setPage(paged.page - 1)}>이전</Button>
           {pageWindow(paged.page, paged.totalPages).map((p, i) =>
