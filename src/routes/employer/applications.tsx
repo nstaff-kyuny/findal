@@ -18,6 +18,7 @@ import { useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { analyzeApplications } from "@/lib/ai.functions";
+import { getApplicantContacts } from "@/lib/applicants.functions";
 
 export const Route = createFileRoute("/employer/applications")({ component: () => <RoleGate role="employer"><Page /></RoleGate> });
 
@@ -27,6 +28,7 @@ function Page() {
   const [aiNotes, setAiNotes] = useState<Record<string, { summary: string; noShowRisk: "낮음" | "보통" | "높음"; question: string }>>({});
   const [aiBusy, setAiBusy] = useState(false);
   const analyze = useServerFn(analyzeApplications);
+  const getContacts = useServerFn(getApplicantContacts);
   const load = async () => {
     if (!user) return;
     const { data: appsData, error } = await supabase.from("job_applications")
@@ -38,7 +40,7 @@ function Page() {
     const jobIds = Array.from(new Set(list.map((a: any) => a.job_id)));
     const [jobsRes, profilesRes, seekerProfilesRes] = await Promise.all([
       jobIds.length ? supabase.from("jobs").select("id, title, place_name, work_dates, headcount").in("id", jobIds) : Promise.resolve({ data: [] as any[] }),
-      seekerIds.length ? supabase.from("profiles").select("id, full_name, phone").in("id", seekerIds) : Promise.resolve({ data: [] as any[] }),
+      seekerIds.length ? getContacts().then((m) => ({ data: Object.entries(m).map(([id, v]) => ({ id, ...v })) })).catch(() => ({ data: [] as any[] })) : Promise.resolve({ data: [] as any[] }),
       seekerIds.length ? supabase.from("seeker_profiles").select("user_id, nationality, experience, korean_ok, visa").in("user_id", seekerIds) : Promise.resolve({ data: [] as any[] }),
     ]);
     const jobsMap = new Map((jobsRes.data ?? []).map((j: any) => [j.id, j]));
@@ -239,7 +241,11 @@ function Page() {
             {a.seeker_profiles?.korean_ok && <Badge variant="outline" className="text-xs">한국어 가능</Badge>}
             {a.seeker_profiles?.visa && <Badge variant="outline" className="text-xs">비자: {a.seeker_profiles.visa}</Badge>}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">※ 연락처는 승인 후에만 표시됩니다</p>
+          {a.profiles?.phone && a.status !== "pending" ? (
+            <p className="text-sm font-medium mt-1">📞 {a.profiles.phone}</p>
+          ) : a.status === "pending" ? (
+            <p className="text-xs text-muted-foreground mt-1">※ 연락처는 승인 후에만 표시됩니다</p>
+          ) : null}
           {a.message && <p className="text-sm italic mt-1 text-muted-foreground">"{a.message}"</p>}
           {aiNotes[a.id] && (() => {
             const r = aiNotes[a.id].noShowRisk;
