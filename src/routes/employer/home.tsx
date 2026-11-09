@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { MobileLayout } from "@/components/MobileLayout";
 import { RoleGate } from "@/components/RoleGate";
+import { AdBannerList } from "@/components/AdBannerList";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
@@ -78,6 +79,10 @@ function Page() {
             <p className="text-xs text-muted-foreground">{t("pc_admin_site_url")}</p>
           </CardContent>
         </Card>
+
+        <div className="pt-2">
+          <AdBannerList audience="employer" />
+        </div>
       </div>
     </MobileLayout>
   );

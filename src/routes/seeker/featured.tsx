@@ -63,7 +63,7 @@ function Page() {
     const randomJobs = (r ?? []).sort(() => Math.random() - 0.5);
     setRandom(randomJobs);
 
-    const { data: a } = await supabase.from("ad_banners").select("*").eq("active", true).gte("ends_at", now).lte("starts_at", now).limit(20);
+    const { data: a } = await supabase.from("ad_banners").select("*").eq("audience", "seeker").eq("active", true).gte("ends_at", now).lte("starts_at", now).limit(20);
     const shuffledAds = (a ?? []).sort(() => Math.random() - 0.5).slice(0, 3);
     setAds(shuffledAds);
 

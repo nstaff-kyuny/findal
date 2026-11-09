@@ -17,6 +17,7 @@ export type Database = {
       ad_banners: {
         Row: {
           active: boolean
+          audience: string
           created_at: string
           ends_at: string
           id: string
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          audience?: string
           created_at?: string
           ends_at: string
           id?: string
@@ -37,6 +39,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          audience?: string
           created_at?: string
           ends_at?: string
           id?: string
