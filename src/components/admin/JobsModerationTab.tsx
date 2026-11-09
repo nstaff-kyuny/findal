@@ -13,6 +13,7 @@ import { isJobCompleted } from "@/lib/job-visuals";
 import { useI18n } from "@/lib/i18n";
 import { jobModerationStatus, type JobModerationStatus } from "@/lib/job-moderation";
 import { JobDetailDialog } from "./JobDetailDialog";
+import { paginate, pageWindow } from "@/lib/paginate";
 
 const STATUS_LABEL: Record<JobModerationStatus, string> = {
   live: "노출중",
@@ -28,6 +29,8 @@ export function JobsModerationTab() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"live" | "admin_hidden" | "inactive" | "all">("live");
   const [q, setQ] = useState("");
+  const [page, setPage] = useState(1);
+  useEffect(() => { setPage(1); }, [filter, q]);
   const [target, setTarget] = useState<any | null>(null);
   const [detail, setDetail] = useState<any | null>(null);
   const [reason, setReason] = useState("");
@@ -69,6 +72,7 @@ export function JobsModerationTab() {
     const comp = companies[j.employer_id]?.company_name ?? "";
     return [j.title, j.place_name, j.region, j.location, comp].some((v) => String(v ?? "").toLowerCase().includes(s));
   });
+  const paged = paginate(shown, page);
 
   const setHidden = async (job: any, hidden: boolean, why?: string) => {
     setBusy(true);
@@ -121,7 +125,9 @@ export function JobsModerationTab() {
           </SelectContent>
         </Select>
         <Input className="w-72" placeholder="공고명, 업체명, 지역 검색" value={q} onChange={(e) => setQ(e.target.value)} />
-        <span className="text-sm text-muted-foreground self-center">표시 {shown.length}건</span>
+        <span className="text-sm text-muted-foreground self-center">
+          표시 {shown.length}건{shown.length > 0 ? ` · ${paged.start + 1}–${paged.start + paged.items.length}번째` : ""}
+        </span>
       </div>
 
       <div className="overflow-x-auto">
@@ -141,7 +147,7 @@ export function JobsModerationTab() {
           <tbody>
             {loading && <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">불러오는 중...</td></tr>}
             {!loading && shown.length === 0 && <tr><td colSpan={8} className="py-8 text-center text-muted-foreground">해당하는 공고가 없습니다</td></tr>}
-            {!loading && shown.map((j) => {
+            {!loading && paged.items.map((j) => {
               const comp = companies[j.employer_id];
               return (
                 <tr key={j.id} className="border-b align-top">
@@ -193,6 +199,29 @@ export function JobsModerationTab() {
           </tbody>
         </table>
       </div>
+
+      {!loading && shown.length > 0 && (
+        <nav aria-label="공고 목록 페이지" className="flex items-center justify-center gap-1 pt-2">
+          <Button size="sm" variant="outline" disabled={paged.page === 1} onClick={() => setPage(paged.page - 1)}>이전</Button>
+          {pageWindow(paged.page, paged.totalPages).map((p, i) =>
+            p === "…" ? (
+              <span key={`gap-${i}`} className="px-2 text-muted-foreground">…</span>
+            ) : (
+              <Button
+                key={p}
+                size="sm"
+                variant={p === paged.page ? "default" : "outline"}
+                className="min-w-9"
+                aria-current={p === paged.page ? "page" : undefined}
+                onClick={() => setPage(p)}
+              >
+                {p}
+              </Button>
+            ),
+          )}
+          <Button size="sm" variant="outline" disabled={paged.page === paged.totalPages} onClick={() => setPage(paged.page + 1)}>다음</Button>
+        </nav>
+      )}
 
       <JobDetailDialog
         job={detail}
