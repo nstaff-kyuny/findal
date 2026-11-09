@@ -430,7 +430,8 @@ function CompanyInfoTab() {
   const [saving, setSaving] = useState(false);
   useEffect(() => {
     (async () => {
-      const { data: row } = await (supabase as any).from("company_info").select("*").eq("id", true).maybeSingle();
+      const { data: rows } = await (supabase as any).rpc("get_company_info");
+      const row = Array.isArray(rows) ? rows[0] : rows;
       if (row) setData({
         name: row.name ?? "", ceo: row.ceo ?? "", biz_no: row.biz_no ?? "",
         mail_order_no: row.mail_order_no ?? "", app_name: row.app_name ?? "",
@@ -441,9 +442,14 @@ function CompanyInfoTab() {
   }, []);
   const save = async () => {
     setSaving(true);
-    const { error } = await (supabase as any).from("company_info").upsert({ id: true, ...data }, { onConflict: "id" });
+    try {
+      const { saveCompanyInfo } = await import("@/lib/company.functions");
+      await saveCompanyInfo({ data });
+    } catch (e: any) {
+      setSaving(false);
+      return toast.error(e?.message ?? "저장 실패");
+    }
     setSaving(false);
-    if (error) return toast.error(error.message);
     toast.success("사업자 정보가 저장되었습니다");
   };
   if (loading) return <div className="text-sm text-muted-foreground py-8 text-center">불러오는 중...</div>;
