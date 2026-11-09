@@ -70,25 +70,26 @@ export async function enableNativePush(userId: string): Promise<{ ok: boolean; r
 
     let regErr = "";
     const handles: Array<{ remove: () => Promise<void> }> = [];
-    const token = await new Promise<string | null>(async (resolve) => {
-      const timer = setTimeout(() => resolve(null), 15000);
-      try {
-        handles.push(await PushNotifications.addListener("registration", (t) => {
-          clearTimeout(timer);
-          resolve(t.value);
-        }));
-        handles.push(await PushNotifications.addListener("registrationError", (err: any) => {
-          regErr = err?.error ?? "";
-          clearTimeout(timer);
-          resolve(null);
-        }));
-        await PushNotifications.register();
-      } catch (e: any) {
-        regErr = e?.message ?? String(e);
+    let done: (v: string | null) => void = () => {};
+    const tokenPromise = new Promise<string | null>((resolve) => { done = resolve; });
+    const timer = setTimeout(() => done(null), 20000);
+    try {
+      handles.push(await withTimeout(PushNotifications.addListener("registration", (t) => {
         clearTimeout(timer);
-        resolve(null);
-      }
-    });
+        done(t.value);
+      }), 5000, "listener timeout"));
+      handles.push(await withTimeout(PushNotifications.addListener("registrationError", (err: any) => {
+        regErr = err?.error ?? "";
+        clearTimeout(timer);
+        done(null);
+      }), 5000, "listener timeout"));
+      await withTimeout(PushNotifications.register(), 10000, "푸시 등록 요청이 응답하지 않습니다");
+    } catch (e: any) {
+      regErr = e?.message ?? String(e);
+      clearTimeout(timer);
+      done(null);
+    }
+    const token = await tokenPromise;
     handles.forEach((h) => h.remove().catch(() => {}));
 
     if (!token) {
@@ -115,13 +116,16 @@ export async function disableNativePush(userId: string): Promise<void> {
   }
 }
 
-/** 이미 권한이 허용된 경우에만 조용히 토큰을 갱신 (프롬프트 없음) */
+/**
+ * 로그인/앱 실행 시 자동 등록: 처음이면 OS 권한 팝업을 띄우고,
+ * 허용되어 있으면 조용히 토큰을 갱신합니다. 거부된 경우에는 다시 묻지 않습니다.
+ */
 export async function ensureNativePush(userId: string): Promise<boolean> {
   if (!isNativeApp() || !userId) return false;
   try {
     const perm = await getNativePushPermission();
-    if (perm !== "granted") return false;
-    const res = await enableNativePush(userId);
+    if (perm === "denied") return false;
+    const res = await withTimeout(enableNativePush(userId), 90000, "timeout");
     return res.ok;
   } catch {
     return false;
