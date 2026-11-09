@@ -1138,6 +1138,10 @@ export type Database = {
         }
         Returns: Json
       }
+      register_native_push_token: {
+        Args: { _platform: string; _token: string; _user_agent: string }
+        Returns: Json
+      }
       run_partner_monthly_grants: { Args: never; Returns: Json }
       seeker_confirm_application: { Args: { _app_id: string }; Returns: Json }
       seeker_reapply_application: {
