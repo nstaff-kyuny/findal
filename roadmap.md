@@ -1,5 +1,5 @@
 # Tasks
 
-- [x] Add a public, mobile-friendly Find AR download page with official branding and the provided store destinations.
-- [x] Verify mobile and desktop display, public access, and store links (external navigation checked against the supplied URLs, not store installation).
-- [x] Provide the advertisement destination URL and explain publishing/link replacement; the mobile business-card project's link remains unchanged.
+- [x] Admin dashboard at /admin/dashboard: viewable in any browser (phone or PC), admin-only, not inside the installed app.
+- [x] Dashboard numbers: users, yesterday's sign-ups by role, credit sales (monthly/weekly + running total), refunds, ad banners, notices, jobs by type (shown vs posted), plus extra operating stats.
+- [x] Link dashboard from the PC admin page; admins opening the site on a phone browser land on the dashboard.

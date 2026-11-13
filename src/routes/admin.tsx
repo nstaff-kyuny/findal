@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, Fragment } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -64,8 +64,9 @@ function Admin() {
       <div className="min-h-screen flex items-center justify-center p-6 text-center">
         <div className="max-w-sm w-full">
           <h1 className="font-bold text-lg mb-2">관리자 페이지는 PC에서만 이용 가능합니다</h1>
-          <p className="text-sm text-muted-foreground mb-6">데스크탑(1024px 이상) 환경에서 접속해 주세요.</p>
+          <p className="text-sm text-muted-foreground mb-6">데스크탑(1024px 이상) 환경에서 접속해 주세요.<br />휴대폰 브라우저에서는 운영 현황 대시보드를 볼 수 있습니다.</p>
           <div className="flex flex-col gap-2">
+            {roles.includes("admin") && <Button asChild><Link to="/admin/dashboard">관리자 대시보드 보기</Link></Button>}
             <Button onClick={signOut}>로그아웃</Button>
             <Button variant="outline" onClick={() => nav({ to: "/auth" })}>로그인 화면으로</Button>
           </div>
@@ -80,6 +81,7 @@ function Admin() {
         <h1 className="font-bold text-xl text-primary">Find AR (파인달) · 관리자</h1>
         <div className="flex items-center gap-3 text-sm">
           <span className="text-muted-foreground">{user.email}</span>
+          {roles.includes("admin") && <Button size="sm" asChild><Link to="/admin/dashboard">대시보드</Link></Button>}
           <Button size="sm" variant="outline" onClick={signOut}>로그아웃</Button>
         </div>
       </header>

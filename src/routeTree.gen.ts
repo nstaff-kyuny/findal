@@ -26,6 +26,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AdminDashboardRouteImport } from './routes/admin_.dashboard'
 import { Route as EmployerApplicationsRouteImport } from './routes/employer/applications'
 import { Route as EmployerCreditsRouteImport } from './routes/employer/credits'
 import { Route as EmployerHistoryRouteImport } from './routes/employer/history'
@@ -132,6 +133,11 @@ const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminDashboardRoute = AdminDashboardRouteImport.update({
+  id: '/admin_/dashboard',
+  path: '/admin/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EmployerApplicationsRoute = EmployerApplicationsRouteImport.update({
@@ -264,6 +270,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
   '/employer/history': typeof EmployerHistoryRouteWithChildren
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/admin/dashboard': typeof AdminDashboardRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
   '/employer/history': typeof EmployerHistoryRouteWithChildren
@@ -347,6 +355,7 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/admin_/dashboard': typeof AdminDashboardRoute
   '/employer/applications': typeof EmployerApplicationsRoute
   '/employer/credits': typeof EmployerCreditsRoute
   '/employer/history': typeof EmployerHistoryRouteWithChildren
@@ -390,6 +399,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
+    | '/admin/dashboard'
     | '/employer/applications'
     | '/employer/credits'
     | '/employer/history'
@@ -431,6 +441,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
+    | '/admin/dashboard'
     | '/employer/applications'
     | '/employer/credits'
     | '/employer/history'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/reset-password'
     | '/sitemap.xml'
     | '/terms'
+    | '/admin_/dashboard'
     | '/employer/applications'
     | '/employer/credits'
     | '/employer/history'
@@ -514,6 +526,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
+  AdminDashboardRoute: typeof AdminDashboardRoute
   EmployerApplicationsRoute: typeof EmployerApplicationsRoute
   EmployerCreditsRoute: typeof EmployerCreditsRoute
   EmployerHistoryRoute: typeof EmployerHistoryRouteWithChildren
@@ -656,6 +669,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin_/dashboard': {
+      id: '/admin_/dashboard'
+      path: '/admin/dashboard'
+      fullPath: '/admin/dashboard'
+      preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/employer/applications': {
@@ -845,6 +865,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
+  AdminDashboardRoute: AdminDashboardRoute,
   EmployerApplicationsRoute: EmployerApplicationsRoute,
   EmployerCreditsRoute: EmployerCreditsRoute,
   EmployerHistoryRoute: EmployerHistoryRouteWithChildren,
