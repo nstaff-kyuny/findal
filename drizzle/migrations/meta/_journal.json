@@ -43,6 +43,13 @@
       "when": 1794531321123,
       "tag": "0005_restrict_taxonomy_reads_to_members",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794550008701,
+      "tag": "0006_normalize_phone_numbers",
+      "breakpoints": true
     }
   ]
 }

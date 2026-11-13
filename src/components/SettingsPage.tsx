@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -354,13 +355,13 @@ export function SettingsPage({ role }: { role: "seeker" | "employer" }) {
           <DialogHeader><DialogTitle>기본정보 수정</DialogTitle></DialogHeader>
           <div className="space-y-3">
             <div><Label>이름</Label><Input value={form.full_name ?? ""} onChange={e => setForm({ ...form, full_name: e.target.value })} /></div>
-            <div><Label>연락처</Label><Input value={form.phone ?? ""} onChange={e => setForm({ ...form, phone: e.target.value })} /></div>
+            <div><Label>연락처</Label><PhoneInput value={form.phone ?? ""} onValueChange={v => setForm({ ...form, phone: v })} /></div>
             {role === "employer" ? (
               <>
                 <div><Label>업체명</Label><Input value={form.company_name ?? ""} onChange={e => setForm({ ...form, company_name: e.target.value })} /></div>
                 <div><Label>담당자명</Label><Input value={form.manager_name ?? ""} onChange={e => setForm({ ...form, manager_name: e.target.value })} /></div>
                 <div><Label>위치</Label><Input value={form.location ?? ""} onChange={e => setForm({ ...form, location: e.target.value })} /></div>
-                <div><Label>대표 연락처</Label><Input value={form.contact_phone ?? ""} onChange={e => setForm({ ...form, contact_phone: e.target.value })} /></div>
+                <div><Label>대표 연락처</Label><PhoneInput value={form.contact_phone ?? ""} onValueChange={v => setForm({ ...form, contact_phone: v })} /></div>
               </>
             ) : (
               <>

@@ -1101,6 +1101,7 @@ export type Database = {
       }
       approve_application: { Args: { _app_id: string }; Returns: Json }
       employer_cancel_application: { Args: { _app_id: string }; Returns: Json }
+      format_kr_phone: { Args: { _v: string }; Returns: string }
       get_active_promoted_jobs: {
         Args: never
         Returns: {

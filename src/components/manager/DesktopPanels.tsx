@@ -3,6 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -540,7 +541,7 @@ export function NewJobPanel({ userId, onCreated, editJobId, onBack }: { userId: 
             {!useDefaultContact && (
               <div>
                 <Label>담당자 연락처 (구직자에게 비공개)</Label>
-                <Input value={contact} onChange={(e) => setContact(e.target.value)} />
+                <PhoneInput value={contact} onValueChange={setContact} />
               </div>
             )}
 
@@ -853,10 +854,10 @@ export function ProfilePanel({ userId, userEmail, onSignOut }: { userId: string;
             <div className="grid grid-cols-2 gap-3">
               <div><Label>이름</Label><Input value={form.full_name ?? ""} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></div>
               <div><Label>이메일</Label><Input value={userEmail} disabled /></div>
-              <div><Label>연락처</Label><Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
+              <div><Label>연락처</Label><PhoneInput value={form.phone ?? ""} onValueChange={(v) => setForm({ ...form, phone: v })} /></div>
               <div><Label>업체명</Label><Input value={form.company_name ?? ""} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></div>
               <div><Label>담당자명</Label><Input value={form.manager_name ?? ""} onChange={(e) => setForm({ ...form, manager_name: e.target.value })} /></div>
-              <div><Label>대표 연락처</Label><Input value={form.contact_phone ?? ""} onChange={(e) => setForm({ ...form, contact_phone: e.target.value })} /></div>
+              <div><Label>대표 연락처</Label><PhoneInput value={form.contact_phone ?? ""} onValueChange={(v) => setForm({ ...form, contact_phone: v })} /></div>
               <div className="col-span-2"><Label>위치</Label><Input value={form.location ?? ""} onChange={(e) => setForm({ ...form, location: e.target.value })} /></div>
             </div>
             <Button onClick={save} disabled={saving}>{saving ? "저장 중…" : "저장"}</Button>

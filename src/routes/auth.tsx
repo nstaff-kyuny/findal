@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -223,7 +224,7 @@ function AuthPage() {
               </RadioGroup>
             </div>
             <div><Label className="text-base">이름 (Full Name)</Label><Input className="h-14 text-base mt-1" value={name} onChange={e => setName(e.target.value)} /></div>
-            <div><Label className="text-base">연락처 (Mobile)</Label><Input className="h-14 text-base mt-1" value={phone} onChange={e => setPhone(e.target.value)} placeholder="010-0000-0000" /></div>
+            <div><Label className="text-base">연락처 (Mobile)</Label><PhoneInput className="h-14 text-base mt-1" value={phone} onValueChange={setPhone} /></div>
             <div>
               <Label className="text-base">이메일 (아이디) (E-mail)</Label>
               <p className="text-xs text-muted-foreground mt-1">이메일 주소가 아이디로 사용됩니다.</p>

@@ -8,6 +8,7 @@ import { normalizeReferrerCode } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -478,7 +479,7 @@ function CompanyInfoTab() {
         <div><Label>사업자등록번호</Label><Input value={data.biz_no} onChange={e => setData({ ...data, biz_no: e.target.value })} /></div>
         <div><Label>통신판매업등록번호</Label><Input value={data.mail_order_no} onChange={e => setData({ ...data, mail_order_no: e.target.value })} /></div>
         <div><Label>앱 이름</Label><Input value={data.app_name} onChange={e => setData({ ...data, app_name: e.target.value })} /></div>
-        <div><Label>대표 연락처</Label><Input value={data.phone} onChange={e => setData({ ...data, phone: e.target.value })} /></div>
+        <div><Label>대표 연락처</Label><PhoneInput placeholder="02-0000-0000" value={data.phone} onValueChange={v => setData({ ...data, phone: v })} /></div>
         <div className="col-span-2"><Label>주소</Label><Input value={data.address} onChange={e => setData({ ...data, address: e.target.value })} /></div>
         <div className="col-span-2"><Label>이메일</Label><Input type="email" value={data.email} onChange={e => setData({ ...data, email: e.target.value })} /></div>
       </div>
@@ -873,7 +874,7 @@ function EditUserDialog({ userId, open, onOpenChange, onSaved }: { userId: strin
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div><Label>이름</Label><Input value={fullName} onChange={e => setFullName(e.target.value)} /></div>
-              <div><Label>연락처</Label><Input value={phone} onChange={e => setPhone(e.target.value)} /></div>
+              <div><Label>연락처</Label><PhoneInput value={phone} onValueChange={setPhone} /></div>
             </div>
             {role === "seeker" && (
               <>
@@ -1040,7 +1041,7 @@ function UsersTab() {
           <Input placeholder="이메일" value={newEmail} onChange={e => setNewEmail(e.target.value)} />
           <Input placeholder="비밀번호 (6자리)" value={newPwd} onChange={e => setNewPwd(e.target.value)} />
           <Input placeholder="이름" value={newName} onChange={e => setNewName(e.target.value)} />
-          <Input placeholder="연락처" value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+          <PhoneInput placeholder="연락처 (010-0000-0000)" value={newPhone} onValueChange={setNewPhone} />
           <Input placeholder="추천인코드 (영문 대문자/숫자, 선택)" value={newReferrer} onChange={e => setNewReferrer(normalizeReferrerCode(e.target.value))} />
           <Select value={newRole} onValueChange={(v: any) => setNewRole(v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -1292,7 +1293,7 @@ function ReferrersTab() {
       <div className="grid grid-cols-4 gap-2">
         <Input placeholder="코드 (영문 대문자/숫자, 예: REF1234)" value={code} onChange={e => setCode(normalizeReferrerCode(e.target.value))} />
         <Input placeholder="이름" value={name} onChange={e => setName(e.target.value)} />
-        <Input placeholder="연락처" value={phone} onChange={e => setPhone(e.target.value)} />
+        <PhoneInput placeholder="연락처 (010-0000-0000)" value={phone} onValueChange={setPhone} />
         <Button onClick={add}>추가</Button>
       </div>
       <table className="w-full text-sm">
@@ -1309,7 +1310,7 @@ function ReferrersTab() {
                     <>
                       <td className="py-2"><Input className="h-8 font-mono text-xs" value={editForm.code} onChange={e => setEditForm({ ...editForm, code: normalizeReferrerCode(e.target.value) })} /></td>
                       <td><Input className="h-8 text-xs" value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} /></td>
-                      <td><Input className="h-8 text-xs" value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} /></td>
+                      <td><PhoneInput className="h-8 text-xs" value={editForm.phone} onValueChange={v => setEditForm({ ...editForm, phone: v })} /></td>
                       <td>
                         <Button size="sm" variant="ghost" className="font-bold h-auto p-1" onClick={toggle}>
                           {users.length}명 {users.length > 0 ? (isOpen ? " ▲" : " ▼") : ""}
