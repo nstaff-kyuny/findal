@@ -208,7 +208,9 @@ function DashboardBody({ d }: { d: Dashboard }) {
         <MiniStat label="승인 대기 신청" value={`${num(d.applications.pending)}건`} tone={d.applications.pending ? "alert" : undefined} />
         <MiniStat label="이번 달 출근 확정" value={`${num(d.applications.confirmedThisMonth)}건`} />
         <MiniStat label="이번 달 노쇼" value={`${num(d.applications.noShowThisMonth)}건`} />
-        <MiniStat label="미답변 1:1 문의" value={`${num(d.inquiriesOpen)}건`} tone={d.inquiriesOpen ? "alert" : undefined} />
+        <Link to="/admin" search={{ tab: "inquiries" }} className="block rounded-md transition-colors hover:ring-2 hover:ring-primary/40" title="1:1 문의 관리 열기 (PC)">
+          <MiniStat label="미답변 1:1 문의 ›" value={`${num(d.inquiriesOpen)}건`} tone={d.inquiriesOpen ? "alert" : undefined} />
+        </Link>
         <MiniStat label="이번 달 사용 크레딧" value={num(d.credits.creditsUsedMonth)} />
         <MiniStat label="구인자 보유 크레딧" value={num(d.credits.creditsHeld)} />
         <MiniStat label="최신 앱 버전" value={d.latestVersion ?? "-"} tone="muted" />

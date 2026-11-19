@@ -29,7 +29,11 @@ import { adminListRefundRequests, adminApproveRefund, adminRejectRefund } from "
 import { JobsModerationTab } from "@/components/admin/JobsModerationTab";
 
 
-export const Route = createFileRoute("/admin")({ component: Admin });
+export const Route = createFileRoute("/admin")({
+  validateSearch: (search: Record<string, unknown>): { tab?: string } =>
+    typeof search.tab === "string" && search.tab ? { tab: search.tab } : {},
+  component: Admin,
+});
 
 async function downloadXlsx(rows: any[], sheetName: string, filename: string) {
   const wb = new ExcelJS.Workbook();
@@ -162,6 +166,7 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
       { value: "notices", label: "공지사항" },
       { value: "events", label: "이벤트" },
       { value: "faqs", label: "FAQ" },
+      { value: "inquiries", label: "1:1 문의 관리" },
       { value: "banners", label: "광고 배너(구직자용)" },
       { value: "banners-employer", label: "광고 배너(구인자용)" },
     ],
@@ -198,9 +203,11 @@ const MENU_GROUPS: { id: string; label: string; items: { value: string; label: s
 ];
 
 function AdminPanel() {
-  const [tab, setTab] = useState("all-users");
+  const search = Route.useSearch();
+  const initialTab = search.tab && MENU_GROUPS.some(g => g.items.some(i => i.value === search.tab)) ? search.tab : "all-users";
+  const [tab, setTab] = useState(initialTab);
   const groupOf = (val: string) => MENU_GROUPS.find(g => g.items.some(i => i.value === val))?.id ?? MENU_GROUPS[0].id;
-  const [openGroup, setOpenGroup] = useState<string>(groupOf("all-users"));
+  const [openGroup, setOpenGroup] = useState<string>(groupOf(initialTab));
   useEffect(() => { setOpenGroup(groupOf(tab)); }, [tab]);
   return (
     <Tabs value={tab} onValueChange={setTab} orientation="vertical" className="flex flex-row gap-8 items-start">
@@ -240,6 +247,7 @@ function AdminPanel() {
         <TabsContent value="notices"><NoticesTab /></TabsContent>
         <TabsContent value="events"><EventsTab /></TabsContent>
         <TabsContent value="faqs"><FaqsTab /></TabsContent>
+        <TabsContent value="inquiries"><InquiriesTab /></TabsContent>
         <TabsContent value="partners"><PartnersTab /></TabsContent>
         <TabsContent value="ai-insights"><AiInsightsTab /></TabsContent>
         <TabsContent value="company"><CompanyInfoTab /></TabsContent>
@@ -2177,8 +2185,16 @@ function InquiriesTab() {
   const [analysis, setAnalysis] = useState<Record<string, any>>({});
   const [aiBusyId, setAiBusyId] = useState<string | null>(null);
   const load = async () => {
-    const { data } = await supabase.from("inquiries").select("*, profiles:user_id(full_name, phone)").order("created_at", { ascending: false });
-    setList(data ?? []);
+    const { data, error } = await supabase.from("inquiries").select("*").order("created_at", { ascending: false });
+    if (error) { toast.error(`문의 목록을 불러오지 못했습니다: ${error.message}`); return; }
+    const rows = data ?? [];
+    const ids = Array.from(new Set(rows.map((r: any) => r.user_id).filter(Boolean)));
+    const profileMap: Record<string, any> = {};
+    if (ids.length) {
+      const { data: profs } = await supabase.from("profiles").select("id, full_name, phone").in("id", ids);
+      (profs ?? []).forEach((p: any) => { profileMap[p.id] = p; });
+    }
+    setList(rows.map((r: any) => ({ ...r, profiles: profileMap[r.user_id] ?? null })));
   };
   useEffect(() => { load(); }, []);
   const reply = async (id: string) => {
@@ -2200,15 +2216,15 @@ function InquiriesTab() {
     finally { setAiBusyId(null); }
   };
   return (
-    <Card className="mt-4"><CardContent className="p-4 space-y-3">
-      <h3 className="font-bold">1:1 문의 관리</h3>
+    <Card><CardContent className="p-4 space-y-3">
+      <h3 className="font-bold">1:1 문의 관리 <span className="text-sm font-normal text-muted-foreground">· 미답변 {list.filter(q => q.status !== "answered").length}건</span></h3>
       {list.length === 0 && <p className="text-sm text-muted-foreground">문의가 없습니다</p>}
       {list.map(q => (
         <Card key={q.id}><CardContent className="p-3 space-y-2">
           <div className="flex justify-between items-center">
             <div>
               <p className="font-semibold text-sm">{q.subject}</p>
-              <p className="text-xs text-muted-foreground">{q.profiles?.full_name} · {q.profiles?.phone} · {new Date(q.created_at).toLocaleString("ko-KR")}</p>
+              <p className="text-xs text-muted-foreground">{[q.profiles?.full_name || "알 수 없는 회원", q.profiles?.phone, new Date(q.created_at).toLocaleString("ko-KR", { timeZone: "Asia/Seoul" })].filter(Boolean).join(" · ")}</p>
             </div>
             <Badge variant={q.status === "answered" ? "default" : "secondary"}>{q.status === "answered" ? "답변완료" : "대기"}</Badge>
           </div>
